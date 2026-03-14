@@ -1241,7 +1241,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 
 
 // ============ AUTENTICAÇÃO ============
-const ADMIN_MASTER_PASSWORD = 'hac2026admin';
+const ADMIN_MASTER_PASSWORD = 'admin2026';
 let usuarioLogado = null;
 
 async function hashSenha(senha){
@@ -1286,8 +1286,7 @@ async function fazerLogin(){
   if(!cpf || cpf.length!==11){ msgEl.className='msg erro'; msgEl.innerText='CPF inválido'; return; }
   if(!senha){ msgEl.className='msg erro'; msgEl.innerText='Digite a senha'; return; }
 
-  let senhaHash = await hashSenha(senha);
-  const {data,error} = await sb.from('usuarios').select('*').eq('cpf',cpf).eq('senha_hash',senhaHash).single();
+  const {data,error} = await sb.from('usuarios').select('*').eq('cpf',cpf).eq('senha',senha).single();
 
   if(error || !data){ msgEl.className='msg erro'; msgEl.innerText='CPF ou senha incorretos'; return; }
   if(data.status==='pendente'){ msgEl.className='msg erro'; msgEl.innerText='Seu cadastro está pendente de aprovação.'; return; }
@@ -1295,7 +1294,7 @@ async function fazerLogin(){
 
   // Login OK
   usuarioLogado = data;
-  localStorage.setItem('sessao_cc', JSON.stringify({cpf:data.cpf, nome:data.nome, is_admin:data.is_admin}));
+  localStorage.setItem('sessao_cc', JSON.stringify({cpf:data.cpf, nome:data.nome, is_admin:data.perfil==='admin'}));
   entrarSistema();
 }
 
@@ -1311,17 +1310,13 @@ async function fazerLoginAdmin(){
 
   // Check if admin already exists
   let {data:existing} = await sb.from('usuarios').select('*').eq('cpf',cpf).single();
-  let senhaHash = await hashSenha(senhaMestre);
-
   if(!existing){
-    // Create admin user
     await sb.from('usuarios').insert({
       nome:nome, cpf:cpf, email:'admin@hac.com', setor:'Administração',
-      senha_hash:senhaHash, is_admin:true, status:'aprovado', aprovado_por:'sistema'
+      senha:senhaMestre, perfil:'admin', status:'aprovado', aprovado_por:'sistema'
     });
   } else {
-    // Update to admin
-    await sb.from('usuarios').update({is_admin:true, status:'aprovado'}).eq('cpf',cpf);
+    await sb.from('usuarios').update({perfil:'admin', status:'aprovado'}).eq('cpf',cpf);
   }
 
   let {data:user} = await sb.from('usuarios').select('*').eq('cpf',cpf).single();
@@ -1342,11 +1337,10 @@ async function fazerCadastro(){
   if(cpf.length!==11){ msgEl.className='msg erro'; msgEl.innerText='CPF inválido'; return; }
   if(senha.length<6){ msgEl.className='msg erro'; msgEl.innerText='Senha mínimo 6 caracteres'; return; }
 
-  let senhaHash = await hashSenha(senha);
   let {data:existing} = await sb.from('usuarios').select('cpf').eq('cpf',cpf).single();
   if(existing){ msgEl.className='msg erro'; msgEl.innerText='CPF já cadastrado. Faça login.'; return; }
 
-  let {error} = await sb.from('usuarios').insert({nome,cpf,email,setor,senha_hash:senhaHash,is_admin:false,status:'pendente'});
+  let {error} = await sb.from('usuarios').insert({nome,cpf,email,setor,senha:senha,perfil:'usuario',status:'pendente'});
   if(error){ msgEl.className='msg erro'; msgEl.innerText='Erro: '+error.message; return; }
 
   msgEl.className='msg ok'; msgEl.innerText='✅ Cadastro enviado! Aguarde aprovação de um administrador.';
@@ -1359,10 +1353,10 @@ function entrarSistema(){
 
   // Show user info
   let info = document.getElementById('userInfo');
-  info.innerHTML = '<b>'+usuarioLogado.nome+'</b> '+(usuarioLogado.is_admin?'(Admin)':'');
+  info.innerHTML = '<b>'+usuarioLogado.nome+'</b> '+((usuarioLogado.is_admin||usuarioLogado.perfil==='admin')?'(Admin)':'');
 
   // Show admin tab
-  if(usuarioLogado.is_admin){
+  if(usuarioLogado.is_admin || usuarioLogado.perfil==='admin'){
     let tabAut = document.getElementById('tabAutorizacoes');
     if(tabAut) tabAut.style.display='';
   }
@@ -1391,7 +1385,7 @@ async function verificarSessao(){
 
 // Autorizações (admin)
 async function renderAutorizacoes(){
-  if(!usuarioLogado || !usuarioLogado.is_admin) return;
+  if(!usuarioLogado || !(usuarioLogado.is_admin||usuarioLogado.perfil==='admin')) return;
   const {data} = await sb.from('usuarios').select('*').order('criado_em',{ascending:false});
   if(!data) return;
   let tbody = document.getElementById('tabelaAutorizacoes');
@@ -1404,7 +1398,7 @@ async function renderAutorizacoes(){
     } else if(u.status==='rejeitado'){
       acoes = '<button class="btn btn-success btn-sm" onclick="aprovarUsuario(\''+u.cpf+'\')">Aprovar</button>';
     }
-    acoes += u.is_admin?' <span class="tag tag-recurso">ADMIN</span>':'';
+    acoes += u.perfil==='admin'?' <span class="tag tag-recurso">ADMIN</span>':'';
     return '<tr><td>'+u.nome+'</td><td>'+u.cpf+'</td><td>'+(u.email||'-')+'</td><td>'+(u.setor||'-')+'</td>'+
       '<td>'+new Date(u.criado_em).toLocaleString('pt-BR')+'</td>'+
       '<td><span class="status-badge '+statusCls+'">'+u.status.toUpperCase()+'</span></td>'+
@@ -1413,7 +1407,7 @@ async function renderAutorizacoes(){
 }
 
 async function aprovarUsuario(cpf){
-  await sb.from('usuarios').update({status:'aprovado',aprovado_por:usuarioLogado.nome,aprovado_em:new Date().toISOString()}).eq('cpf',cpf);
+  await sb.from('usuarios').update({status:'aprovado',aprovado_por:usuarioLogado.nome}).eq('cpf',cpf);
   showToast('✅ Usuário aprovado');
   renderAutorizacoes();
 }
