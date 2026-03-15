@@ -2124,6 +2124,54 @@ function limparForm(){
   document.getElementById("btnConfirmar").classList.remove('disabled');
   let crmSt = document.getElementById("crmStatus");
   if(crmSt) crmSt.innerHTML='';
+  // Limpar rascunho salvo
+  clearFormDraft();
+}
+
+// ============ AUTO-SAVE RASCUNHO DO FORMULÁRIO ============
+const FORM_FIELDS = ['data','horario','tempo','sala','identificacao','paciente','dataNasc',
+  'medico','crm','especialidade','procedimento','codigoTuss',
+  'lateralidade','convenio','codigoConvenio','convenioGrupo','observacoes'];
+
+function getDraftKey(){
+  let cpf = usuarioLogado ? (usuarioLogado.cpf||'anon') : 'anon';
+  return 'rascunho_cc_'+cpf;
+}
+
+function autoSaveForm(){
+  try {
+    let draft = {};
+    FORM_FIELDS.forEach(id => {
+      let el = document.getElementById(id);
+      if(el) draft[id] = el.value;
+    });
+    draft.recursosAtivos = recursosAtivos || {};
+    localStorage.setItem(getDraftKey(), JSON.stringify(draft));
+  } catch(e){}
+}
+
+function autoRestoreForm(){
+  try {
+    let raw = localStorage.getItem(getDraftKey());
+    if(!raw) return;
+    let draft = JSON.parse(raw);
+    let hasData = false;
+    FORM_FIELDS.forEach(id => {
+      if(draft[id] && draft[id].trim && draft[id].trim()){
+        let el = document.getElementById(id);
+        if(el){ el.value = draft[id]; hasData = true; }
+      }
+    });
+    if(draft.recursosAtivos){
+      recursosAtivos = draft.recursosAtivos;
+      renderRecursosGrid();
+    }
+    if(hasData) showToast('📝 Rascunho restaurado');
+  } catch(e){}
+}
+
+function clearFormDraft(){
+  try { localStorage.removeItem(getDraftKey()); } catch(e){}
 }
 
 // ============ VALIDAÇÃO EM TEMPO REAL ============
@@ -2135,6 +2183,8 @@ function validarLive(){
   liveTimeout = setTimeout(_validarLive, 150);
   // Also refresh recursos grid counters
   renderRecursosGrid();
+  // Auto-save rascunho
+  autoSaveForm();
 }
 
 function _validarLive(){
@@ -2418,6 +2468,7 @@ async function salvar(){
     }
     limparForm();
     showToast('✓ Cirurgia agendada com sucesso!');
+    clearFormDraft();
     atualizarHeader();
     renderRecursosGrid();
   }
@@ -3757,6 +3808,9 @@ async function initApp(){
 
     console.log('✅ Sistema carregado: ' + dados.length + ' cirurgias, ' + MEDICOS_CACHE.length + ' médicos, ' + TUSS_CACHE.length + ' TUSS, ' + CONVENIO_CACHE.length + ' convênios');
     showToast('✅ Sistema conectado ao Supabase');
+
+    // Restaurar rascunho do formulário (se houver)
+    setTimeout(()=> autoRestoreForm(), 500);
   } catch(err) {
     console.error('Erro ao carregar:', err);
     document.getElementById("grade").innerHTML = '<p style="text-align:center;padding:40px;color:var(--danger)">Erro ao conectar ao Supabase. Verifique a conexão.</p>';
