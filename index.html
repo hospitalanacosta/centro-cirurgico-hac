@@ -909,7 +909,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 </div>
 
 <div class="tabs">
-  <div class="tab" data-tab="dashboard">📊 Dashboard</div>
+  <div class="tab" data-tab="dashboard" id="tabDashboard" style="display:none">📊 Dashboard</div>
   <div class="tab active" data-tab="form">Agendamento</div>
   <div class="tab" data-tab="grade">Mapa Cirúrgico</div>
   <div class="tab" data-tab="disponibilidade">Disponibilidade</div>
@@ -929,7 +929,10 @@ tr.suspenso td { color: #e65100; font-style: italic; }
   <div class="panel active" id="panel-form">
 
     <div class="card">
-      <div class="card-title">Dados da Cirurgia</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="card-title" style="margin:0">Dados da Cirurgia</div>
+        <button class="btn btn-outline" onclick="abrirBuscaEditar()" style="font-size:11px;padding:6px 14px">🔍 Buscar para Editar</button>
+      </div>
       <div class="form-grid">
 
         <div class="form-group">
@@ -984,7 +987,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 
         <div class="form-group" style="position:relative">
           <label>CRM <span style="font-size:10px;color:var(--accent);font-weight:400">(digite e pressione Tab ou Enter)</span></label>
-          <input type="text" id="crm" placeholder="Nº CRM" onkeydown="if(event.key==='Enter'||event.key==='Tab'){buscarCRM()}" onblur="buscarCRM()">
+          <input type="text" id="crm" placeholder="CRM ou Nome do médico" oninput="buscarCRM()" onkeydown="if(event.key==='Enter'||event.key==='Tab'){buscarCRM()}" onblur="setTimeout(()=>{let s=document.getElementById('crmStatus');if(s&&s.querySelector('div'))s.innerHTML='';},300)">
           <div id="crmStatus" style="font-size:10px;margin-top:2px;min-height:14px"></div>
         </div>
         <div class="form-group span2">
@@ -1023,6 +1026,30 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           </select>
         </div>
 
+      </div>
+      <!-- Procedimento Secundário -->
+      <div style="border-top:1px dashed var(--border);margin-top:14px;padding-top:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Procedimento Secundário (opcional)</div>
+        <div class="form-grid">
+          <div class="form-group" style="position:relative">
+            <label>Código TUSS 2</label>
+            <input type="text" id="codigoTuss2" placeholder="Código ou busca..." oninput="buscarTUSS2()" onfocus="buscarTUSS2()">
+            <div id="tussDropdown2" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:50;background:white;border:1.5px solid var(--primary);border-radius:0 0 6px 6px;max-height:200px;overflow-y:auto;box-shadow:var(--shadow-lg)"></div>
+          </div>
+          <div class="form-group span2">
+            <label>Descrição Procedimento Secundário</label>
+            <input type="text" id="procedimento2" placeholder="Preenchido ao selecionar TUSS">
+          </div>
+          <div class="form-group">
+            <label>Lateralidade 2</label>
+            <select id="lateralidade2">
+              <option value="">N/A</option>
+              <option value="D">Direita</option>
+              <option value="E">Esquerda</option>
+              <option value="B">Bilateral</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1145,6 +1172,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
               <th>CRM</th>
               <th>Procedimento</th>
               <th>TUSS</th>
+              <th>Proc. Secundário</th>
               <th>Convênio</th>
               <th>Grupo</th>
               <th>Tempo</th>
@@ -1169,7 +1197,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       <div class="form-grid">
         <div class="form-group">
           <label>CRM</label>
-          <input type="text" id="cadMedCRM" placeholder="Nº CRM">
+          <input type="text" id="cadMedCRM" placeholder="CRM ou Nome do médico">
         </div>
         <div class="form-group span2">
           <label>Nome Completo</label>
@@ -1220,6 +1248,24 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           <label>Data</label>
           <input type="date" id="dispData" onchange="renderDisponibilidade()">
         </div>
+        <div class="form-group">
+          <label>Horário (opcional)</label>
+          <input type="time" id="dispHora" onchange="renderDisponibilidade()" placeholder="HH:MM">
+        </div>
+        <div class="form-group">
+          <label>Sala (opcional)</label>
+          <select id="dispSala" onchange="renderDisponibilidade()">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="form-group" style="align-self:flex-end">
+          <button class="btn btn-outline" onclick="limparFiltrosDisp()" style="padding:8px 14px;font-size:12px">✕ Limpar Filtros</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary btn-sm" onclick="setDispMode('grade')" id="btnDispGrade" style="font-size:11px;padding:6px 14px">📊 Grade Visual</button>
+        <button class="btn btn-outline btn-sm" onclick="setDispMode('tabela')" id="btnDispTabela" style="font-size:11px;padding:6px 14px">📋 Tabela por Sala</button>
+        <button class="btn btn-outline btn-sm" onclick="setDispMode('recursos')" id="btnDispRecursos" style="font-size:11px;padding:6px 14px">⚙️ Recursos</button>
       </div>
     </div>
     <div id="dispContainer"></div>
@@ -1574,6 +1620,8 @@ function entrarSistema(){
   if(usuarioLogado.is_admin || usuarioLogado.perfil==='admin'){
     let tabAut = document.getElementById('tabAutorizacoes');
     if(tabAut) tabAut.style.display='';
+    let tabDash = document.getElementById('tabDashboard');
+    if(tabDash) tabDash.style.display='';
   }
 
   // Init app
@@ -1692,6 +1740,9 @@ const DB = {
       suspenso: c.suspenso || false,
       // Map snake_case → camelCase for frontend compatibility
       codigoTuss: c.codigo_tuss || '',
+      procedimento2: c.procedimento2 || '',
+      codigoTuss2: c.codigo_tuss2 || '',
+      lateralidade2: c.lateralidade2 || '',
       codigoConvenio: c.codigo_convenio || '',
       convenioGrupo: c.convenio_grupo || '',
       dataNasc: c.data_nasc || '',
@@ -1708,6 +1759,7 @@ const DB = {
       data_nasc: c.dataNasc || null, idade: c.idade,
       medico: c.medico, crm: c.crm, especialidade: c.especialidade,
       procedimento: c.procedimento, codigo_tuss: c.codigoTuss,
+      procedimento2: c.procedimento2||null, codigo_tuss2: c.codigoTuss2||null, lateralidade2: c.lateralidade2||null,
       lateralidade: c.lateralidade, convenio: c.convenio,
       codigo_convenio: c.codigoConvenio, convenio_grupo: c.convenioGrupo,
       recursos: c.recursos, observacoes: c.observacoes,
@@ -2008,9 +2060,8 @@ const RECURSOS_EQUIPAMENTOS = [
   {id:'ultracision', label:'Ultracision'},
   {id:'uti', label:'Reserva UTI'},
   {id:'transfusao', label:'Transfusão'},
-  {id:'sangue', label:'Reserva Sangue'},
   {id:'congelacao', label:'Congelação'},
-  {id:'rx', label:'Raio-X'},
+  {id:'alergia_latex', label:'Alergia a Látex'},
 ];
 const RECURSOS_MATERIAIS = [
   {id:'cx_adenoamigdalectomia', label:'Cx Adenoamigdalectomia'},
@@ -2082,9 +2133,17 @@ function toggleRecurso(el){
     if(max !== null){
       let usado = contarRecursoDia(diaList, r);
       if(usado >= max){
-        let regra = REGRAS.diario[r] || REGRAS.simultaneo_periodo[r] || {label:r};
-        showToast('🚫 '+regra.label+' esgotado ('+usado+'/'+max+')');
-        return;
+        // Para vídeo: se a sala atual já tem vídeo, permite (não consome extra)
+        if(r === 'video'){
+          let sala = document.getElementById("sala").value;
+          let salaJaTemVideo = diaList.some(c => c.sala === sala && c.recursos && c.recursos.video);
+          if(salaJaTemVideo){ /* OK - mesma sala, não consome extra */ }
+          else { showToast('🚫 Vídeo esgotado ('+usado+'/'+max+' salas)'); return; }
+        } else {
+          let regra = REGRAS.diario[r] || REGRAS.simultaneo_periodo[r] || {label:r};
+          showToast('🚫 '+regra.label+' esgotado ('+usado+'/'+max+')');
+          return;
+        }
       }
     }
   }
@@ -2111,6 +2170,9 @@ function coletarForm(){
     especialidade: document.getElementById("especialidade").value,
     procedimento: document.getElementById("procedimento").value,
     codigoTuss: document.getElementById("codigoTuss").value,
+    procedimento2: document.getElementById("procedimento2").value,
+    codigoTuss2: document.getElementById("codigoTuss2").value,
+    lateralidade2: document.getElementById("lateralidade2").value,
     lateralidade: document.getElementById("lateralidade").value,
     convenio: document.getElementById("convenio").value,
     codigoConvenio: document.getElementById("codigoConvenio").value,
@@ -2126,6 +2188,7 @@ function coletarForm(){
 function limparForm(){
   ['data','horario','tempo','sala','identificacao','paciente','dataNasc','idade',
    'medico','crm','especialidade','procedimento','codigoTuss',
+   'procedimento2','codigoTuss2','lateralidade2','lateralidade2',
    'lateralidade','convenio','codigoConvenio','convenioGrupo','observacoes'
   ].forEach(id => {
     let el = document.getElementById(id);
@@ -2140,6 +2203,13 @@ function limparForm(){
   document.getElementById("btnConfirmar").classList.remove('disabled');
   let crmSt = document.getElementById("crmStatus");
   if(crmSt) crmSt.innerHTML='';
+  // Reset edit mode
+  if(editandoId){
+    editandoId = null;
+    let btn = document.getElementById("btnConfirmar");
+    btn.innerText = '✓ Confirmar Agendamento';
+    btn.style.background = '';
+  }
   // Limpar rascunho salvo
   clearFormDraft();
 }
@@ -2147,6 +2217,7 @@ function limparForm(){
 // ============ AUTO-SAVE RASCUNHO DO FORMULÁRIO ============
 const FORM_FIELDS = ['data','horario','tempo','sala','identificacao','paciente','dataNasc',
   'medico','crm','especialidade','procedimento','codigoTuss',
+  'procedimento2','codigoTuss2','lateralidade2',
   'lateralidade','convenio','codigoConvenio','convenioGrupo','observacoes'];
 
 function getDraftKey(){
@@ -2294,6 +2365,15 @@ function _validarLive(){
     let usado = contarRecursoDia(diaList, 'cx_micro_laringe');
     if(usado === 0){
       alertas.push({tipo:'aviso', msg:'⚠️ Cx Micro Laringe: apenas 1/dia (tempo de esterilização)'});
+    }
+  }
+
+  // 5b. Alergia a Látex: cirurgia só pode iniciar às 07:00
+  if(recursosAtivos.alergia_latex){
+    if(horario && horario !== '07:00'){
+      alertas.push({tipo:'erro', msg:'🧤 Alergia a Látex: cirurgia deve iniciar às 07:00 (primeira do dia)'});
+    } else {
+      alertas.push({tipo:'info', msg:'🧤 Alergia a Látex selecionada — horário fixo 07:00'});
     }
   }
 
@@ -2462,8 +2542,50 @@ function fecharModal(){ document.getElementById("modalSim").classList.remove("sh
 // ============ SALVAR ============
 async function salvar(){
   let c = coletarForm();
-  if(!c.data||!c.horario||!c.sala||!c.paciente||!c.medico||!c.procedimento){
-    alert("Preencha os campos obrigatórios: Data, Horário, Sala, Paciente, Cirurgião e Procedimento.");
+
+  // Se está editando, fazer UPDATE
+  if(editandoId){
+    let btn = document.getElementById("btnConfirmar");
+    btn.disabled = true; btn.innerText = 'Atualizando...';
+
+    let updates = {
+      data: c.data, horario: c.horario, tempo: c.tempo, sala: c.sala,
+      identificacao: c.identificacao, paciente: c.paciente,
+      data_nasc: c.dataNasc || null, idade: c.idade,
+      medico: c.medico, crm: c.crm, especialidade: c.especialidade,
+      procedimento: c.procedimento, codigo_tuss: c.codigoTuss,
+      procedimento2: c.procedimento2 || null, codigo_tuss2: c.codigoTuss2 || null,
+      lateralidade: c.lateralidade, lateralidade2: c.lateralidade2 || null,
+      convenio: c.convenio, codigo_convenio: c.codigoConvenio,
+      convenio_grupo: c.convenioGrupo,
+      observacoes: c.observacoes, recursos: c.recursos || {}
+    };
+
+    await DB.updateCirurgia(editandoId, updates);
+    await DB.loadCirurgias();
+    limparForm();
+    editandoId = null;
+    btn.style.background = '';
+    btn.disabled = false; btn.innerText = '✓ Confirmar Agendamento';
+    showToast('✅ Cirurgia atualizada com sucesso!');
+    clearFormDraft();
+    atualizarHeader();
+    renderRecursosGrid();
+    return;
+  }
+
+  let camposFaltando = [];
+  if(!c.data) camposFaltando.push('Data');
+  if(!c.horario) camposFaltando.push('Horário');
+  if(!c.tempo) camposFaltando.push('Tempo Cirúrgico');
+  if(!c.sala) camposFaltando.push('Sala');
+  if(!c.identificacao) camposFaltando.push('Nº Identificação/Prontuário');
+  if(!c.paciente) camposFaltando.push('Nome do Paciente');
+  if(!c.crm && !c.medico) camposFaltando.push('CRM/Cirurgião');
+  if(!c.procedimento && !c.codigoTuss) camposFaltando.push('Procedimento/TUSS');
+  if(!c.codigoConvenio && !c.convenio) camposFaltando.push('Convênio');
+  if(camposFaltando.length > 0){
+    alert("Preencha os campos obrigatórios:\n\n• " + camposFaltando.join("\n• "));
     return;
   }
   let btn = document.getElementById("btnConfirmar");
@@ -2821,6 +2943,7 @@ function renderLista(){
       '<td>'+(c.crm||'-')+'</td>'+
       '<td>'+c.procedimento+'</td>'+
       '<td>'+(c.codigoTuss||'-')+'</td>'+
+      '<td style="font-size:10px">'+(c.procedimento2||'-')+'</td>'+
       '<td>'+(c.convenio||'-')+'</td>'+
       '<td>'+(c.convenioGrupo||'-')+'</td>'+
       '<td>'+(c.tempo||'-')+'min</td>'+
@@ -3013,14 +3136,14 @@ function renderDashboard(){
 
   // --- Recursos ---
   destroyChart('chartRecursos');
-  let recLabels = ['Vídeo','Escopia','Microscópio','Ultracision','UTI','Congelação','Transfusão'];
-  let recKeys = ['video','escopia','microscopio','ultracision','uti','congelacao','transfusao'];
+  let recLabels = ['Vídeo','Escopia','Microscópio','Ultracision','UTI','Congelação','Transfusão','Alergia Látex'];
+  let recKeys = ['video','escopia','microscopio','ultracision','uti','congelacao','transfusao','alergia_latex'];
   let recCounts = recKeys.map(k=> ativos.filter(c=>(c.recursos||{})[k]).length);
   dashCharts['chartRecursos'] = new Chart(document.getElementById('chartRecursos'), {
     type:'bar', plugins:[DATALABEL_PLUGIN],
     data:{ labels:recLabels,
       datasets:[{data:recCounts,
-        backgroundColor:['#1565c0','#6a1b9a','#00838f','#e65100','#c62828','#2e7d32','#ff8f00'], borderRadius:6}]},
+        backgroundColor:['#1565c0','#6a1b9a','#00838f','#e65100','#c62828','#2e7d32','#ff8f00','#d84315'], borderRadius:6}]},
     options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:Math.max(...recCounts)+5}}}
   });
 
@@ -3071,12 +3194,96 @@ async function renderRankColaboradores(ativos){
   container.innerHTML = html;
 }
 
+// ============ EDITAR CIRURGIA (BUSCAR E CARREGAR NO FORM) ============
+let editandoId = null;
+
+function abrirBuscaEditar(){
+  let termo = prompt("Buscar cirurgia por Nome do Paciente ou Nº Identificação:");
+  if(!termo || !termo.trim()) return;
+  termo = termo.trim().toLowerCase();
+
+  let resultados = dados.filter(c =>
+    !c.cancelado && !c.suspenso && (
+      (c.paciente||'').toLowerCase().includes(termo) ||
+      (c.identificacao||'').toLowerCase().includes(termo)
+    )
+  ).slice(0, 20);
+
+  if(resultados.length === 0){
+    alert("Nenhuma cirurgia encontrada para: " + termo);
+    return;
+  }
+
+  // Mostrar lista para selecionar
+  let msg = "Selecione a cirurgia (digite o número):\n\n";
+  resultados.forEach((c, i) => {
+    msg += (i+1) + ". " + formatDate(c.data) + " " + c.horario + " | " + c.sala + " | " + c.paciente + " | " + (c.procedimento||'').substring(0,40) + "\n";
+  });
+
+  let escolha = prompt(msg);
+  if(!escolha) return;
+  let idx = parseInt(escolha) - 1;
+  if(isNaN(idx) || idx < 0 || idx >= resultados.length){
+    alert("Opção inválida");
+    return;
+  }
+
+  carregarParaEditar(resultados[idx]);
+}
+
+function carregarParaEditar(cir){
+  editandoId = cir.id;
+
+  // Preencher todos os campos do formulário
+  document.getElementById("data").value = cir.data || '';
+  document.getElementById("horario").value = cir.horario || '';
+  document.getElementById("tempo").value = cir.tempo || '';
+  document.getElementById("sala").value = cir.sala || '';
+  document.getElementById("identificacao").value = cir.identificacao || '';
+  document.getElementById("paciente").value = cir.paciente || '';
+  document.getElementById("dataNasc").value = cir.dataNasc || cir.data_nasc || '';
+  document.getElementById("crm").value = cir.crm || '';
+  document.getElementById("medico").value = cir.medico || '';
+  document.getElementById("especialidade").value = cir.especialidade || '';
+  document.getElementById("procedimento").value = cir.procedimento || '';
+  document.getElementById("codigoTuss").value = cir.codigoTuss || cir.codigo_tuss || '';
+  document.getElementById("procedimento2").value = cir.procedimento2 || '';
+  document.getElementById("codigoTuss2").value = cir.codigoTuss2 || cir.codigo_tuss2 || '';
+  document.getElementById("lateralidade").value = cir.lateralidade || '';
+  document.getElementById("lateralidade2").value = cir.lateralidade2 || '';
+  document.getElementById("codigoConvenio").value = cir.codigoConvenio || cir.codigo_convenio || '';
+  document.getElementById("convenio").value = cir.convenio || '';
+  document.getElementById("convenioGrupo").value = cir.convenioGrupo || cir.convenio_grupo || '';
+  document.getElementById("observacoes").value = cir.observacoes || '';
+
+  // Recursos
+  recursosAtivos = cir.recursos ? {...cir.recursos} : {};
+  renderRecursosGrid();
+
+  // Calcular idade
+  if(cir.dataNasc || cir.data_nasc) calcularIdade();
+
+  // Mudar botão para "Atualizar"
+  let btn = document.getElementById("btnConfirmar");
+  btn.innerText = '✏️ Atualizar Agendamento';
+  btn.style.background = '#e65100';
+
+  // Scroll to top
+  document.getElementById("panel-form").scrollIntoView({behavior:'smooth'});
+
+  showToast('📝 Cirurgia carregada para edição: ' + cir.paciente);
+  autoSaveForm();
+}
+
 // ============ PDF MAPA ============
 function gerarPDF(){
   let dataAtual = document.getElementById("filtroData").value || new Date().toISOString().split('T')[0];
   let fData = prompt("Data do Mapa Cirúrgico (DD/MM/AAAA):", formatDate(dataAtual));
   if(!fData) return;
   if(fData.includes('/')){ let p=fData.split('/'); fData=p[2]+'-'+p[1]+'-'+p[0]; }
+
+  let respProc2 = prompt("Incluir Procedimento Secundário no mapa? (S/N):", "S");
+  let mostrarProc2 = respProc2 && respProc2.toUpperCase().startsWith("S");
 
   let lista = dados.filter(c=>!c.cancelado&&!c.suspenso&&c.data===fData);
   if(lista.length===0){ alert("Nenhuma cirurgia agendada para "+formatDate(fData)); return; }
@@ -3111,16 +3318,19 @@ function gerarPDF(){
     {key:'ident',    l:'Identificação',w:22, a:'c'},
     {key:'cnv',      l:'Cnv.',         w:12, a:'c'},
     {key:'grupo',    l:'Grupo',        w:16, a:'c'},
-    {key:'nome',     l:'Nome',         w:36, a:'l'},
+    {key:'nome',     l:'Nome',         w:mostrarProc2?32:36, a:'l'},
     {key:'dtNasc',   l:'Dt. Nasc.',    w:17, a:'c'},
     {key:'codProc',  l:'Cód. Proc.',   w:17, a:'c'},
-    {key:'cirurgia', l:'Cirurgia',     w:44, a:'l'},
-    {key:'cirurgiao',l:'Cirurgião',    w:40, a:'l'},
+    {key:'cirurgia', l:'Cirurgia',     w:mostrarProc2?34:44, a:'l'},
+  ];
+  if(mostrarProc2) C.push({key:'proc2', l:'Proc. Sec.', w:30, a:'l'});
+  C = C.concat([
+    {key:'cirurgiao',l:'Cirurgião',    w:mostrarProc2?30:40, a:'l'},
     {key:'lateral',  l:'Lat.',         w:10, a:'c'},
     {key:'congel',   l:'Cong.',        w:11, a:'c'},
     {key:'resUti',   l:'UTI',          w:11, a:'c'},
     {key:'transf',   l:'Transf.',      w:12, a:'c'},
-  ];
+  ]);
   // Calc X positions
   let xP = [mg];
   for(let i=0;i<C.length-1;i++) xP.push(xP[i]+C[i].w);
@@ -3170,10 +3380,15 @@ function gerarPDF(){
     if(dn && dn.includes('-')) dn = formatDate(dn);
 
     // Calculate wrapped lines for long texts
-    let cirurgiaLines = wrapText((c.procedimento||''), C[8].w);
-    let cirurgiaoLines = wrapText((c.medico||''), C[9].w);
-    let nomeLines = wrapText((c.paciente||''), C[5].w);
-    let maxLines = Math.max(cirurgiaLines.length, cirurgiaoLines.length, nomeLines.length);
+    let proc2Idx = C.findIndex(x=>x.key==='proc2');
+    let cirIdx = C.findIndex(x=>x.key==='cirurgia');
+    let crgIdx = C.findIndex(x=>x.key==='cirurgiao');
+    let nomeIdx = C.findIndex(x=>x.key==='nome');
+    let cirurgiaLines = wrapText((c.procedimento||''), C[cirIdx].w);
+    let cirurgiaoLines = wrapText((c.medico||''), C[crgIdx].w);
+    let nomeLines = wrapText((c.paciente||''), C[nomeIdx].w);
+    let proc2Lines = mostrarProc2 ? wrapText((c.procedimento2||''), C[proc2Idx].w) : [];
+    let maxLines = Math.max(cirurgiaLines.length, cirurgiaoLines.length, nomeLines.length, proc2Lines.length);
     let rowH = Math.max(4.5, maxLines * 3.5);
 
     if(y + rowH > ph-16){ doc.addPage(); y = 12; drawHdr(); doc.setFontSize(6); rn=0; }
@@ -3208,17 +3423,24 @@ function gerarPDF(){
       doc.setTextColor(0);
     }
 
-    tc(dn, xP[6], C[6].w, yMid);
-    tc((c.codigoTuss||c.codigo_tuss||''), xP[7], C[7].w, yMid);
-    tc(c.lateralidade||'0', xP[10], C[10].w, yMid);
-    tc(rec.congelacao?'Sim':'Não', xP[11], C[11].w, yMid);
-    tc(rec.uti?'Sim':'Não', xP[12], C[12].w, yMid);
-    tc(rec.transfusao?'Sim':'Não', xP[13], C[13].w, yMid);
+    let iDtNasc = C.findIndex(x=>x.key==='dtNasc');
+    let iCodProc = C.findIndex(x=>x.key==='codProc');
+    let iLat = C.findIndex(x=>x.key==='lateral');
+    let iCong = C.findIndex(x=>x.key==='congel');
+    let iUti = C.findIndex(x=>x.key==='resUti');
+    let iTransf = C.findIndex(x=>x.key==='transf');
+    tc(dn, xP[iDtNasc], C[iDtNasc].w, yMid);
+    tc((c.codigoTuss||c.codigo_tuss||''), xP[iCodProc], C[iCodProc].w, yMid);
+    tc(c.lateralidade||'0', xP[iLat], C[iLat].w, yMid);
+    tc(rec.congelacao?'Sim':'Não', xP[iCong], C[iCong].w, yMid);
+    tc(rec.uti?'Sim':'Não', xP[iUti], C[iUti].w, yMid);
+    tc(rec.transfusao?'Sim':'Não', xP[iTransf], C[iTransf].w, yMid);
 
     // Multi-line fields
-    nomeLines.forEach((ln,li)=> tl(ln, xP[5], yMid + li*3.5));
-    cirurgiaLines.forEach((ln,li)=> tl(ln, xP[8], yMid + li*3.5));
-    cirurgiaoLines.forEach((ln,li)=> tl(ln, xP[9], yMid + li*3.5));
+    nomeLines.forEach((ln,li)=> tl(ln, xP[nomeIdx], yMid + li*3.5));
+    cirurgiaLines.forEach((ln,li)=> tl(ln, xP[cirIdx], yMid + li*3.5));
+    if(mostrarProc2 && proc2Idx >= 0) proc2Lines.forEach((ln,li)=> tl(ln, xP[proc2Idx], yMid + li*3.5));
+    cirurgiaoLines.forEach((ln,li)=> tl(ln, xP[crgIdx], yMid + li*3.5));
 
     // Separator line
     doc.setDrawColor(210); doc.setLineWidth(0.1);
@@ -3311,42 +3533,162 @@ setInterval(updateClock, 1000);
 
 
 // ============ DISPONIBILIDADE ============
+let dispMode = 'grade';
+
+function setDispMode(mode){
+  dispMode = mode;
+  ['grade','tabela','recursos'].forEach(m=>{
+    let btn = document.getElementById('btnDisp'+m.charAt(0).toUpperCase()+m.slice(1));
+    if(btn){ btn.className = m===mode ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'; }
+  });
+  renderDisponibilidade();
+}
+
+function limparFiltrosDisp(){
+  document.getElementById('dispHora').value = '';
+  let sel = document.getElementById('dispSala');
+  if(sel) sel.selectedIndex = 0;
+  renderDisponibilidade();
+}
+
 function renderDisponibilidade(){
   let data = document.getElementById("dispData").value;
+  let horaFiltro = document.getElementById("dispHora")?.value||'';
+  let salaFiltro = document.getElementById("dispSala")?.value||'';
   let container = document.getElementById("dispContainer");
   if(!data){ container.innerHTML='<div class="card"><p style="text-align:center;color:var(--text-secondary);padding:20px">Selecione uma data acima</p></div>'; return; }
 
-  let diaList = cirurgiasDoDia(data, -1);
-  let html = '';
+  // Preencher select de salas
+  let selSala = document.getElementById("dispSala");
+  if(selSala && selSala.options.length <= 1){
+    for(let s=1;s<=9;s++){ if(salas[s]) selSala.innerHTML += '<option value="Sala '+s+'">Sala '+s+'</option>'; }
+  }
 
-  // Grade por sala e horário
-  html += '<div class="card"><div class="card-title">Salas — '+formatDate(data)+'</div>';
-  html += '<div style="overflow-x:auto"><table style="font-size:11px;width:100%"><thead><tr><th>Sala</th><th>Horário</th><th>Paciente</th><th>Cirurgião</th><th>Procedimento</th><th>Tempo</th><th>Convênio</th></tr></thead><tbody>';
+  let diaList = cirurgiasDoDia(data, -1);
+
+  // Horários padrão do CC: 07:00 às 19:00
+  let horaInicio = 420; // 07:00
+  let horaFim = 1140;   // 19:00
+
+  if(dispMode === 'grade'){
+    renderDispGrade(data, diaList, horaFiltro, salaFiltro, horaInicio, horaFim, container);
+  } else if(dispMode === 'tabela'){
+    renderDispTabela(data, diaList, salaFiltro, horaInicio, horaFim, container);
+  } else {
+    renderDispRecursos(data, diaList, container);
+  }
+}
+
+function renderDispGrade(data, diaList, horaFiltro, salaFiltro, horaInicio, horaFim, container){
+  let html = '<div class="card"><div class="card-title">📊 Grade de Disponibilidade — '+formatDate(data)+(horaFiltro?' às '+horaFiltro:'')+'</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">';
 
   for(let s=1;s<=9;s++){
     if(!salas[s]) continue;
     let salaName = 'Sala '+s;
+    if(salaFiltro && salaFiltro !== salaName) continue;
     let cirs = diaList.filter(c=>c.sala===salaName).sort((a,b)=>(a.horario||'').localeCompare(b.horario||''));
+
+    // Calcular slots livres
+    let slots = calcularSlots(cirs, horaInicio, horaFim);
+    let livres = slots.filter(sl=>sl.livre);
+    let ocupados = slots.filter(sl=>!sl.livre);
+
+    // Se filtro de hora, verificar especificamente
+    if(horaFiltro){
+      let hMin = toMin(horaFiltro);
+      let ocupadaAgora = ocupados.some(sl=> hMin >= sl.ini && hMin < sl.fim);
+      let bg = ocupadaAgora ? '#ffebee' : '#e8f5e9';
+      let brd = ocupadaAgora ? '#ef9a9a' : '#a5d6a7';
+      html += '<div style="background:'+bg+';border:2px solid '+brd+';padding:14px;border-radius:12px">';
+      html += '<div style="font-weight:800;font-size:13px;margin-bottom:6px">'+(ocupadaAgora?'🔴':'🟢')+' '+salaName+'</div>';
+      if(ocupadaAgora){
+        let conf = ocupados.find(sl=> hMin >= sl.ini && hMin < sl.fim);
+        html += '<div style="font-size:11px;color:var(--danger)">Ocupada: '+minToH(conf.ini)+'-'+minToH(conf.fim)+'</div>';
+        html += '<div style="font-size:10px;color:#888">'+conf.paciente+'</div>';
+      } else {
+        html += '<div style="font-size:11px;color:var(--primary)">Disponível neste horário</div>';
+      }
+      html += '</div>';
+      continue;
+    }
+
+    // Sem filtro de hora: mostrar timeline
+    let totalLivre = livres.reduce((s,sl)=>s+(sl.fim-sl.ini),0);
+    let bg = cirs.length===0 ? '#e8f5e9' : totalLivre > 0 ? '#fffde7' : '#ffebee';
+    let brd = cirs.length===0 ? '#a5d6a7' : totalLivre > 0 ? '#fff176' : '#ef9a9a';
+    html += '<div style="background:'+bg+';border:2px solid '+brd+';padding:14px;border-radius:12px">';
+    html += '<div style="font-weight:800;font-size:13px;margin-bottom:8px">'+(cirs.length===0?'🟢':totalLivre>0?'🟡':'🔴')+' '+salaName+'</div>';
+
     if(cirs.length===0){
-      html += '<tr><td style="font-weight:700">'+salaName+'</td><td colspan="6" style="color:#aaa">Livre</td></tr>';
+      html += '<div style="font-size:11px;color:var(--primary);font-weight:600">Livre o dia todo (07:00-19:00)</div>';
     } else {
-      cirs.forEach((c,j)=>{
-        html += '<tr><td style="font-weight:700">'+(j===0?salaName:'')+'</td>';
-        html += '<td>'+c.horario+'</td><td>'+c.paciente+'</td><td>'+c.medico+'</td>';
-        html += '<td>'+c.procedimento+'</td><td>'+(c.tempo||60)+'min</td>';
-        html += '<td>'+(c.convenio||'-')+'</td></tr>';
+      // Mostrar slots livres
+      if(livres.length > 0){
+        html += '<div style="font-size:10px;font-weight:700;color:var(--primary);margin-bottom:4px;text-transform:uppercase">Horários Livres:</div>';
+        livres.forEach(sl=>{
+          let dur = sl.fim - sl.ini;
+          html += '<div style="font-size:11px;color:var(--primary);padding:2px 0">🟢 '+minToH(sl.ini)+' - '+minToH(sl.fim)+' <span style="color:#888">('+dur+'min)</span></div>';
+        });
+      }
+      // Mostrar slots ocupados
+      html += '<div style="font-size:10px;font-weight:700;color:var(--danger);margin-top:6px;margin-bottom:4px;text-transform:uppercase">Ocupados:</div>';
+      ocupados.forEach(sl=>{
+        html += '<div style="font-size:10px;color:#888;padding:1px 0">🔴 '+minToH(sl.ini)+'-'+minToH(sl.fim)+' '+sl.paciente+'</div>';
+      });
+    }
+    html += '</div>';
+  }
+  html += '</div></div>';
+  container.innerHTML = html;
+}
+
+function renderDispTabela(data, diaList, salaFiltro, horaInicio, horaFim, container){
+  let html = '<div class="card"><div class="card-title">📋 Salas — '+formatDate(data)+'</div>';
+  html += '<div style="overflow-x:auto"><table style="font-size:11px;width:100%"><thead><tr><th>Sala</th><th>Horário</th><th>Status</th><th>Paciente</th><th>Cirurgião</th><th>Procedimento</th><th>Proc. Secundário</th><th>Tempo</th></tr></thead><tbody>';
+
+  for(let s=1;s<=9;s++){
+    if(!salas[s]) continue;
+    let salaName = 'Sala '+s;
+    if(salaFiltro && salaFiltro !== salaName) continue;
+    let cirs = diaList.filter(c=>c.sala===salaName).sort((a,b)=>(a.horario||'').localeCompare(b.horario||''));
+    let slots = calcularSlots(cirs, horaInicio, horaFim);
+
+    if(slots.length === 0){
+      html += '<tr><td style="font-weight:700">'+salaName+'</td><td>07:00 - 19:00</td><td><span style="color:var(--primary);font-weight:700">🟢 LIVRE</span></td><td colspan="4" style="color:#aaa">Dia inteiro disponível</td></tr>';
+    } else {
+      let first = true;
+      slots.forEach(sl=>{
+        html += '<tr style="'+(sl.livre?'background:#f0faf0':'')+'">';
+        html += '<td style="font-weight:700">'+(first?salaName:'')+'</td>';
+        html += '<td style="font-family:JetBrains Mono,monospace;font-size:11px">'+minToH(sl.ini)+' - '+minToH(sl.fim)+'</td>';
+        if(sl.livre){
+          let dur = sl.fim - sl.ini;
+          html += '<td><span style="color:var(--primary);font-weight:700">🟢 LIVRE</span></td>';
+          html += '<td colspan="4" style="color:var(--primary);font-size:10px">Disponível — '+dur+' minutos</td><td></td>';
+        } else {
+          html += '<td><span style="color:var(--danger);font-weight:600;font-size:10px">🔴 OCUPADO</span></td>';
+          html += '<td>'+sl.paciente+'</td><td>'+sl.medico+'</td>';
+          html += '<td style="font-size:10px">'+sl.procedimento+'</td>';
+          html += '<td style="font-size:10px">'+(sl.proc2||'-')+'</td>';
+          html += '<td>'+(sl.fim-sl.ini)+'min</td>';
+        }
+        html += '</tr>';
+        first = false;
       });
     }
   }
   html += '</tbody></table></div></div>';
+  container.innerHTML = html;
+}
 
-  // Recursos
-  html += '<div class="card"><div class="card-title">Equipamentos e Materiais — '+formatDate(data)+'</div>';
+function renderDispRecursos(data, diaList, container){
+  let html = '<div class="card"><div class="card-title">⚙️ Equipamentos e Materiais — '+formatDate(data)+'</div>';
   html += '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:2px;font-size:12px">';
-  html += '<div style="font-weight:700;padding:6px;background:var(--primary);color:white">Recurso</div>';
-  html += '<div style="font-weight:700;padding:6px;background:var(--primary);color:white;text-align:center">Limite</div>';
-  html += '<div style="font-weight:700;padding:6px;background:var(--primary);color:white;text-align:center">Usado</div>';
-  html += '<div style="font-weight:700;padding:6px;background:var(--primary);color:white;text-align:center">Disponível</div>';
+  html += '<div style="font-weight:700;padding:8px;background:var(--primary);color:white;border-radius:4px 0 0 0">Recurso</div>';
+  html += '<div style="font-weight:700;padding:8px;background:var(--primary);color:white;text-align:center">Limite</div>';
+  html += '<div style="font-weight:700;padding:8px;background:var(--primary);color:white;text-align:center">Usado</div>';
+  html += '<div style="font-weight:700;padding:8px;background:var(--primary);color:white;text-align:center;border-radius:0 4px 0 0">Disponível</div>';
 
   let allRecursos = [...RECURSOS_EQUIPAMENTOS, ...RECURSOS_MATERIAIS];
   allRecursos.forEach(r=>{
@@ -3356,14 +3698,38 @@ function renderDisponibilidade(){
     let disp = max - usado;
     let bg = disp<=0?'var(--danger-light)':disp===1?'var(--warning-light)':'#fafbfd';
     let desativ = equipDesativados[r.id];
-    html += '<div style="padding:6px;background:'+bg+';border-bottom:1px solid var(--border)">'+r.label+(desativ?' <span style="color:var(--danger);font-size:10px">(INDISP.)</span>':'')+'</div>';
-    html += '<div style="padding:6px;text-align:center;background:'+bg+';border-bottom:1px solid var(--border)">'+max+'</div>';
-    html += '<div style="padding:6px;text-align:center;background:'+bg+';border-bottom:1px solid var(--border);font-weight:700">'+usado+'</div>';
-    html += '<div style="padding:6px;text-align:center;background:'+bg+';border-bottom:1px solid var(--border);font-weight:700;'+(disp<=0?'color:var(--danger)':disp===1?'color:var(--warning)':'color:var(--primary)')+'">'+disp+'</div>';
+    html += '<div style="padding:8px;background:'+bg+';border-bottom:1px solid var(--border)">'+r.label+(desativ?' <span style="color:var(--danger);font-size:10px">(INDISP.)</span>':'')+'</div>';
+    html += '<div style="padding:8px;text-align:center;background:'+bg+';border-bottom:1px solid var(--border)">'+max+'</div>';
+    html += '<div style="padding:8px;text-align:center;background:'+bg+';border-bottom:1px solid var(--border);font-weight:700">'+usado+'</div>';
+    html += '<div style="padding:8px;text-align:center;background:'+bg+';border-bottom:1px solid var(--border);font-weight:700;'+(disp<=0?'color:var(--danger)':disp===1?'color:var(--warning)':'color:var(--primary)')+'">'+disp+'</div>';
   });
   html += '</div></div>';
-
   container.innerHTML = html;
+}
+
+function calcularSlots(cirs, horaInicio, horaFim){
+  if(cirs.length === 0) return [];
+  let slots = [];
+  let sorted = [...cirs].sort((a,b)=>(a.horario||'').localeCompare(b.horario||''));
+  let cursor = horaInicio;
+
+  sorted.forEach(c=>{
+    let ci = toMin(c.horario);
+    let cf = ci + (c.tempo||60);
+    // Slot livre antes desta cirurgia
+    if(ci > cursor && ci - cursor >= 30){
+      slots.push({livre:true, ini:cursor, fim:ci});
+    }
+    // Slot ocupado
+    slots.push({livre:false, ini:ci, fim:cf, paciente:c.paciente||'', medico:c.medico||'', procedimento:c.procedimento||'', proc2:c.procedimento2||''});
+    cursor = Math.max(cursor, cf);
+  });
+
+  // Slot livre após a última cirurgia
+  if(cursor < horaFim && horaFim - cursor >= 30){
+    slots.push({livre:true, ini:cursor, fim:horaFim});
+  }
+  return slots;
 }
 
 // ============ EQUIPAMENTOS (DESATIVAR/ATIVAR) ============
@@ -3405,17 +3771,45 @@ function construirIndice(){
 }
 
 function buscarCRM(){
-  let crm = document.getElementById("crm").value.trim();
+  let val = document.getElementById("crm").value.trim();
   let statusEl = document.getElementById("crmStatus");
-  if(!crm){ statusEl.innerHTML = ''; return; }
+  if(!val){ statusEl.innerHTML = ''; document.getElementById("medico").value = ''; return; }
 
-  let found = indiceCRM[crm];
+  // Busca por CRM exato
+  let found = indiceCRM[val];
   if(found){
     document.getElementById("medico").value = found.nome;
     document.getElementById("especialidade").value = found.especialidade || '';
     statusEl.innerHTML = '<span style="color:var(--primary)">✓ ' + found.nome + '</span>';
-  } else {
-    statusEl.innerHTML = '<span style="color:var(--warning)">⚠ CRM não encontrado. Preencha manualmente — será salvo ao confirmar.</span>';
+    return;
+  }
+
+  // Busca por nome (se digitou texto, não número)
+  if(isNaN(val) || val.length > 8){
+    let resultados = MEDICOS_CACHE.filter(m => m.nome.toLowerCase().includes(val.toLowerCase())).slice(0,8);
+    if(resultados.length > 0){
+      let html = '<div style="background:white;border:1.5px solid var(--primary);border-radius:8px;max-height:200px;overflow-y:auto;position:absolute;z-index:50;width:300px;box-shadow:var(--shadow-lg)">';
+      resultados.forEach(m => {
+        html += '<div onclick="selecionarMedico(\''+m.crm+'\')" style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0f0f0;transition:background 0.15s" onmouseover="this.style.background=\'#e8f5e9\'" onmouseout="this.style.background=\'white\'">';
+        html += '<b>'+m.nome+'</b> <span style="color:var(--text-secondary)">CRM: '+m.crm+'</span></div>';
+      });
+      html += '</div>';
+      statusEl.innerHTML = html;
+      return;
+    }
+  }
+
+  statusEl.innerHTML = '<span style="color:var(--warning)">⚠ Não encontrado. Preencha manualmente — será salvo ao confirmar.</span>';
+}
+
+function selecionarMedico(crm){
+  let med = indiceCRM[crm];
+  if(med){
+    document.getElementById("crm").value = med.crm;
+    document.getElementById("medico").value = med.nome;
+    document.getElementById("especialidade").value = med.especialidade || '';
+    document.getElementById("crmStatus").innerHTML = '<span style="color:var(--primary)">✓ ' + med.nome + '</span>';
+    autoSaveForm();
   }
 }
 
@@ -3769,7 +4163,45 @@ function selecionarTUSS(cod, desc){
 document.addEventListener('click', function(e){
   if(!e.target.closest('#codigoTuss') && !e.target.closest('#tussDropdown'))
     document.getElementById("tussDropdown").style.display='none';
+  if(!e.target.closest('#codigoTuss2') && !e.target.closest('#tussDropdown2')){
+    let dd2 = document.getElementById("tussDropdown2");
+    if(dd2) dd2.style.display='none';
+  }
 });
+
+// ============ BUSCAR TUSS 2 (Procedimento Secundário) ============
+let tussTimeout2 = null;
+function buscarTUSS2(){ clearTimeout(tussTimeout2); tussTimeout2 = setTimeout(_buscarTUSS2, 200); }
+
+function _buscarTUSS2(){
+  let q = document.getElementById("codigoTuss2").value.trim();
+  let dd = document.getElementById("tussDropdown2");
+  if(!q || q.length < 2){ dd.style.display='none'; return; }
+
+  let ql = q.toLowerCase();
+  let results = TUSS_CACHE.filter(t => t.codigo.includes(q) || t.descricao.toLowerCase().includes(ql)).slice(0, 8);
+
+  if(results.length === 0){ dd.style.display='none'; return; }
+
+  dd.style.display='block';
+  dd.innerHTML = results.map(function(t){
+    var cod = t.codigo;
+    var desc = t.descricao.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    var descShort = t.descricao.substring(0,80);
+    return '<div style="padding:6px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #eee;display:flex;gap:8px" '+
+      'onmousedown="selecionarTUSS2(&quot;'+cod+'&quot;,&quot;'+desc+'&quot;)" '+
+      'onmouseover="this.style.background=\'#e8f5e9\'" onmouseout="this.style.background=\'white\'">'+
+      '<span style="font-family:JetBrains Mono;font-weight:700;color:var(--primary);min-width:80px">'+cod+'</span>'+
+      '<span style="color:var(--text-secondary)">'+descShort+'</span></div>';
+  }).join('');
+}
+
+function selecionarTUSS2(cod, desc){
+  document.getElementById("codigoTuss2").value = cod;
+  document.getElementById("procedimento2").value = desc;
+  document.getElementById("tussDropdown2").style.display='none';
+  autoSaveForm();
+}
 
 // ============ BUSCAR CONVÊNIO ============
 function buscarConvenio(){
