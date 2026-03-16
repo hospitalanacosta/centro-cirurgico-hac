@@ -573,9 +573,10 @@ body {
   border-radius: 3px;
   font-weight: 600;
 }
-.tag-recurso { background: #fff3e0; color: #e65100; }
+.tag-recurso { background: #fce4ec; color: #cb324c; }
 .tag-convenio { background: #e8f5e9; color: #2e7d32; }
-.tag-extra { background: #fce4ec; color: #c62828; }
+.tag-extra { background: #e8f5e9; color: #2e7d32; }
+.tag-grupo { background: #fff3e0; color: #e65100; font-weight:700; }
 
 .cirurgia-card .actions {
   display: flex;
@@ -2071,6 +2072,47 @@ function grupoConvenio(c){
   return 'extra';
 }
 
+// Cores padronizadas por convênio
+const CONV_CORES = {
+  'ana costa':    {bg:'#e3f2fd', cor:'#0d47a1'},
+  'amil':         {bg:'#e3f2fd', cor:'#0d47a1'},
+  'acs':          {bg:'#e3f2fd', cor:'#0d47a1'},
+  'unimed':       {bg:'#e8f5e9', cor:'#2e7d32'},
+  'bradesco':     {bg:'#fce4ec', cor:'#b71c1c'},
+  'sulamerica':   {bg:'#fff3e0', cor:'#e65100'},
+  'sul america':  {bg:'#fff3e0', cor:'#e65100'},
+  'particular':   {bg:'#f3e5f5', cor:'#6a1b9a'},
+  'porto seguro': {bg:'#e0f7fa', cor:'#00695c'},
+  'cassi':        {bg:'#fff8e1', cor:'#f57f17'},
+  'geap':         {bg:'#efebe9', cor:'#4e342e'},
+  'notredame':    {bg:'#f1f8e9', cor:'#33691e'},
+  'intermedica':  {bg:'#f1f8e9', cor:'#33691e'},
+  'hapvida':      {bg:'#fff3e0', cor:'#bf360c'},
+  'care plus':    {bg:'#e8eaf6', cor:'#283593'},
+  'omint':        {bg:'#e8eaf6', cor:'#283593'},
+};
+const CONV_PALETTE = [
+  {bg:'#e8eaf6',cor:'#283593'},{bg:'#fce4ec',cor:'#880e4f'},
+  {bg:'#e0f2f1',cor:'#004d40'},{bg:'#f3e5f5',cor:'#4a148c'},
+  {bg:'#fff8e1',cor:'#ff6f00'},{bg:'#e1f5fe',cor:'#01579b'},
+  {bg:'#fbe9e7',cor:'#bf360c'},{bg:'#f9fbe7',cor:'#827717'},
+];
+function corConvenio(nome){
+  if(!nome) return {bg:'#f5f5f5', cor:'#757575'};
+  let nl = nome.toLowerCase();
+  for(let k in CONV_CORES){
+    if(nl.includes(k)) return CONV_CORES[k];
+  }
+  let hash = 0;
+  for(let i=0;i<nl.length;i++) hash = ((hash<<5)-hash)+nl.charCodeAt(i);
+  return CONV_PALETTE[Math.abs(hash) % CONV_PALETTE.length];
+}
+function tagConvenio(nome){
+  if(!nome) return '';
+  let c = corConvenio(nome);
+  return '<span class="tag" style="background:'+c.bg+';color:'+c.cor+'">'+nome+'</span>';
+}
+
 // ============ REGRAS DO CENTRO CIRÚRGICO ============
 const REGRAS = {
   intervalo_min: 60,
@@ -3010,7 +3052,7 @@ function desenhar(){
         let recursos = c.recursos ? Object.keys(c.recursos).filter(k=>c.recursos[k]) : [];
 
         let card = document.createElement("div");
-        card.className = "cirurgia-card" + (isGrupo?" grupo":"");
+        card.className = "cirurgia-card" + (isGrupo?" grupo":" extra");
         card.setAttribute("draggable","true");
         card.addEventListener('dragstart', function(e){ onDragStart(e, idx); });
         card.addEventListener('dragend', onDragEnd);
@@ -3022,7 +3064,7 @@ function desenhar(){
           '<div class="detalhe">Dr(a). '+c.medico+(c.crm?' | CRM: '+c.crm:'')+'</div>'+
           '<div class="detalhe">'+c.procedimento+(c.codigoTuss?' | TUSS: '+c.codigoTuss:'')+'</div>'+
           '<div class="tags">'+
-            (isGrupo?'<span class="tag tag-convenio">GRUPO</span>':'<span class="tag tag-extra">EXTRA</span>')+
+            (isGrupo?'<span class="tag tag-grupo">GRUPO</span>':'<span class="tag tag-extra">EXTRA</span>')+
             (c.convenio?'<span class="tag tag-convenio">'+c.convenio+'</span>':'')+
             recursos.map(r=>'<span class="tag tag-recurso">'+r.toUpperCase()+'</span>').join('')+
           '</div>'+
