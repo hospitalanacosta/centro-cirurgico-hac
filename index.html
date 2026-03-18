@@ -597,6 +597,8 @@ body {
 }
 
 /* LISTA */
+.tabela-wrapper table td { max-width: 180px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.4; }
+.tabela-wrapper table td:nth-child(9),.tabela-wrapper table td:nth-child(11) { max-width: 140px; font-size: 10px; }
 .tabela-wrapper { overflow-x: auto; }
 table {
   width: 100%;
@@ -995,6 +997,9 @@ tr.suspenso td { color: #e65100; font-style: italic; }
   <div class="tab" data-tab="tuss">TUSS</div>
   <div class="tab" data-tab="equipamentos">Equipamentos</div>
   <div class="tab" data-tab="salas">Salas</div>
+  <div class="tab" data-tab="hemodinamica">Hemodinâmica</div>
+  <div class="tab" data-tab="logs" id="tabLogs" style="display:none">📋 Logs</div>
+  <div class="tab" data-tab="adminRecursos" id="tabAdminRecursos" style="display:none">⚙️ Config. Recursos</div>
   <div class="tab" data-tab="autorizacoes" id="tabAutorizacoes" style="display:none">🔒 Autorizações</div>
 </div>
 </div>
@@ -1003,6 +1008,32 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 
   <!-- ========== PAINEL AGENDAMENTO ========== -->
   <div class="panel active" id="panel-form">
+
+
+    <div class="card" style="border-left:4px solid var(--accent)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div class="form-grid" style="flex:1;min-width:300px">
+          <div class="form-group span2" style="max-width:520px">
+            <label>Especialidade da Cirurgia <span style="color:var(--danger);font-size:10px">* obrigatório</span></label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <div style="flex:1;position:relative" id="especWrap">
+                <input type="text" id="especInput" placeholder="Selecione ou pesquise..."
+                  onfocus="abrirDropEspec()" oninput="filtrarDropEspec(this.value)" autocomplete="off"
+                  style="width:100%;cursor:pointer">
+                <input type="hidden" id="especialidadeCirurgia">
+                <div id="especDrop" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:60;background:white;border:1.5px solid var(--primary);border-radius:0 0 8px 8px;max-height:250px;overflow-y:auto;box-shadow:var(--shadow-lg)"></div>
+              </div>
+              <button class="btn btn-sm" onclick="limparEspec()" style="height:36px;padding:0 10px;background:transparent;color:var(--text-secondary);border:1.5px solid var(--border);font-size:16px" title="Limpar">✕</button>
+              <button class="btn btn-outline btn-sm" onclick="irParaMedicos()" style="height:36px;white-space:nowrap" title="Gerenciar especialidades na aba Médicos">+ Nova</button>
+            </div>
+          </div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 16px;border:1.5px solid var(--warning);border-radius:20px;font-size:12px;font-weight:600;color:var(--warning);user-select:none" title="Reserva sem cadastro completo — exige apenas data, horário, sala e médico">
+          <input type="checkbox" id="flutuante" onchange="toggleFlutuante(this.checked)" style="accent-color:var(--warning)">
+          Reserva Flutuante
+        </label>
+      </div>
+    </div>
 
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -1072,7 +1103,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         </div>
         <div class="form-group">
           <label>Especialidade</label>
-          <input type="text" id="especialidade" placeholder="Ex: Ortopedia">
+          <select id="especialidade"></select>
         </div>
 
       </div>
@@ -1219,8 +1250,12 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       <div class="card-title">Filtros da Lista</div>
       <div class="filtro-row">
         <div class="form-group">
-          <label>Data</label>
-          <input type="date" id="filtroListaData" onchange="renderLista()">
+          <label>Data Início</label>
+          <input type="date" id="filtroListaDataIni" onchange="renderLista()">
+        </div>
+        <div class="form-group">
+          <label>Data Fim</label>
+          <input type="date" id="filtroListaDataFim" onchange="renderLista()">
         </div>
         <div class="form-group">
           <label>Status</label>
@@ -1229,6 +1264,14 @@ tr.suspenso td { color: #e65100; font-style: italic; }
             <option value="agendado">Agendados</option>
             <option value="cancelado">Cancelados</option>
             <option value="suspenso">Suspensos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Grupo Convênio</label>
+          <select id="filtroListaGrupo" onchange="renderLista()">
+            <option value="">Todos</option>
+            <option value="grupo">Grupo (Amil/Ana Costa)</option>
+            <option value="extra">Mercado (Extra)</option>
           </select>
         </div>
       </div>
@@ -1282,13 +1325,28 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         </div>
         <div class="form-group">
           <label>Especialidade</label>
-          <input type="text" id="cadMedEspec" placeholder="Ex: Ortopedia">
+          <select id="cadMedEspec"></select>
         </div>
       </div>
       <div class="btn-row">
         <button class="btn btn-success" onclick="cadastrarMedico()">✓ Cadastrar Médico</button>
         <button class="btn btn-outline" onclick="exportarMedicosExcel()">📥 Exportar Excel Atualizado</button>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Gerenciar Especialidades</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+        Adicione novas especialidades que ficarão disponíveis no agendamento e no cadastro de médicos.
+      </p>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <div class="form-group" style="flex:1;max-width:400px">
+          <label>Nova Especialidade</label>
+          <input type="text" id="novaEspecialidade" placeholder="Ex: CIRURGIA ROBÓTICA" style="text-transform:uppercase">
+        </div>
+        <button class="btn btn-primary" onclick="adicionarEspecialidade()" style="height:36px;margin-bottom:4px">+ Adicionar Especialidade</button>
+      </div>
+      <div id="listaEspecialidades" style="margin-top:12px"></div>
     </div>
 
     <div class="card">
@@ -1471,6 +1529,117 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         Clique para ativar ou desativar salas. Salas fechadas não aparecem no agendamento.
       </p>
       <div class="salas-row" id="painelSalas"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">⏱️ Fechamento Programado de Salas</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+        Programe o fechamento de uma sala por período. Ela reabre automaticamente após a data final.
+      </p>
+      <div class="form-grid">
+        <div class="form-group"><label>Sala</label><select id="fechSala"><option value="">Selecione</option></select></div>
+        <div class="form-group"><label>Data Início</label><input type="date" id="fechDataIni"></div>
+        <div class="form-group"><label>Data Fim</label><input type="date" id="fechDataFim"></div>
+        <div class="form-group"><label>Motivo</label><input type="text" id="fechMotivo" placeholder="Ex: Manutenção"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-warning" onclick="programarFechamento()">Programar Fechamento</button>
+      </div>
+      <div id="listaFechamentos" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+
+  <!-- ========== PAINEL HEMODINÂMICA ========== -->
+  <div class="panel" id="panel-hemodinamica">
+    <div class="card">
+      <div class="card-title">🫀 Sala de Hemodinâmica</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+        Mapa separado da Hemodinâmica. Equipamentos habilitados: Reserva UTI, Transfusão Sanguínea e Observações.
+      </p>
+      <div class="filtro-row">
+        <div class="form-group"><label>Data</label><input type="date" id="hemoData" onchange="renderHemodinamica()"></div>
+        <button class="btn btn-outline" onclick="gerarPDFHemo()" style="margin-top:16px">📄 PDF Mapa Hemodinâmica</button>
+      </div>
+      <div id="hemoMapa" style="margin-top:16px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Agendar Hemodinâmica</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Data</label><input type="date" id="hemoAgData"></div>
+        <div class="form-group"><label>Horário</label><input type="time" id="hemoAgHorario"></div>
+        <div class="form-group"><label>Tempo (min)</label><input type="number" id="hemoAgTempo" placeholder="60"></div>
+        <div class="form-group"><label>Paciente</label><input type="text" id="hemoAgPaciente" placeholder="Nome"></div>
+        <div class="form-group"><label>Prontuário</label><input type="text" id="hemoAgId" placeholder="Nº prontuário"></div>
+        <div class="form-group" style="position:relative">
+          <label>CRM / Médico <span style="font-size:10px;color:var(--accent)">(digite CRM ou nome)</span></label>
+          <input type="text" id="hemoAgCRM" placeholder="CRM ou nome..." oninput="buscarCRMHemo()" autocomplete="off">
+          <div id="crmDropdownHemo" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:50;background:white;border:1.5px solid var(--primary);border-radius:0 0 6px 6px;max-height:200px;overflow-y:auto;box-shadow:var(--shadow-lg)"></div>
+        </div>
+        <div class="form-group">
+          <label>Médico</label>
+          <input type="text" id="hemoAgMedico" placeholder="Preenchido auto" readonly style="background:#f0f3f8">
+        </div>
+        <div class="form-group span2" style="position:relative">
+          <label>Código TUSS <span style="font-size:10px;color:var(--accent)">(digite código ou busque por nome)</span></label>
+          <input type="text" id="hemoAgTuss" placeholder="Código ou busca..." oninput="buscarTUSSHemo()" onfocus="buscarTUSSHemo()">
+          <div id="tussDropdownHemo" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:50;background:white;border:1.5px solid var(--primary);border-radius:0 0 6px 6px;max-height:200px;overflow-y:auto;box-shadow:var(--shadow-lg)"></div>
+        </div>
+        <div class="form-group span2">
+          <label>Procedimento</label>
+          <input type="text" id="hemoAgProc" placeholder="Preenchido ao selecionar TUSS">
+        </div>
+        <div class="form-group">
+          <label>Recursos</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <label style="font-size:11px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="hemoUTI"> Reserva UTI</label>
+            <label style="font-size:11px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="hemoSangue"> Transfusão</label>
+          </div>
+        </div>
+        <div class="form-group full"><label>Observações</label><textarea id="hemoAgObs" rows="2" placeholder="Observações..."></textarea></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="salvarHemodinamica()">Agendar Hemodinâmica</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========== PAINEL LOGS ========== -->
+  <div class="panel" id="panel-logs">
+    <div class="card">
+      <div class="card-title">📋 Log de Alterações</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+        Registro de todas as ações: criação, edição, cancelamento, suspensão e reativação de cirurgias.
+      </p>
+      <div class="filtro-row">
+        <div class="form-group"><label>Data</label><input type="date" id="logData" onchange="renderLogs()"></div>
+        <div class="form-group"><label>Tipo</label>
+          <select id="logTipo" onchange="renderLogs()">
+            <option value="">Todos</option>
+            <option value="criacao">Criação</option>
+            <option value="edicao">Edição</option>
+            <option value="cancelamento">Cancelamento</option>
+            <option value="suspensao">Suspensão</option>
+            <option value="reativacao">Reativação</option>
+          </select>
+        </div>
+      </div>
+      <div class="tabela-wrapper" style="margin-top:12px">
+        <table><thead><tr><th>Data/Hora</th><th>Tipo</th><th>Usuário</th><th>Paciente</th><th>Detalhes</th></tr></thead>
+        <tbody id="tabelaLogs"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========== PAINEL ADMIN RECURSOS ========== -->
+  <div class="panel" id="panel-adminRecursos">
+    <div class="card">
+      <div class="card-title">⚙️ Configuração de Recursos e Equipamentos</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+        Administradores podem alterar os limites de equipamentos e materiais. Alterações ficam registradas no log.
+      </p>
+      <div id="adminRecursosGrid"></div>
     </div>
   </div>
 
@@ -1757,6 +1926,22 @@ async function fazerCadastro(){
   msgEl.className='msg ok'; msgEl.innerText='✅ Cadastro enviado! Aguarde aprovação de um administrador.';
 }
 
+async function mostrarEsqueciSenha(){
+  let email = await modalPrompt('Digite o e-mail cadastrado para recuperar a senha:', '', '🔑 Recuperar Senha');
+  if(!email) return;
+  try {
+    let {data,error} = await sb.from('usuarios').select('cpf,nome').eq('email',email).single();
+    if(error || !data){
+      await modalAlert('E-mail não encontrado no sistema.', 'Erro');
+      return;
+    }
+    // Note: Full password reset requires Supabase Auth integration
+    await modalAlert('Solicitação registrada.\n\nEntre em contato com o administrador informando:\n- Nome: '+data.nome+'\n- CPF: '+data.cpf+'\n\nO administrador poderá redefinir sua senha.', 'Recuperação de Senha');
+  } catch(e){
+    await modalAlert('Erro ao buscar e-mail. Contate o administrador.', 'Erro');
+  }
+}
+
 function entrarSistema(){
   document.getElementById('loginOverlay').classList.add('hidden');
   document.getElementById('mainSystem').style.display='';
@@ -1772,6 +1957,10 @@ function entrarSistema(){
     if(tabAut) tabAut.style.display='';
     let tabDash = document.getElementById('tabDashboard');
     if(tabDash) tabDash.style.display='';
+    let tabLogs = document.getElementById('tabLogs');
+    if(tabLogs) tabLogs.style.display='';
+    let tabAdmRec = document.getElementById('tabAdminRecursos');
+    if(tabAdmRec) tabAdmRec.style.display='';
   }
 
   // Init app
@@ -1811,6 +2000,12 @@ async function renderAutorizacoes(){
     } else if(u.status==='rejeitado'){
       acoes = '<button class="btn btn-success btn-sm" onclick="aprovarUsuario(\''+u.cpf+'\')">Aprovar</button>';
     }
+    if(u.status==='aprovado' && u.perfil!=='admin'){
+      acoes += ' <button class="btn btn-danger btn-sm" onclick="bloquearUsuario(\''+u.cpf+'\')">Bloquear</button>';
+    }
+    if(u.status==='bloqueado'){
+      acoes += ' <button class="btn btn-success btn-sm" onclick="aprovarUsuario(\''+u.cpf+'\')">Desbloquear</button>';
+    }
     acoes += u.perfil==='admin'?' <span class="tag tag-recurso">ADMIN</span>':'';
     return '<tr><td>'+u.nome+'</td><td>'+u.cpf+'</td><td>'+(u.email||'-')+'</td><td>'+(u.setor||'-')+'</td>'+
       '<td>'+new Date(u.criado_em).toLocaleString('pt-BR')+'</td>'+
@@ -1834,6 +2029,14 @@ async function rejeitarUsuario(cpf){
 }
 
 
+async function bloquearUsuario(cpf){
+  if(await modalConfirm('Bloquear este usuário? Ele não poderá mais acessar o sistema.', '⚠️ Bloquear Usuário')){
+    await sb.from('usuarios').update({status:'bloqueado'}).eq('cpf',cpf);
+    showToast('🚫 Usuário bloqueado');
+    renderAutorizacoes();
+  }
+}
+
 // ============ TABS (executa imediatamente) ============
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -1846,10 +2049,14 @@ document.querySelectorAll('.tab').forEach(tab => {
       if(tab.dataset.tab==='grade') desenhar();
       if(tab.dataset.tab==='dashboard'){ initDashFilters(); renderDashboard(); }
       if(tab.dataset.tab==='lista') renderLista();
-      if(tab.dataset.tab==='medicos') renderMedicos();
+      if(tab.dataset.tab==='medicos'){ renderMedicos(); renderListaEspecialidades(); }
       if(tab.dataset.tab==='convenios') renderConvenios();
       if(tab.dataset.tab==='tuss') renderTUSSList();
       if(tab.dataset.tab==='disponibilidade') renderDisponibilidade();
+      if(tab.dataset.tab==='hemodinamica') renderHemodinamica();
+      if(tab.dataset.tab==='logs'){ document.getElementById('logData').value = hojeLocal(); renderLogs(); }
+      if(tab.dataset.tab==='adminRecursos') renderAdminRecursos();
+      if(tab.dataset.tab==='salas'){ renderFechamentos(); carregarSelectFechSala(); }
       if(tab.dataset.tab==='equipamentos') renderEquipamentos();
       if(tab.dataset.tab==='autorizacoes') renderAutorizacoes();
     } catch(e){ console.warn('Tab render error:', e); }
@@ -1904,6 +2111,7 @@ const DB = {
 
   async salvarCirurgia(c){
     const row = {
+      especialidade_cirurgia: c.especialidadeCirurgia, flutuante: c.flutuante||false,
       data: c.data, horario: c.horario, tempo: c.tempo, sala: c.sala,
       identificacao: c.identificacao, paciente: c.paciente,
       data_nasc: c.dataNasc || null, idade: c.idade,
@@ -1912,6 +2120,7 @@ const DB = {
       procedimento2: c.procedimento2||null, codigo_tuss2: c.codigoTuss2||null, lateralidade2: c.lateralidade2||null,
       lateralidade: c.lateralidade, convenio: c.convenio,
       codigo_convenio: c.codigoConvenio, convenio_grupo: c.convenioGrupo,
+      especialidade_cirurgia: c.especialidadeCirurgia||null, flutuante: c.flutuante||false,
       recursos: c.recursos, observacoes: c.observacoes,
       cancelado: false, suspenso: false,
     };
@@ -2348,6 +2557,8 @@ function toggleRecurso(el){
 // ============ COLETAR FORM ============
 function coletarForm(){
   return {
+    especialidadeCirurgia: document.getElementById("especialidadeCirurgia").value,
+    flutuante: document.getElementById("flutuante").checked,
     data: document.getElementById("data").value,
     horario: document.getElementById("horario").value,
     tempo: parseInt(document.getElementById("tempo").value)||0,
@@ -2377,7 +2588,7 @@ function coletarForm(){
 }
 
 function limparForm(){
-  ['data','horario','tempo','sala','identificacao','paciente','dataNasc','idade',
+  ['especialidadeCirurgia','especInput','data','horario','tempo','sala','identificacao','paciente','dataNasc','idade',
    'medico','crm','especialidade','procedimento','codigoTuss',
    'procedimento2','codigoTuss2','lateralidade2','lateralidade2',
    'lateralidade','convenio','codigoConvenio','convenioGrupo','observacoes'
@@ -2407,7 +2618,7 @@ function limparForm(){
 }
 
 // ============ AUTO-SAVE RASCUNHO DO FORMULÁRIO ============
-const FORM_FIELDS = ['data','horario','tempo','sala','identificacao','paciente','dataNasc',
+const FORM_FIELDS = ['especialidadeCirurgia','especInput','data','horario','tempo','sala','identificacao','paciente','dataNasc',
   'medico','crm','especialidade','procedimento','codigoTuss',
   'procedimento2','codigoTuss2','lateralidade2',
   'lateralidade','convenio','codigoConvenio','convenioGrupo','observacoes'];
@@ -2467,6 +2678,17 @@ function validarLive(){
 }
 
 function _validarLive(){
+  // Check sala closure
+  let cData = document.getElementById("data").value;
+  let cSala = document.getElementById("sala").value;
+  if(cData && cSala && typeof salaFechadaNaData === 'function' && salaFechadaNaData(cSala, cData)){
+    let fech = salaFechamentos.find(f=>f.sala===cSala && cData>=f.dataIni && cData<=f.dataFim);
+    let msg = cSala+' fechada nesta data'+(fech?' ('+fech.motivo+')':'');
+    document.getElementById("validationBar").className='validation-bar show has-error';
+    document.getElementById("vbItems").innerHTML='<div class="vb-item" style="background:var(--danger-light);color:var(--danger)">'+msg+'</div>';
+    return;
+  }
+
   let data = document.getElementById("data").value;
   let horario = document.getElementById("horario").value;
   let tempo = parseInt(document.getElementById("tempo").value)||0;
@@ -2731,6 +2953,276 @@ function mostrarAlertas(alertas){
 
 function fecharModal(){ document.getElementById("modalSim").classList.remove("show"); }
 
+
+
+// ============ ESPECIALIDADES DINÂMICAS ============
+const ESPECIALIDADES_BASE = [
+  'ORTOPEDIA',
+  'NEURO-CIRURGIA',
+  'CIRURGIA GERAL E LAPAROSCOPICA',
+  'UROLOGIA',
+  'OBSTETRICIA',
+  'CIRURGIA VASCULAR',
+  'GINECOLOGIA',
+  'OTORRINOLARINGOLOGIA',
+  'ENDOSCOPIA DIGESTIVA',
+  'CIRURGIA GINECOLOGICA',
+  'CIRURGIA TORAX',
+  'TRAUMATOLOGIA',
+  'CIRURGIA CARDIOVASCULAR',
+  'CIRURGIA BARIATRICA',
+  'CIRURGIA CABECA-PESCOCO',
+  'CIRURGIA PEDIATRICA',
+  'CANCEROLOGIA',
+  'CLINICA MEDICA',
+  'CIRURGIA TR.BUCOMAX FACIAL',
+  'CIRURGIA PLASTICA',
+  'SERVICO DE MAMA',
+  'HISTEROSCOPIA CIRURGICA',
+  'PROCTOLOGIA',
+  'CIRURGIA APARELHO DIGESTIVO/PROCTO',
+  'ONCOLOGIA',
+  'MASTOLOGIA',
+  'CIRURGIA CARDIACA',
+  'GASTROENTEROLOGIA',
+  'BRONCOSCOPIA',
+  'NEUROLOGIA',
+  'CARDIOLOGIA',
+  'HEMODINAMICA',
+  'ANGIOLOGIA',
+  'ANESTESIOLOGIA',
+  'AMB. MARCAPASSO CARDIACO',
+  'OFTALMOLOGIA',
+  'PLANEJAMENTO REPRODUTIVO GINECOLOGI',
+  'CLINICA DA DOR',
+  'PEDIATRIA',
+  'LAPAROSCOPIA GINECOLOGICA',
+  'ODONTO-PEDIATRIA',
+  'U.T.I. CARDIOLOGICA',
+  'ODONTOLOGIA',
+  'CARDIOLOGIA HEMODINAMICA',
+  'HEMATOLOGIA CLINICA',
+  'REPRODUCAO HUMANA',
+  'CIR. ONCOLOGICA COLORRETAL/PROCTO',
+  'DIAGNOSTICO POR IMAGEM'
+];
+
+let especialidadesCustom = JSON.parse(localStorage.getItem('especialidades_custom') || '[]');
+
+function getEspecialidades(){
+  let todas = [...ESPECIALIDADES_BASE, ...especialidadesCustom];
+  todas.sort((a,b) => a.localeCompare(b, 'pt-BR'));
+  return [...new Set(todas)];
+}
+
+function popularSelectsEspecialidade(){
+  let lista = getEspecialidades();
+  // Populate regular selects (cadMedEspec, especialidade)
+  ['cadMedEspec', 'especialidade'].forEach(id => {
+    let sel = document.getElementById(id);
+    if(!sel) return;
+    let valorAtual = sel.value;
+    sel.innerHTML = '<option value="">Selecione a especialidade...</option>';
+    lista.forEach(e => {
+      sel.innerHTML += '<option value="'+e+'">'+e+'</option>';
+    });
+    if(valorAtual) sel.value = valorAtual;
+  });
+  // Custom searchable dropdown for agendamento
+  renderDropEspec('');
+}
+
+function renderDropEspec(filtro){
+  let dd = document.getElementById('especDrop');
+  if(!dd) return;
+  let lista = getEspecialidades();
+  let f = (filtro||'').toUpperCase();
+  let filtrada = f ? lista.filter(e => e.toUpperCase().includes(f)) : lista;
+  dd.innerHTML = filtrada.map(e =>
+    '<div style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #eee;transition:background 0.1s" '+
+    'onmousedown="selecionarEspec(\''+e.replace(/'/g,"\\'")+'\')" '+
+    'onmouseover="this.style.background=\'#e8f5e9\'" onmouseout="this.style.background=\'white\'">'+e+'</div>'
+  ).join('');
+  if(filtrada.length===0) dd.innerHTML='<div style="padding:10px;font-size:12px;color:var(--text-secondary);text-align:center">Nenhuma encontrada</div>';
+}
+
+function abrirDropEspec(){
+  let dd = document.getElementById('especDrop');
+  dd.style.display='block';
+  renderDropEspec(document.getElementById('especInput').value);
+}
+
+function filtrarDropEspec(val){
+  renderDropEspec(val);
+  document.getElementById('especDrop').style.display='block';
+  // Se limpou, limpa a seleção
+  if(!val){
+    document.getElementById('especialidadeCirurgia').value='';
+    validarLive();
+  }
+}
+
+function selecionarEspec(nome){
+  document.getElementById('especInput').value = nome;
+  document.getElementById('especialidadeCirurgia').value = nome;
+  document.getElementById('especDrop').style.display='none';
+  validarLive();
+}
+
+function limparEspec(){
+  document.getElementById('especInput').value = '';
+  document.getElementById('especialidadeCirurgia').value = '';
+  validarLive();
+}
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#especWrap')){
+    let dd = document.getElementById('especDrop');
+    if(dd) dd.style.display='none';
+  }
+});
+
+function adicionarEspecialidade(){
+  let input = document.getElementById('novaEspecialidade');
+  if(!input) return;
+  let nome = input.value.trim().toUpperCase();
+  if(!nome){ showToast('Digite o nome da especialidade'); return; }
+  let todas = getEspecialidades();
+  if(todas.includes(nome)){
+    showToast('Especialidade já existe na lista');
+    input.value = '';
+    return;
+  }
+  especialidadesCustom.push(nome);
+  localStorage.setItem('especialidades_custom', JSON.stringify(especialidadesCustom));
+  popularSelectsEspecialidade();
+  renderListaEspecialidades();
+  input.value = '';
+  showToast('✓ Especialidade "'+nome+'" adicionada');
+}
+
+function irParaMedicos(){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector('[data-tab="medicos"]').classList.add('active');
+  document.getElementById('panel-medicos').classList.add('active');
+  document.getElementById('novaEspecialidade').focus();
+  showToast('Adicione a nova especialidade aqui');
+}
+
+function renderListaEspecialidades(){
+  let el = document.getElementById('listaEspecialidades');
+  if(!el) return;
+  if(especialidadesCustom.length === 0){
+    el.innerHTML = '<p style="color:var(--text-secondary);font-size:12px">Nenhuma especialidade adicionada manualmente. As '+ESPECIALIDADES_BASE.length+' especialidades base estão sempre disponíveis.</p>';
+    return;
+  }
+  el.innerHTML = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px">Especialidades Adicionadas ('+especialidadesCustom.length+')</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    especialidadesCustom.map((e,i) =>
+      '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--primary-light);border:1px solid var(--primary);border-radius:16px;font-size:11px;font-weight:600;color:var(--primary)">'+
+      e+' <span onclick="removerEspecialidade('+i+')" style="cursor:pointer;font-size:14px;line-height:1;opacity:0.6" title="Remover">✕</span></span>'
+    ).join('') + '</div>';
+}
+
+function removerEspecialidade(i){
+  especialidadesCustom.splice(i, 1);
+  localStorage.setItem('especialidades_custom', JSON.stringify(especialidadesCustom));
+  popularSelectsEspecialidade();
+  renderListaEspecialidades();
+  showToast('Especialidade removida');
+}
+
+// ============ FLUTUANTE TOGGLE ============
+function toggleFlutuante(on){
+  let opcionais = ['identificacao','paciente','dataNasc','procedimento','codigoTuss','codigoConvenio','convenio','convenioGrupo','idade','procedimento2','codigoTuss2'];
+  let obrigatorios = ['especInput','data','horario','tempo','sala','crm','medico'];
+  opcionais.forEach(id=>{
+    let el = document.getElementById(id);
+    if(!el) return;
+    if(on){
+      el.style.opacity='0.4';
+      el.style.background='#f5f5f5';
+      el.setAttribute('data-flutuante-skip','1');
+    } else {
+      el.style.opacity='1';
+      el.style.background='';
+      el.removeAttribute('data-flutuante-skip');
+    }
+  });
+  obrigatorios.forEach(id=>{
+    let el = document.getElementById(id);
+    if(!el) return;
+    if(on){
+      el.style.background='#fff3e0';
+      el.style.borderColor='#e65100';
+    } else {
+      el.style.background='';
+      el.style.borderColor='';
+    }
+  });
+  if(on) showToast('🔄 Modo flutuante: campos em laranja são obrigatórios');
+}
+
+// ============ VALIDAÇÃO ID DUPLICADO ============
+function verificarIdDuplicado(identificacao, data, excluirId){
+  if(!identificacao) return null;
+  let dup = dados.find(c => !c.cancelado && !c.suspenso && c.identificacao === identificacao && c.data === data && c.id !== excluirId);
+  return dup || null;
+}
+
+// ============ REGRA INTERVALO 1H / 30MIN ============
+function verificarIntervalo(data, horario, tempo, sala, especialidadeCir, excluirId){
+  if(!data || !horario || !tempo || !sala) return null;
+  let ini = toMin(horario);
+  let fim = ini + (parseInt(tempo)||60);
+  let diaList = dados.filter(c => c.data===data && c.sala===sala && !c.cancelado && !c.suspenso && c.id !== excluirId);
+
+  for(let c of diaList){
+    if(!c.horario) continue;
+    let cIni = toMin(c.horario);
+    let cFim = cIni + (parseInt(c.tempo)||60);
+    let mesmaEspec = especialidadeCir && c.especialidadeCirurgia && especialidadeCir === c.especialidadeCirurgia;
+    let intervaloMin = mesmaEspec ? 30 : 60;
+
+    // Check gap between surgeries
+    if(fim <= cIni){
+      let gap = cIni - fim;
+      if(gap < intervaloMin) return {conflito:c, gap:gap, necessario:intervaloMin, mesmaEspec:mesmaEspec};
+    } else if(ini >= cFim){
+      let gap = ini - cFim;
+      if(gap < intervaloMin) return {conflito:c, gap:gap, necessario:intervaloMin, mesmaEspec:mesmaEspec};
+    }
+    // Overlap
+    if(ini < cFim && fim > cIni){
+      return {conflito:c, gap:0, necessario:intervaloMin, overlap:true, mesmaEspec:mesmaEspec};
+    }
+  }
+  return null;
+}
+
+// ============ PROLONGAMENTO: EMPURRAR CIRURGIAS ============
+async function empurrarCirurgias(data, sala, horarioOriginal, tempoOriginal, tempoNovo, excluirId){
+  if(tempoNovo <= tempoOriginal) return;
+  let diff = tempoNovo - tempoOriginal;
+  let fimOriginal = toMin(horarioOriginal) + tempoOriginal;
+
+  let posteriores = dados.filter(c =>
+    c.data===data && c.sala===sala && !c.cancelado && !c.suspenso &&
+    c.id !== excluirId && toMin(c.horario) >= fimOriginal
+  ).sort((a,b) => toMin(a.horario) - toMin(b.horario));
+
+  for(let c of posteriores){
+    let novoIni = toMin(c.horario) + diff;
+    let novoHorario = minToH(novoIni);
+    await DB.updateCirurgia(c.id, {horario: novoHorario});
+  }
+  if(posteriores.length > 0){
+    showToast('⏩ '+posteriores.length+' cirurgia(s) empurrada(s) em '+diff+' minutos');
+  }
+}
+
 // ============ SALVAR ============
 async function salvar(){
   let c = coletarForm();
@@ -2741,6 +3233,7 @@ async function salvar(){
     btn.disabled = true; btn.innerText = 'Atualizando...';
 
     let updates = {
+      especialidade_cirurgia: c.especialidadeCirurgia, flutuante: c.flutuante||false,
       data: c.data, horario: c.horario, tempo: c.tempo, sala: c.sala,
       identificacao: c.identificacao, paciente: c.paciente,
       data_nasc: c.dataNasc || null, idade: c.idade,
@@ -2753,6 +3246,11 @@ async function salvar(){
       observacoes: c.observacoes, recursos: c.recursos || {}
     };
 
+    // Verificar se tempo aumentou -> empurrar cirurgias
+    let cirOriginal = dados.find(x=>x.id===editandoId);
+    if(cirOriginal && c.tempo > (cirOriginal.tempo||60)){
+      await empurrarCirurgias(c.data, c.sala, cirOriginal.horario, cirOriginal.tempo||60, c.tempo, editandoId);
+    }
     await DB.updateCirurgia(editandoId, updates);
     await DB.loadCirurgias();
     limparForm();
@@ -2761,24 +3259,48 @@ async function salvar(){
     btn.disabled = false; btn.innerText = '✓ Confirmar Agendamento';
     document.getElementById("btnCancelarEdicao").style.display = 'none';
     showToast('✅ Cirurgia atualizada com sucesso!');
+    registrarLog('edicao', c.paciente, 'Atualização: '+c.procedimento+' | '+c.sala+' '+c.horario);
     clearFormDraft();
     atualizarHeader();
     renderRecursosGrid();
     return;
   }
 
+  let isFlutuante = c.flutuante;
   let camposFaltando = [];
+  if(!c.especialidadeCirurgia) camposFaltando.push('Especialidade da Cirurgia');
   if(!c.data) camposFaltando.push('Data');
   if(!c.horario) camposFaltando.push('Horário');
   if(!c.tempo) camposFaltando.push('Tempo Cirúrgico');
   if(!c.sala) camposFaltando.push('Sala');
-  if(!c.identificacao) camposFaltando.push('Nº Identificação/Prontuário');
-  if(!c.paciente) camposFaltando.push('Nome do Paciente');
+  if(!isFlutuante){
+    if(!c.identificacao) camposFaltando.push('Nº Identificação/Prontuário');
+    if(!c.paciente) camposFaltando.push('Nome do Paciente');
+    if(!c.procedimento && !c.codigoTuss) camposFaltando.push('Procedimento/TUSS');
+    if(!c.codigoConvenio && !c.convenio) camposFaltando.push('Convênio');
+  }
   if(!c.crm && !c.medico) camposFaltando.push('CRM/Cirurgião');
-  if(!c.procedimento && !c.codigoTuss) camposFaltando.push('Procedimento/TUSS');
-  if(!c.codigoConvenio && !c.convenio) camposFaltando.push('Convênio');
   if(camposFaltando.length > 0){
     await modalAlert("Preencha os campos obrigatórios:\n\n• " + camposFaltando.join("\n• "), 'Campos Obrigatórios');
+    return;
+  }
+  // Verificar ID duplicado
+  if(c.identificacao){
+    let dup = verificarIdDuplicado(c.identificacao, c.data, null);
+    if(dup){
+      await modalAlert("Já existe uma cirurgia agendada para o prontuário "+c.identificacao+" nesta data ("+dup.paciente+" - "+dup.sala+" "+dup.horario+").\n\nNão é permitido duplicar o mesmo ID na mesma data.", 'ID Duplicado');
+      return;
+    }
+  }
+  // Verificar intervalo entre cirurgias
+  let intervaloCheck = verificarIntervalo(c.data, c.horario, c.tempo, c.sala, c.especialidadeCirurgia, null);
+  if(intervaloCheck && !intervaloCheck.overlap){
+    let msgInt = intervaloCheck.mesmaEspec ?
+      "Intervalo mínimo de 30min (mesma especialidade) não atendido." :
+      "Intervalo mínimo de 1h entre cirurgias diferentes não atendido.";
+    msgInt += "\n\nConflito com: "+intervaloCheck.conflito.paciente+" ("+intervaloCheck.conflito.horario+")";
+    msgInt += "\nIntervalo atual: "+intervaloCheck.gap+"min | Necessário: "+intervaloCheck.necessario+"min";
+    await modalAlert(msgInt, 'Intervalo Insuficiente');
     return;
   }
   let btn = document.getElementById("btnConfirmar");
@@ -2799,6 +3321,7 @@ async function salvar(){
     }
     limparForm();
     showToast('✓ Cirurgia agendada com sucesso!');
+    registrarLog('criacao', c.paciente, c.procedimento+' | '+c.sala+' '+c.horario+' | '+c.convenio);
     clearFormDraft();
     atualizarHeader();
     renderRecursosGrid();
@@ -2834,6 +3357,7 @@ async function cancelar(i){
   if(motivo !== null){
     await DB.updateCirurgia(dados[i].id, {cancelado:true, motivo_cancelamento:motivo});
     await DB.loadCirurgias();
+    registrarLog('cancelamento', dados[i].paciente, 'Motivo: '+motivo+' | '+dados[i].sala+' '+dados[i].horario);
     showToast('Cirurgia cancelada: '+dados[i].paciente);
     desenhar(); renderLista();
   }
@@ -2843,6 +3367,7 @@ async function suspender(i){
   if(motivo !== null){
     await DB.updateCirurgia(dados[i].id, {suspenso:true, motivo_suspensao:motivo});
     await DB.loadCirurgias();
+    registrarLog('suspensao', dados[i].paciente, 'Motivo: '+motivo+' | '+dados[i].sala+' '+dados[i].horario);
     showToast('Cirurgia suspensa: '+dados[i].paciente);
     desenhar(); renderLista();
   }
@@ -3103,14 +3628,19 @@ function desenhar(){
 
 // ============ LISTA ============
 function renderLista(){
-  let fData = document.getElementById("filtroListaData").value;
+  let fDataIni = document.getElementById("filtroListaDataIni").value;
+  let fDataFim = document.getElementById("filtroListaDataFim").value;
   let fStatus = document.getElementById("filtroListaStatus").value;
+  let fGrupo = document.getElementById("filtroListaGrupo").value;
 
   let lista = [...dados];
-  if(fData) lista = lista.filter(c=>c.data===fData);
+  if(fDataIni) lista = lista.filter(c=>c.data>=fDataIni);
+  if(fDataFim) lista = lista.filter(c=>c.data<=fDataFim);
   if(fStatus==='agendado') lista = lista.filter(c=>!c.cancelado&&!c.suspenso);
   if(fStatus==='cancelado') lista = lista.filter(c=>c.cancelado);
   if(fStatus==='suspenso') lista = lista.filter(c=>c.suspenso);
+  if(fGrupo==='grupo') lista = lista.filter(c=>grupoConvenio(c)==='grupo');
+  if(fGrupo==='extra') lista = lista.filter(c=>grupoConvenio(c)==='extra');
 
   lista.sort((a,b)=>(a.data+a.horario).localeCompare(b.data+b.horario));
 
@@ -3185,6 +3715,40 @@ const DATALABEL_PLUGIN = { id:'dl', afterDatasetsDraw(chart){
   });
 }};
 
+const DONUT_LABEL_PLUGIN = { id:'donutLabels', afterDraw(chart){
+  if(chart.config.type !== 'doughnut') return;
+  let ctx = chart.ctx;
+  let meta = chart.getDatasetMeta(0);
+  let total = chart.data.datasets[0].data.reduce((s,v)=>s+v,0);
+  if(!total) return;
+  meta.data.forEach((arc,i)=>{
+    let val = chart.data.datasets[0].data[i];
+    if(!val || val/total < 0.05) return;
+    let pct = ((val/total)*100).toFixed(1)+'%';
+    let mid = (arc.startAngle + arc.endAngle) / 2;
+    let cx = (chart.chartArea.left + chart.chartArea.right) / 2;
+    let cy = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+    let midR = arc.outerRadius * 0.78;
+    let mx = cx + Math.cos(mid) * midR;
+    let my = cy + Math.sin(mid) * midR;
+    ctx.save();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 14px DM Sans';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(val, mx, my - 7);
+    ctx.font = '11px DM Sans';
+    ctx.fillText(pct, mx, my + 8);
+    ctx.restore();
+  });
+}};
+
+function formatDateShort(d){
+  if(!d) return '-';
+  let p = d.split('-');
+  return p[2]+'/'+p[1];
+}
+
 function initDashFilters(){
   let anos = new Set();
   dados.forEach(c=>{ if(c.data) anos.add(c.data.substring(0,4)); });
@@ -3240,10 +3804,10 @@ function renderDashboard(){
   let diasOrd = Object.keys(porDia).sort();
   dashCharts['chartPorDia'] = new Chart(document.getElementById('chartPorDia'), {
     type:'bar', plugins:[DATALABEL_PLUGIN],
-    data:{ labels:diasOrd.map(d=>formatDate(d)),
+    data:{ labels:diasOrd.map(d=>formatDateShort(d)),
       datasets:[{label:'Cirurgias', data:diasOrd.map(d=>porDia[d]),
         backgroundColor:'rgba(46,125,50,0.75)', borderColor:'#1b5e20', borderWidth:1, borderRadius:6}]},
-    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:Math.max(...diasOrd.map(d=>porDia[d]))+5},x:{ticks:{maxRotation:45,font:{size:9}}}}}
+    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:Math.max(...diasOrd.map(d=>porDia[d]))+5},x:{ticks:{maxRotation:45,minRotation:0,font:{size:10}}}}}
   });
 
   // --- Distribuição por Grupo (donut com totais e %) ---
@@ -3253,12 +3817,14 @@ function renderDashboard(){
   let gLabels = Object.keys(porGrupo);
   let gTotal = gLabels.reduce((s,g)=>s+porGrupo[g],0);
   dashCharts['chartPorGrupo'] = new Chart(document.getElementById('chartPorGrupo'), {
-    type:'doughnut',
-    data:{ labels:gLabels.map(g=>g+' ('+porGrupo[g]+' - '+((porGrupo[g]/gTotal)*100).toFixed(1)+'%)'),
+    type:'doughnut', plugins:[DONUT_LABEL_PLUGIN],
+    data:{ labels:gLabels,
       datasets:[{data:gLabels.map(g=>porGrupo[g]),
         backgroundColor:gLabels.map(g=>coresGrupo[g]||'#90a4ae'), borderWidth:3, borderColor:'#fff'}]},
-    options:{responsive:true, cutout:'60%',
-      plugins:{legend:{position:'bottom', labels:{font:{size:12,weight:'bold'},padding:14,usePointStyle:true,pointStyleWidth:12}}}}
+    options:{responsive:true, cutout:'60%', layout:{padding:10},
+      plugins:{legend:{position:'bottom', labels:{font:{size:12,weight:'bold'},padding:14,usePointStyle:true,pointStyleWidth:12,
+        generateLabels:function(chart){ return chart.data.labels.map((l,i)=>({text:l, fillStyle:chart.data.datasets[0].backgroundColor[i], strokeStyle:'#fff', lineWidth:2, pointStyle:'circle', hidden:false, index:i})); }
+      }},tooltip:{callbacks:{label:function(ctx){let t=ctx.dataset.data.reduce((s,v)=>s+v,0);return ctx.label+': '+ctx.raw+' ('+((ctx.raw/t)*100).toFixed(1)+'%)';}}}}}
   });
 
   // --- Top 10 Cirurgiões (MAIÚSCULO) ---
@@ -3280,7 +3846,7 @@ function renderDashboard(){
   let topProc = Object.entries(porProc).sort((a,b)=>b[1]-a[1]).slice(0,10);
   dashCharts['chartTopProc'] = new Chart(document.getElementById('chartTopProc'), {
     type:'bar', plugins:[DATALABEL_PLUGIN],
-    data:{ labels:topProc.map(p=>p[0].substring(0,32)),
+    data:{ labels:topProc.map(p=>p[0].toUpperCase().substring(0,35)),
       datasets:[{data:topProc.map(p=>p[1]), backgroundColor:coresBarra, borderRadius:6}]},
     options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:topProc.length?topProc[0][1]+3:5},y:{ticks:{font:{size:11}}}}}
   });
@@ -3311,7 +3877,7 @@ function renderDashboard(){
           let conv = CONVENIO_CACHE.find(x=>x.sigla===cv[0]||x.nome===cv[0]);
           return coresGrupo[conv?conv.grupo:'']||'#78909c';
         }), borderRadius:6}]},
-    options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:topConv.length?topConv[0][1]+3:5},y:{ticks:{font:{size:10}}}}}
+    options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:topConv.length?topConv[0][1]+5:5},y:{ticks:{font:{size:10}}}}}
   });
 
   // --- Status ---
@@ -3418,6 +3984,9 @@ function carregarParaEditar(cir){
   editandoId = cir.id;
 
   // Preencher todos os campos do formulário
+  document.getElementById("especialidadeCirurgia").value = cir.especialidade_cirurgia || cir.especialidadeCirurgia || '';
+  document.getElementById("especInput").value = cir.especialidade_cirurgia || cir.especialidadeCirurgia || '';
+  document.getElementById("flutuante").checked = cir.flutuante || false;
   document.getElementById("data").value = cir.data || '';
   document.getElementById("horario").value = cir.horario || '';
   document.getElementById("tempo").value = cir.tempo || '';
@@ -4053,6 +4622,14 @@ async function excluirMedicoNovo(crm){
   }
 }
 
+function buildEspecOptions(selected){
+  let opts = '<option value="">Selecione...</option>';
+  getEspecialidades().forEach(e => {
+    opts += '<option value="'+e+'"'+(e===(selected||'').toUpperCase()||e===selected?' selected':'')+'>'+e+'</option>';
+  });
+  return opts;
+}
+
 function renderMedicos(){
   let busca = (document.getElementById("buscaMedico")?.value||'').toLowerCase();
   let todos = MEDICOS_CACHE;
@@ -4085,7 +4662,7 @@ function renderMedicos(){
         '<td style="font-family:JetBrains Mono,monospace;font-weight:600">'+m.crm+'</td>'+
         '<td><input id="edit-nome-'+m.crm+'" value="'+escapeHtml(m.nome)+'" style="padding:4px 6px;border:1.5px solid var(--primary);border-radius:4px;font-size:12px;width:100%" onkeydown="if(event.key==&quot;Enter&quot;)salvarEdicao(&quot;'+m.crm+'&quot;);if(event.key==&quot;Escape&quot;)cancelarEdicao()"></td>'+
         '<td>'+(m.uf||'SP')+'</td>'+
-        '<td><input id="edit-espec-'+m.crm+'" value="'+escapeHtml(m.especialidade||'')+'" placeholder="Especialidade" style="padding:4px 6px;border:1.5px solid var(--primary);border-radius:4px;font-size:12px;width:100%" onkeydown="if(event.key==&quot;Enter&quot;)salvarEdicao(&quot;'+m.crm+'&quot;);if(event.key==&quot;Escape&quot;)cancelarEdicao()"></td>'+
+        '<td><select id="edit-espec-'+m.crm+'" style="padding:4px 6px;border:1.5px solid var(--primary);border-radius:4px;font-size:12px;width:100%">'+buildEspecOptions(m.especialidade)+'</select></td>'+
         '<td>'+tag+'</td>'+
         '<td><span class="status-badge status-agendado">'+cirCount+'</span></td>'+
         '<td><button class="btn btn-success btn-sm" onclick="salvarEdicao(\''+m.crm+'\')">Salvar</button> <button class="btn btn-outline btn-sm" onclick="cancelarEdicao()" style="padding:4px 8px;font-size:11px">✕</button></td></tr>';
@@ -4433,6 +5010,396 @@ function selecionarConvenio(sigla, nome, grupo){
   document.getElementById("convDropdown").style.display='none';
 }
 
+
+// ============ LOG SYSTEM ============
+let LOG_CACHE = [];
+
+async function registrarLog(tipo, paciente, detalhes){
+  let log = {
+    tipo: tipo,
+    usuario: usuarioLogado ? usuarioLogado.nome : 'Sistema',
+    paciente: paciente || '-',
+    detalhes: detalhes || '',
+    data_hora: new Date().toISOString()
+  };
+  LOG_CACHE.push(log);
+  // Try to save to Supabase (table may not exist yet)
+  try { await sb.from('logs_cirurgias').insert(log); } catch(e){ console.log('Log local only:', e); }
+}
+
+async function renderLogs(){
+  let logData = document.getElementById("logData").value;
+  let logTipo = document.getElementById("logTipo").value;
+  let tbody = document.getElementById("tabelaLogs");
+  if(!tbody) return;
+
+  // Try loading from Supabase first
+  let logs = [];
+  try {
+    let q = sb.from('logs_cirurgias').select('*').order('data_hora',{ascending:false}).limit(200);
+    if(logData) q = q.gte('data_hora', logData+'T00:00:00').lte('data_hora', logData+'T23:59:59');
+    if(logTipo) q = q.eq('tipo', logTipo);
+    let {data} = await q;
+    logs = data || [];
+  } catch(e){
+    logs = LOG_CACHE.filter(l => {
+      if(logData && !l.data_hora.startsWith(logData)) return false;
+      if(logTipo && l.tipo !== logTipo) return false;
+      return true;
+    }).reverse();
+  }
+
+  tbody.innerHTML = logs.map(l => {
+    let tipoColor = l.tipo==='criacao'?'var(--primary)':l.tipo==='edicao'?'var(--accent)':l.tipo==='cancelamento'?'var(--danger)':l.tipo==='suspensao'?'var(--warning)':'var(--primary)';
+    return '<tr><td style="font-size:11px;white-space:nowrap">'+new Date(l.data_hora).toLocaleString('pt-BR')+'</td>'+
+      '<td><span style="color:'+tipoColor+';font-weight:700;font-size:11px;text-transform:uppercase">'+l.tipo+'</span></td>'+
+      '<td style="font-size:11px">'+l.usuario+'</td>'+
+      '<td style="font-size:11px">'+l.paciente+'</td>'+
+      '<td style="font-size:11px;max-width:250px;word-wrap:break-word">'+l.detalhes+'</td></tr>';
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:20px">Nenhum log encontrado</td></tr>';
+}
+
+// ============ FECHAMENTO PROGRAMADO DE SALAS ============
+let salaFechamentos = JSON.parse(localStorage.getItem('salaFechamentos') || '[]');
+
+function carregarSelectFechSala(){
+  let sel = document.getElementById('fechSala');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Selecione</option>';
+  for(let s=1; s<=9; s++){
+    sel.innerHTML += '<option value="Sala '+s+'">Sala '+s+'</option>';
+  }
+}
+
+async function programarFechamento(){
+  let sala = document.getElementById('fechSala').value;
+  let ini = document.getElementById('fechDataIni').value;
+  let fim = document.getElementById('fechDataFim').value;
+  let motivo = document.getElementById('fechMotivo').value;
+  if(!sala || !ini || !fim){
+    await modalAlert('Preencha Sala, Data Início e Data Fim.', 'Campos Obrigatórios');
+    return;
+  }
+  if(fim < ini){
+    await modalAlert('Data Fim deve ser posterior à Data Início.', 'Erro');
+    return;
+  }
+  salaFechamentos.push({sala, dataIni:ini, dataFim:fim, motivo:motivo||'Não informado', criadoPor:usuarioLogado?usuarioLogado.nome:'Admin'});
+  localStorage.setItem('salaFechamentos', JSON.stringify(salaFechamentos));
+  showToast('✓ Fechamento programado: '+sala+' de '+formatDate(ini)+' a '+formatDate(fim));
+  renderFechamentos();
+  registrarLog('fechamento_sala', sala, 'Fechamento de '+formatDate(ini)+' a '+formatDate(fim)+'. Motivo: '+(motivo||'N/I'));
+}
+
+function renderFechamentos(){
+  let hoje = hojeLocal();
+  // Auto-remove expired
+  salaFechamentos = salaFechamentos.filter(f => f.dataFim >= hoje);
+  localStorage.setItem('salaFechamentos', JSON.stringify(salaFechamentos));
+
+  let el = document.getElementById('listaFechamentos');
+  if(!el) return;
+  if(salaFechamentos.length === 0){
+    el.innerHTML = '<p style="color:var(--text-secondary);font-size:12px">Nenhum fechamento programado.</p>';
+    return;
+  }
+  el.innerHTML = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px">Fechamentos Ativos</div>' +
+    salaFechamentos.map((f,i) =>
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--warning-light);border-radius:6px;margin-bottom:4px;font-size:12px">'+
+      '<span><b>'+f.sala+'</b> — '+formatDate(f.dataIni)+' a '+formatDate(f.dataFim)+' ('+f.motivo+')</span>'+
+      '<button class="btn btn-danger btn-sm" onclick="removerFechamento('+i+')">Remover</button></div>'
+    ).join('');
+}
+
+function removerFechamento(i){
+  salaFechamentos.splice(i, 1);
+  localStorage.setItem('salaFechamentos', JSON.stringify(salaFechamentos));
+  renderFechamentos();
+  showToast('Fechamento removido');
+}
+
+function salaFechadaNaData(salaName, data){
+  return salaFechamentos.some(f => f.sala === salaName && data >= f.dataIni && data <= f.dataFim);
+}
+
+// ============ HEMODINÂMICA CRM SEARCH ============
+let crmTimeoutHemo = null;
+function buscarCRMHemo(){ clearTimeout(crmTimeoutHemo); crmTimeoutHemo = setTimeout(_buscarCRMHemo, 200); }
+
+function _buscarCRMHemo(){
+  let q = document.getElementById("hemoAgCRM").value.trim();
+  let dd = document.getElementById("crmDropdownHemo");
+  if(!q || q.length < 2){ dd.style.display='none'; return; }
+  let ql = q.toLowerCase();
+  let results = MEDICOS_CACHE.filter(m => m.crm.includes(q) || m.nome.toLowerCase().includes(ql)).slice(0, 8);
+  if(results.length === 0){ dd.style.display='none'; return; }
+  dd.style.display='block';
+  dd.innerHTML = results.map(function(m){
+    var crm = m.crm;
+    var nome = m.nome.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    return '<div style="padding:6px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #eee;display:flex;gap:8px" '+
+      'onmousedown="selecionarCRMHemo(&quot;'+crm+'&quot;,&quot;'+nome+'&quot;)" '+
+      'onmouseover="this.style.background=\'#e8f5e9\'" onmouseout="this.style.background=\'white\'">'+
+      '<span style="font-family:JetBrains Mono;font-weight:700;color:var(--primary);min-width:70px">'+crm+'</span>'+
+      '<span style="color:var(--text-secondary)">'+m.nome+'</span>'+
+      '<span style="color:var(--text-secondary);font-size:10px;margin-left:auto">'+(m.especialidade||'')+'</span></div>';
+  }).join('');
+}
+
+function selecionarCRMHemo(crm, nome){
+  document.getElementById("hemoAgCRM").value = crm;
+  document.getElementById("hemoAgMedico").value = nome;
+  document.getElementById("crmDropdownHemo").style.display='none';
+}
+
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#hemoAgCRM') && !e.target.closest('#crmDropdownHemo')){
+    let dd = document.getElementById("crmDropdownHemo");
+    if(dd) dd.style.display='none';
+  }
+});
+
+// ============ HEMODINÂMICA TUSS SEARCH ============
+let tussTimeoutHemo = null;
+function buscarTUSSHemo(){ clearTimeout(tussTimeoutHemo); tussTimeoutHemo = setTimeout(_buscarTUSSHemo, 200); }
+
+function _buscarTUSSHemo(){
+  let q = document.getElementById("hemoAgTuss").value.trim();
+  let dd = document.getElementById("tussDropdownHemo");
+  if(!q || q.length < 2){ dd.style.display='none'; return; }
+  let ql = q.toLowerCase();
+  let results = TUSS_CACHE.filter(t => t.codigo.includes(q) || t.descricao.toLowerCase().includes(ql)).slice(0, 8);
+  if(results.length === 0){ dd.style.display='none'; return; }
+  dd.style.display='block';
+  dd.innerHTML = results.map(function(t){
+    var cod = t.codigo;
+    var desc = t.descricao.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    var descShort = t.descricao.substring(0,80);
+    return '<div style="padding:6px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #eee;display:flex;gap:8px" '+
+      'onmousedown="selecionarTUSSHemo(&quot;'+cod+'&quot;,&quot;'+desc+'&quot;)" '+
+      'onmouseover="this.style.background=\'#e8f5e9\'" onmouseout="this.style.background=\'white\'">'+
+      '<span style="font-family:JetBrains Mono;font-weight:700;color:var(--primary);min-width:80px">'+cod+'</span>'+
+      '<span style="color:var(--text-secondary)">'+descShort+'</span></div>';
+  }).join('');
+}
+
+function selecionarTUSSHemo(cod, desc){
+  document.getElementById("hemoAgTuss").value = cod;
+  document.getElementById("hemoAgProc").value = desc;
+  document.getElementById("tussDropdownHemo").style.display='none';
+}
+
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#hemoAgTuss') && !e.target.closest('#tussDropdownHemo')){
+    let dd = document.getElementById("tussDropdownHemo");
+    if(dd) dd.style.display='none';
+  }
+});
+
+// ============ PDF MAPA HEMODINÂMICA ============
+function gerarPDFHemo(){
+  let data = document.getElementById("hemoData").value || hojeLocal();
+  let hemoCirs = dados.filter(c => c.data===data && !c.cancelado && !c.suspenso &&
+    (c.especialidade_cirurgia === 'HEMODINAMICA' || c.especialidade_cirurgia === 'Hemodinâmica' ||
+     c.especialidadeCirurgia === 'HEMODINAMICA' || c.especialidadeCirurgia === 'Hemodinâmica' ||
+     (c.sala||'').toLowerCase().includes('hemo')));
+  hemoCirs.sort((a,b) => (a.horario||'').localeCompare(b.horario||''));
+
+  if(hemoCirs.length === 0){
+    modalAlert('Nenhum procedimento de hemodinâmica para '+formatDate(data), 'Sem Dados');
+    return;
+  }
+
+  let {jsPDF} = window.jspdf;
+  let doc = new jsPDF('landscape','mm','a4');
+  let pw = doc.internal.pageSize.getWidth();
+  let mg = 14;
+
+  doc.setFontSize(14); doc.setFont(undefined,'bold');
+  doc.text("Mapa Hemodinâmica - Hospital Ana Costa", pw/2, 14, {align:'center'});
+  doc.setDrawColor(46,125,50); doc.setLineWidth(0.8);
+  doc.line(mg, 20, pw-mg, 20);
+
+  doc.setFontSize(9); doc.setFont(undefined,'bold');
+  doc.text("Data: "+formatDate(data), mg, 28);
+  doc.text("Gerado: "+new Date().toLocaleString('pt-BR'), pw-mg, 28, {align:'right'});
+  doc.text("Total: "+hemoCirs.length+" procedimento(s)", mg, 34);
+
+  // Table header
+  let y = 42;
+  let cols = [mg, mg+20, mg+40, mg+70, mg+140, mg+210, mg+235];
+  doc.setFillColor(46,125,50); doc.setTextColor(255);
+  doc.rect(mg, y-4, pw-2*mg, 8, 'F');
+  doc.setFontSize(8);
+  ['Hora','Tempo','Paciente','Procedimento','Médico','UTI','Obs'].forEach((h,i)=>{
+    doc.text(h, cols[i], y+1);
+  });
+
+  doc.setTextColor(0); doc.setFont(undefined,'normal');
+  y += 10;
+
+  hemoCirs.forEach(c => {
+    if(y > 185){ doc.addPage(); y = 20; }
+    let recursos = c.recursos || {};
+    doc.setFontSize(8);
+    doc.text(c.horario||'-', cols[0], y);
+    doc.text((c.tempo||'-')+'min', cols[1], y);
+    doc.text((c.paciente||'-').substring(0,35), cols[2], y);
+    doc.text((c.procedimento||'-').substring(0,35), cols[3], y);
+    doc.text((c.medico||'-').substring(0,25), cols[4], y);
+    doc.text(recursos.uti?'SIM':'-', cols[5], y);
+    doc.text((c.observacoes||'-').substring(0,30), cols[6], y);
+    y += 7;
+    doc.setDrawColor(200); doc.setLineWidth(0.2);
+    doc.line(mg, y-3, pw-mg, y-3);
+  });
+
+  doc.save('Mapa_Hemodinamica_'+data+'.pdf');
+  showToast('✓ PDF Hemodinâmica gerado');
+}
+
+// ============ HEMODINÂMICA ============
+function renderHemodinamica(){
+  let data = document.getElementById('hemoData').value;
+  if(!data) data = hojeLocal();
+  let container = document.getElementById('hemoMapa');
+  if(!container) return;
+
+  let hemoCirs = dados.filter(c => c.data===data && !c.cancelado && !c.suspenso &&
+    ((c.especialidadeCirurgia||'').toUpperCase().includes('HEMODIN') ||
+     (c.especialidade_cirurgia||'').toUpperCase().includes('HEMODIN') ||
+     (c.sala||'').toLowerCase().includes('hemo')));
+
+  hemoCirs.sort((a,b) => (a.horario||'').localeCompare(b.horario||''));
+
+  if(hemoCirs.length === 0){
+    container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:30px">Nenhum procedimento de hemodinâmica agendado para '+formatDate(data)+'</p>';
+    return;
+  }
+
+  let html = '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Sala única — '+hemoCirs.length+' procedimento(s) sequenciais</div>';
+  html += '<div style="position:relative;padding-left:20px;border-left:3px solid var(--primary)">';
+  hemoCirs.forEach((c, idx) => {
+    let recursos = c.recursos ? Object.keys(c.recursos).filter(k=>c.recursos[k]) : [];
+    let fimMin = toMin(c.horario) + (parseInt(c.tempo)||60);
+    let fimH = minToH(fimMin);
+    html += '<div style="position:relative;margin-bottom:12px">'+
+      '<div style="position:absolute;left:-27px;top:8px;width:11px;height:11px;border-radius:50%;background:var(--primary);border:2px solid white;box-shadow:0 0 0 2px var(--primary)"></div>'+
+      '<div class="cirurgia-card" style="margin-left:10px">'+
+      '<div class="hora">'+c.horario+' → '+fimH+' <span style="font-size:10px;opacity:0.7">('+c.tempo+'min)</span></div>'+
+      '<div class="paciente-nome">'+(c.paciente||'Paciente não informado')+(c.identificacao?' <span class="detalhe">#'+c.identificacao+'</span>':'')+'</div>'+
+      '<div class="detalhe">Dr(a). '+(c.medico||'-')+(c.crm||c.codigo_medico?' | CRM: '+(c.crm||c.codigo_medico):'')+'</div>'+
+      '<div class="detalhe">'+(c.procedimento||'-')+(c.codigoTuss||c.codigo_tuss?' | TUSS: '+(c.codigoTuss||c.codigo_tuss):'')+'</div>'+
+      '<div class="tags">'+recursos.map(r=>'<span class="tag tag-recurso">'+r.toUpperCase()+'</span>').join('')+'</div>'+
+      (c.observacoes?'<div class="detalhe" style="margin-top:4px;font-style:italic">📝 '+c.observacoes+'</div>':'')+
+    '</div></div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+async function salvarHemodinamica(){
+  let data = document.getElementById('hemoAgData').value;
+  let horario = document.getElementById('hemoAgHorario').value;
+  let tempo = parseInt(document.getElementById('hemoAgTempo').value)||60;
+  let paciente = document.getElementById('hemoAgPaciente').value;
+  let identificacao = document.getElementById('hemoAgId').value;
+  let crm = document.getElementById('hemoAgCRM').value;
+  let medico = document.getElementById('hemoAgMedico').value;
+  let tuss = document.getElementById('hemoAgTuss').value;
+  let proc = document.getElementById('hemoAgProc').value;
+  let obs = document.getElementById('hemoAgObs').value;
+  let uti = document.getElementById('hemoUTI').checked;
+  let sangue = document.getElementById('hemoSangue').checked;
+
+  if(!data || !horario){
+    await modalAlert('Data e Horário são obrigatórios.', 'Campos Obrigatórios');
+    return;
+  }
+
+  let recursos = {};
+  if(uti) recursos.uti = true;
+  if(sangue) recursos.sangue = true;
+
+  let c = {
+    especialidadeCirurgia: 'Hemodinâmica',
+    data: data, horario: horario, tempo: tempo,
+    sala: 'Hemodinâmica',
+    paciente: paciente || 'Paciente Hemo',
+    identificacao: identificacao || '',
+    medico: medico || '',
+    crm: crm || '',
+    procedimento: proc || 'Procedimento Hemodinâmica',
+    codigoTuss: tuss || '',
+    recursos: recursos,
+    observacoes: obs,
+    codigoTuss:'', codigoConvenio:'', convenio:'', convenioGrupo:'',
+    identificacao:'', crm:'', especialidade:'',
+    dataNasc:'', idade:'',
+    procedimento2:'', codigoTuss2:'', lateralidade:'', lateralidade2:'',
+    cancelado:false, suspenso:false,
+    criadoEm: new Date().toISOString()
+  };
+
+  let saved = await DB.salvarCirurgia(c);
+  if(saved){
+    await DB.loadCirurgias();
+    registrarLog('criacao', paciente, 'Hemodinâmica: '+proc+' às '+horario);
+    showToast('✓ Hemodinâmica agendada!');
+    renderHemodinamica();
+    // Clear form
+    ['hemoAgData','hemoAgHorario','hemoAgTempo','hemoAgPaciente','hemoAgId','hemoAgCRM','hemoAgMedico','hemoAgTuss','hemoAgProc','hemoAgObs'].forEach(id=>{
+      let el=document.getElementById(id); if(el) el.value='';
+    });
+    document.getElementById('hemoUTI').checked = false;
+    document.getElementById('hemoSangue').checked = false;
+  }
+}
+
+// ============ ADMIN RECURSOS CONFIG ============
+function renderAdminRecursos(){
+  let el = document.getElementById('adminRecursosGrid');
+  if(!el) return;
+  let html = '<table style="width:100%;font-size:12px"><thead><tr><th>Recurso</th><th>Limite Atual</th><th>Novo Limite</th><th>Ação</th></tr></thead><tbody>';
+  for(let key in REGRAS.diario){
+    let r = REGRAS.diario[key];
+    html += '<tr><td style="font-weight:700">'+r.label+'</td><td>'+r.max+'</td>'+
+      '<td><input type="number" id="adminLim_'+key+'" value="'+r.max+'" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px"></td>'+
+      '<td><button class="btn btn-primary btn-sm" onclick="alterarLimiteRecurso(\''+key+'\')">Alterar</button></td></tr>';
+  }
+  for(let key in REGRAS.simultaneo_periodo){
+    let r = REGRAS.simultaneo_periodo[key];
+    html += '<tr><td style="font-weight:700">'+r.label+' (simultâneo/período)</td><td>'+r.max+'</td>'+
+      '<td><input type="number" id="adminLim_sim_'+key+'" value="'+r.max+'" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px"></td>'+
+      '<td><button class="btn btn-primary btn-sm" onclick="alterarLimiteSimultaneo(\''+key+'\')">Alterar</button></td></tr>';
+  }
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function alterarLimiteRecurso(key){
+  let input = document.getElementById('adminLim_'+key);
+  if(!input) return;
+  let novo = parseInt(input.value);
+  if(isNaN(novo) || novo < 0){ showToast('Valor inválido'); return; }
+  let antigo = REGRAS.diario[key].max;
+  REGRAS.diario[key].max = novo;
+  showToast('✓ '+REGRAS.diario[key].label+': '+antigo+' → '+novo);
+  registrarLog('config_recurso', REGRAS.diario[key].label, 'Limite alterado de '+antigo+' para '+novo);
+  renderRecursosGrid();
+}
+
+function alterarLimiteSimultaneo(key){
+  let input = document.getElementById('adminLim_sim_'+key);
+  if(!input) return;
+  let novo = parseInt(input.value);
+  if(isNaN(novo) || novo < 0){ showToast('Valor inválido'); return; }
+  let antigo = REGRAS.simultaneo_periodo[key].max;
+  REGRAS.simultaneo_periodo[key].max = novo;
+  showToast('✓ '+REGRAS.simultaneo_periodo[key].label+': '+antigo+' → '+novo);
+  registrarLog('config_recurso', REGRAS.simultaneo_periodo[key].label, 'Limite simultâneo alterado de '+antigo+' para '+novo);
+}
+
 // ============ INIT (ASYNC - CARREGA TUDO DO SUPABASE) ============
 async function initApp(){
   document.getElementById("grade").innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-secondary)">Carregando dados do Supabase...</p>';
@@ -4452,12 +5419,15 @@ async function initApp(){
     carregarSelectSala();
     atualizarHeader();
     renderRecursosGrid();
+    popularSelectsEspecialidade();
 
     let hoje = hojeLocal();
     document.getElementById("data").value = hoje;
     document.getElementById("filtroData").value = hoje;
-    document.getElementById("filtroListaData").value = hoje;
+    document.getElementById("filtroListaDataIni").value = hoje;
+    document.getElementById("filtroListaDataFim").value = hoje;
     document.getElementById("dispData").value = hoje;
+    document.getElementById("hemoData").value = hoje;
 
     console.log('✅ Sistema carregado: ' + dados.length + ' cirurgias, ' + MEDICOS_CACHE.length + ' médicos, ' + TUSS_CACHE.length + ' TUSS, ' + CONVENIO_CACHE.length + ' convênios');
     showToast('✅ Sistema conectado ao Supabase');
