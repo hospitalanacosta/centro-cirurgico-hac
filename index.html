@@ -20,6 +20,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1080,8 +1081,33 @@ tr.suspenso td { color: #e65100; font-style: italic; }
     <div class="switch-link">
       Não tem cadastro? <a onclick="mostrarCadastro()">Solicitar acesso</a>
     </div>
+    <div class="switch-link" style="margin-top:4px">
+      <a onclick="mostrarEsqueciSenha()" style="font-size:12px;color:var(--primary)">🔑 Esqueci minha senha</a>
+    </div>
     <div class="switch-link" style="margin-top:8px">
       <a onclick="mostrarLoginAdmin()" style="font-size:11px;color:#999">Acesso Administrador</a>
+    </div>
+  </div>
+
+  <!-- RESET SENHA FORM -->
+  <div class="login-box" id="resetSenhaForm" style="display:none">
+    <h2>🔑 Redefinir Senha</h2>
+    <div class="msg" id="resetMsg"></div>
+    <div class="field">
+      <label>Código recebido por e-mail</label>
+      <input type="text" id="resetCodigo" placeholder="Digite o código de 6 dígitos" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:8px;font-weight:700">
+    </div>
+    <div class="field">
+      <label>Nova Senha</label>
+      <input type="password" id="resetNovaSenha" placeholder="Mínimo 4 caracteres">
+    </div>
+    <div class="field">
+      <label>Confirmar Nova Senha</label>
+      <input type="password" id="resetConfirmaSenha" placeholder="Repita a nova senha" onkeydown="if(event.key==='Enter')redefinirSenhaComCodigo()">
+    </div>
+    <button class="btn-login" onclick="redefinirSenhaComCodigo()">Redefinir Senha</button>
+    <div class="switch-link" style="margin-top:8px">
+      <a onclick="mostrarLogin()">Voltar ao login</a>
     </div>
   </div>
 
@@ -1304,7 +1330,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         </div>
         <div class="form-group">
           <label>Data de Nascimento</label>
-          <input type="date" id="dataNasc" onchange="calcularIdade()">
+          <input type="date" id="dataNasc" onchange="calcularIdade()" onpaste="handleDatePaste(event, this)">
         </div>
 
       </div>
@@ -1431,7 +1457,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       <button class="btn btn-success" id="btnConfirmar" onclick="salvar()">✓ Confirmar Agendamento</button>
       <button class="btn btn-danger" id="btnCancelarEdicao" onclick="cancelarEdicaoCirurgia()" style="display:none">✕ Cancelar Edição</button>
       <button class="btn btn-outline" onclick="limparForm()">Limpar</button>
-      <button class="btn btn-outline" onclick="gerarPDF()">📄 PDF Mapa</button>
+      <button class="btn btn-outline" onclick="gerarPDF()" id="btnPdfCC">📄 PDF Mapa</button>
       <button class="btn btn-outline" onclick="pdfOcorrencias()">📋 PDF Ocorrências</button>
     </div>
 
@@ -1747,6 +1773,27 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         </table>
       </div>
     </div>
+    <div class="card">
+      <div class="card-title">🔐 Permissões de Acesso por Usuário</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
+        Defina quais funcionalidades cada usuário aprovado pode acessar. Administradores têm acesso total.
+      </p>
+      <div class="tabela-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Setor</th>
+              <th style="text-align:center">📊 Dashboard</th>
+              <th style="text-align:center">📄 PDF Mapa CC</th>
+              <th style="text-align:center">📄 PDF Hemo</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaPermissoes"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- ========== PAINEL SALAS ========== -->
@@ -1786,7 +1833,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       </p>
       <div class="filtro-row">
         <div class="form-group"><label>Data</label><input type="date" id="hemoData" onchange="renderHemodinamica()"></div>
-        <button class="btn btn-outline" onclick="gerarPDFHemo()" style="margin-top:16px">📄 PDF Mapa Hemodinâmica</button>
+        <button class="btn btn-outline" onclick="gerarPDFHemo()" id="btnPdfHemo" style="margin-top:16px">📄 PDF Mapa Hemodinâmica</button>
       </div>
       <div id="hemoMapa" style="margin-top:16px"></div>
     </div>
@@ -2085,16 +2132,27 @@ function mostrarLogin(){
   document.getElementById('loginForm').style.display='block';
   document.getElementById('cadastroForm').style.display='none';
   document.getElementById('adminLoginForm').style.display='none';
+  document.getElementById('resetSenhaForm').style.display='none';
 }
 function mostrarCadastro(){
   document.getElementById('loginForm').style.display='none';
   document.getElementById('cadastroForm').style.display='block';
   document.getElementById('adminLoginForm').style.display='none';
+  document.getElementById('resetSenhaForm').style.display='none';
 }
 function mostrarLoginAdmin(){
   document.getElementById('loginForm').style.display='none';
   document.getElementById('cadastroForm').style.display='none';
   document.getElementById('adminLoginForm').style.display='block';
+  document.getElementById('resetSenhaForm').style.display='none';
+}
+function mostrarResetSenha(){
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('cadastroForm').style.display='none';
+  document.getElementById('adminLoginForm').style.display='none';
+  document.getElementById('resetSenhaForm').style.display='block';
+  document.getElementById('resetMsg').className='msg';
+  document.getElementById('resetMsg').innerText='';
 }
 
 async function fazerLogin(){
@@ -2166,18 +2224,111 @@ async function fazerCadastro(){
 }
 
 async function mostrarEsqueciSenha(){
-  let email = await modalPrompt('Digite o e-mail cadastrado para recuperar a senha:', '', '🔑 Recuperar Senha');
+  let email = await modalPrompt('Digite o e-mail cadastrado:', '', '🔑 Recuperar Senha');
   if(!email) return;
+  email = email.trim().toLowerCase();
   try {
-    let {data,error} = await sb.from('usuarios').select('cpf,nome').eq('email',email).single();
+    let {data,error} = await sb.from('usuarios').select('id,cpf,nome,email').eq('email',email).single();
     if(error || !data){
       await modalAlert('E-mail não encontrado no sistema.', 'Erro');
       return;
     }
-    // Note: Full password reset requires Supabase Auth integration
-    await modalAlert('Solicitação registrada.\n\nEntre em contato com o administrador informando:\n- Nome: '+data.nome+'\n- CPF: '+data.cpf+'\n\nO administrador poderá redefinir sua senha.', 'Recuperação de Senha');
+    // Generate 6-digit code
+    let code = String(Math.floor(100000 + Math.random()*900000));
+    let expires = new Date(Date.now() + 30*60*1000).toISOString(); // 30 min
+
+    // Save code to DB
+    await sb.from('usuarios').update({
+      reset_code: code,
+      reset_code_expires: expires
+    }).eq('email', email);
+
+    // Store email locally for verification
+    window._resetEmail = email;
+
+    // Send email via EmailJS
+    try {
+      emailjs.init('OIJTbfdtj9chDtpP3');
+      await emailjs.send('service_g197v2c', 'template_31ybzty', {
+        to_email: email,
+        to_name: data.nome,
+        code: code
+      });
+
+      await modalAlert(
+        '✅ Código enviado com sucesso!\n\n'+
+        'Verifique a caixa de entrada de:\n'+email+'\n\n'+
+        '(Verifique também a pasta de spam)\n'+
+        'O código expira em 30 minutos.',
+        'E-mail Enviado'
+      );
+    } catch(emailErr){
+      console.error('EmailJS error:', emailErr);
+      // Fallback: show code to admin or in alert
+      await modalAlert(
+        '⚠️ Não foi possível enviar o e-mail automaticamente.\n\n'+
+        'Procure o administrador do sistema para obter seu código de recuperação.\n\n'+
+        'Código gerado com validade de 30 minutos.',
+        'Atenção'
+      );
+    }
+
+    mostrarResetSenha();
   } catch(e){
-    await modalAlert('Erro ao buscar e-mail. Contate o administrador.', 'Erro');
+    await modalAlert('Erro ao processar. Tente novamente.', 'Erro');
+  }
+}
+
+async function redefinirSenhaComCodigo(){
+  let msgEl = document.getElementById('resetMsg');
+  let codigo = (document.getElementById('resetCodigo').value||'').trim();
+  let novaSenha = document.getElementById('resetNovaSenha').value;
+  let confirma = document.getElementById('resetConfirmaSenha').value;
+
+  if(!codigo || codigo.length!==6){
+    msgEl.className='msg erro'; msgEl.innerText='Digite o código de 6 dígitos'; return;
+  }
+  if(!novaSenha || novaSenha.length < 4){
+    msgEl.className='msg erro'; msgEl.innerText='A senha deve ter no mínimo 4 caracteres'; return;
+  }
+  if(novaSenha !== confirma){
+    msgEl.className='msg erro'; msgEl.innerText='As senhas não coincidem'; return;
+  }
+
+  try {
+    // Find user with this reset code
+    let {data,error} = await sb.from('usuarios')
+      .select('id,nome,email,reset_code,reset_code_expires')
+      .eq('reset_code', codigo)
+      .single();
+
+    if(error || !data){
+      msgEl.className='msg erro'; msgEl.innerText='Código inválido ou expirado'; return;
+    }
+
+    // Check expiry
+    if(data.reset_code_expires && new Date(data.reset_code_expires) < new Date()){
+      msgEl.className='msg erro'; msgEl.innerText='Código expirado. Solicite um novo.'; return;
+    }
+
+    // Update password and clear code
+    let {error:updErr} = await sb.from('usuarios').update({
+      senha: novaSenha,
+      reset_code: null,
+      reset_code_expires: null
+    }).eq('id', data.id);
+
+    if(updErr){
+      msgEl.className='msg erro'; msgEl.innerText='Erro ao atualizar: '+updErr.message; return;
+    }
+
+    await modalAlert('✅ Senha redefinida com sucesso!\n\nFaça login com sua nova senha.', 'Sucesso');
+    mostrarLogin();
+    document.getElementById('resetCodigo').value='';
+    document.getElementById('resetNovaSenha').value='';
+    document.getElementById('resetConfirmaSenha').value='';
+  } catch(e){
+    msgEl.className='msg erro'; msgEl.innerText='Erro ao processar. Tente novamente.';
   }
 }
 
@@ -2190,17 +2341,8 @@ function entrarSistema(){
   let info = document.getElementById('userInfo');
   info.innerHTML = '<b>'+usuarioLogado.nome+'</b> '+((usuarioLogado.is_admin||usuarioLogado.perfil==='admin')?'(Admin)':'');
 
-  // Show admin tab
-  if(usuarioLogado.is_admin || usuarioLogado.perfil==='admin'){
-    let tabAut = document.getElementById('tabAutorizacoes');
-    if(tabAut) tabAut.style.display='';
-    let tabDash = document.getElementById('tabDashboard');
-    if(tabDash) tabDash.style.display='';
-    let tabLogs = document.getElementById('tabLogs');
-    if(tabLogs) tabLogs.style.display='';
-    let tabAdmRec = document.getElementById('tabAdminRecursos');
-    if(tabAdmRec) tabAdmRec.style.display='';
-  }
+  // Apply user permissions
+  aplicarPermissoes();
 
   // Init app
   initApp();
@@ -2251,6 +2393,7 @@ async function renderAutorizacoes(){
       '<td><span class="status-badge '+statusCls+'">'+u.status.toUpperCase()+'</span></td>'+
       '<td>'+acoes+'</td></tr>';
   }).join('');
+  renderPermissoes();
 }
 
 async function aprovarUsuario(cpf){
@@ -2273,6 +2416,73 @@ async function bloquearUsuario(cpf){
     await sb.from('usuarios').update({status:'bloqueado'}).eq('cpf',cpf);
     showToast('🚫 Usuário bloqueado');
     renderAutorizacoes();
+  }
+}
+
+async function renderPermissoes(){
+  let tbody = document.getElementById('tabelaPermissoes');
+  if(!tbody) return;
+  const {data} = await sb.from('usuarios').select('*').eq('status','aprovado').order('nome');
+  if(!data){ tbody.innerHTML=''; return; }
+  tbody.innerHTML = data.filter(u=>u.perfil!=='admin').map(u=>{
+    let perms = {};
+    try { perms = JSON.parse(u.permissoes||'{}'); } catch(e){}
+    let chk = (key) => perms[key] ? 'checked' : '';
+    return '<tr>'+
+      '<td style="font-weight:600">'+u.nome+'</td>'+
+      '<td>'+(u.setor||'-')+'</td>'+
+      '<td style="text-align:center"><input type="checkbox" '+chk('dashboard')+' data-cpf="'+u.cpf+'" data-perm="dashboard" onchange="marcarPermissao(this)"></td>'+
+      '<td style="text-align:center"><input type="checkbox" '+chk('pdf_cc')+' data-cpf="'+u.cpf+'" data-perm="pdf_cc" onchange="marcarPermissao(this)"></td>'+
+      '<td style="text-align:center"><input type="checkbox" '+chk('pdf_hemo')+' data-cpf="'+u.cpf+'" data-perm="pdf_hemo" onchange="marcarPermissao(this)"></td>'+
+      '<td><button class="btn btn-primary btn-sm" onclick="salvarPermissoes(\''+u.cpf+'\')">Salvar</button></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function marcarPermissao(el){
+  // Visual feedback - highlight row
+  el.closest('tr').style.background='#fffde7';
+}
+
+async function salvarPermissoes(cpf){
+  let row = document.querySelector('input[data-cpf="'+cpf+'"]')?.closest('tr');
+  if(!row) return;
+  let checks = row.querySelectorAll('input[type="checkbox"]');
+  let perms = {};
+  checks.forEach(c=>{ perms[c.dataset.perm] = c.checked; });
+  let {error} = await sb.from('usuarios').update({permissoes: JSON.stringify(perms)}).eq('cpf', cpf);
+  if(error){ showToast('❌ Erro: '+error.message); return; }
+  row.style.background='';
+  showToast('✅ Permissões salvas para este usuário');
+}
+
+function aplicarPermissoes(){
+  let isAdmin = usuarioLogado && (usuarioLogado.is_admin || usuarioLogado.perfil==='admin');
+  let perms = {};
+  if(!isAdmin){
+    try { perms = JSON.parse(usuarioLogado.permissoes||'{}'); } catch(e){}
+  }
+
+  // Dashboard
+  let tabDash = document.getElementById('tabDashboard');
+  if(tabDash) tabDash.style.display = (isAdmin || perms.dashboard) ? '' : 'none';
+
+  // PDF CC button
+  let btnPdf = document.getElementById('btnPdfCC');
+  if(btnPdf) btnPdf.style.display = (isAdmin || perms.pdf_cc) ? '' : 'none';
+
+  // PDF Hemo button
+  let btnHemo = document.getElementById('btnPdfHemo');
+  if(btnHemo) btnHemo.style.display = (isAdmin || perms.pdf_hemo) ? '' : 'none';
+
+  // Admin-only tabs (always hidden for non-admin)
+  if(isAdmin){
+    let tabAut = document.getElementById('tabAutorizacoes');
+    if(tabAut) tabAut.style.display='';
+    let tabLogs = document.getElementById('tabLogs');
+    if(tabLogs) tabLogs.style.display='';
+    let tabAdmRec = document.getElementById('tabAdminRecursos');
+    if(tabAdmRec) tabAdmRec.style.display='';
   }
 }
 
@@ -3850,6 +4060,7 @@ function desenhar(){
             (c.convenio?'<span class="tag tag-convenio">'+c.convenio+'</span>':'')+
             recursos.map(r=>'<span class="tag tag-recurso">'+r.toUpperCase()+'</span>').join('')+
           '</div>'+
+          (c.observacoes?'<div class="detalhe" style="color:#e65100;font-style:italic;margin-top:3px">📝 '+c.observacoes+'</div>':'')+
           '<div class="actions">'+
             '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();cancelar('+idx+')">Cancelar</button>'+
             '<button class="btn btn-warning btn-sm" onclick="event.stopPropagation();suspender('+idx+')">Suspender</button>'+
@@ -4024,7 +4235,7 @@ function renderDashboard(){
   let totalConv = new Set(ativos.map(c=>c.convenio||c.codigoConvenio).filter(Boolean)).size;
 
   document.getElementById('dashKpis').innerHTML =
-    '<div class="dash-kpi"><div class="kpi-val">'+ativos.length+'</div><div class="kpi-lbl">Cirurgias Realizadas</div></div>'+
+    '<div class="dash-kpi"><div class="kpi-val">'+ativos.length+'</div><div class="kpi-lbl">Cirurgias Agendadas</div></div>'+
     '<div class="dash-kpi accent"><div class="kpi-val">'+medicos.size+'</div><div class="kpi-lbl">Cirurgiões Ativos</div></div>'+
     '<div class="dash-kpi purple"><div class="kpi-val">'+totalConv+'</div><div class="kpi-lbl">Convênios Ativos</div></div>'+
     '<div class="dash-kpi"><div class="kpi-val">'+mediaDia+'</div><div class="kpi-lbl">Média / Dia</div></div>'+
@@ -4125,7 +4336,7 @@ function renderDashboard(){
   let stTotal = stData.reduce((s,v)=>s+v,0);
   dashCharts['chartStatus'] = new Chart(document.getElementById('chartStatus'), {
     type:'doughnut',
-    data:{ labels:['Realizadas ('+ativos.length+' - '+(stTotal?(ativos.length/stTotal*100).toFixed(1):0)+'%)',
+    data:{ labels:['Agendadas ('+ativos.length+' - '+(stTotal?(ativos.length/stTotal*100).toFixed(1):0)+'%)',
                     'Canceladas ('+cancelados.length+')',
                     'Suspensas ('+suspensos.length+')'],
       datasets:[{data:stData, backgroundColor:['#2e7d32','#c62828','#e65100'], borderWidth:3, borderColor:'#fff'}]},
@@ -4311,7 +4522,6 @@ async function gerarPDF(){
   doc.text("Setor: CENTRO CIRURGICO", 210, 33);
   doc.setFontSize(8); doc.setFont(undefined,'normal');
   doc.text("Data: "+formatDate(fData), mg, 38);
-  doc.text("Gerado: "+new Date().toLocaleString('pt-BR'), 105, 38);
 
   // === COLUNAS ===
   let y = 45;
@@ -4359,11 +4569,11 @@ async function gerarPDF(){
 
   function drawHdr(){
     doc.setFillColor(50,50,50);
-    doc.rect(mg, y, tw, 6, 'F');
-    doc.setFontSize(6.5); doc.setFont(undefined,'bold'); doc.setTextColor(255);
-    C.forEach((c,i)=> tc(c.l, xP[i], c.w, y+4));
+    doc.rect(mg, y, tw, 7, 'F');
+    doc.setFontSize(7.5); doc.setFont(undefined,'bold'); doc.setTextColor(255);
+    C.forEach((c,i)=> tc(c.l, xP[i], c.w, y+5));
     doc.setTextColor(0);
-    y += 8;
+    y += 9;
     doc.setFont(undefined,'normal');
   }
 
@@ -4375,7 +4585,7 @@ async function gerarPDF(){
     return parseInt((a.sala||'0').replace('Sala ','')) - parseInt((b.sala||'0').replace('Sala ',''));
   });
 
-  doc.setFontSize(6);
+  doc.setFontSize(7);
   let rn = 0;
   lista.forEach(c=>{
     let rec = c.recursos||{};
@@ -4392,14 +4602,14 @@ async function gerarPDF(){
     let nomeLines = wrapText((c.paciente||''), C[nomeIdx].w);
     let proc2Lines = mostrarProc2 ? wrapText((c.procedimento2||''), C[proc2Idx].w) : [];
     let maxLines = Math.max(cirurgiaLines.length, cirurgiaoLines.length, nomeLines.length, proc2Lines.length);
-    let rowH = Math.max(4.5, maxLines * 3.5);
+    let rowH = Math.max(5.5, maxLines * 4);
 
-    if(y + rowH > ph-16){ doc.addPage(); y = 12; drawHdr(); doc.setFontSize(6); rn=0; }
+    if(y + rowH > ph-16){ doc.addPage(); y = 12; drawHdr(); doc.setFontSize(7); rn=0; }
 
     // Zebra
     if(rn%2===0){ doc.setFillColor(244,244,244); doc.rect(mg, y-0.5, tw, rowH, 'F'); }
 
-    let yMid = y + 2.5; // vertical center of first line
+    let yMid = y + 3; // vertical center of first line
 
     // Single-line fields
     tc(c.horario||'', xP[0], C[0].w, yMid);
@@ -4418,7 +4628,7 @@ async function gerarPDF(){
       let bx = xP[4] + C[4].w/2 - doc.getTextWidth(grupoLabel)/2 - 1.5;
       let bw = doc.getTextWidth(grupoLabel) + 3;
       doc.setFillColor(bgR,bgG,bgB);
-      doc.roundedRect(bx, yMid-2.8, bw, 3.8, 1, 1, 'F');
+      doc.roundedRect(bx, yMid-3, bw, 4.2, 1, 1, 'F');
       doc.setTextColor(txR,txG,txB);
       doc.setFont(undefined,'bold');
       tc(grupoLabel, xP[4], C[4].w, yMid);
@@ -4440,10 +4650,10 @@ async function gerarPDF(){
     tc(rec.transfusao?'Sim':'Não', xP[iTransf], C[iTransf].w, yMid);
 
     // Multi-line fields
-    nomeLines.forEach((ln,li)=> tl(ln, xP[nomeIdx], yMid + li*3.5));
-    cirurgiaLines.forEach((ln,li)=> tl(ln, xP[cirIdx], yMid + li*3.5));
-    if(mostrarProc2 && proc2Idx >= 0) proc2Lines.forEach((ln,li)=> tl(ln, xP[proc2Idx], yMid + li*3.5));
-    cirurgiaoLines.forEach((ln,li)=> tl(ln, xP[crgIdx], yMid + li*3.5));
+    nomeLines.forEach((ln,li)=> tl(ln, xP[nomeIdx], yMid + li*4));
+    cirurgiaLines.forEach((ln,li)=> tl(ln, xP[cirIdx], yMid + li*4));
+    if(mostrarProc2 && proc2Idx >= 0) proc2Lines.forEach((ln,li)=> tl(ln, xP[proc2Idx], yMid + li*4));
+    cirurgiaoLines.forEach((ln,li)=> tl(ln, xP[crgIdx], yMid + li*4));
 
     // Separator line
     doc.setDrawColor(210); doc.setLineWidth(0.1);
@@ -4637,7 +4847,7 @@ function renderDispGrade(data, diaList, horaFiltro, salaFiltro, horaInicio, hora
     } else {
       // Mostrar slots livres
       if(livres.length > 0){
-        html += '<div style="font-size:10px;font-weight:700;color:var(--primary);margin-bottom:4px;text-transform:uppercase">Horários Livres:</div>';
+        html += '<div style="font-size:10px;font-weight:700;color:var(--primary);margin-bottom:4px;text-transform:uppercase">Horários Livres: <span style="font-weight:400;text-transform:none;color:#888">(intervalo 30min mesma espec. / 60min outra)</span></div>';
         livres.forEach(sl=>{
           let dur = sl.fim - sl.ini;
           html += '<div style="font-size:11px;color:var(--primary);padding:2px 0">🟢 '+minToH(sl.ini)+' - '+minToH(sl.fim)+' <span style="color:#888">('+dur+'min)</span></div>';
@@ -4723,21 +4933,46 @@ function calcularSlots(cirs, horaInicio, horaFim){
   if(cirs.length === 0) return [];
   let slots = [];
   let sorted = [...cirs].sort((a,b)=>(a.horario||'').localeCompare(b.horario||''));
-  let cursor = horaInicio;
 
-  sorted.forEach(c=>{
+  // Build occupied blocks with interval buffers
+  // Each surgery occupies: start -> end + interval
+  // Interval: 30min same specialty, 60min different specialty
+  // We show both: the surgery block and the interval block
+  let blocos = [];
+  sorted.forEach((c, idx)=>{
     let ci = toMin(c.horario);
     let cf = ci + (c.tempo||60);
-    // Slot livre antes desta cirurgia
-    if(ci > cursor && ci - cursor >= 30){
-      slots.push({livre:true, ini:cursor, fim:ci});
-    }
-    // Slot ocupado
-    slots.push({livre:false, ini:ci, fim:cf, paciente:c.paciente||'', medico:c.medico||'', procedimento:c.procedimento||'', proc2:c.procedimento2||''});
-    cursor = Math.max(cursor, cf);
+    blocos.push({ini:ci, fim:cf, paciente:c.paciente||'', medico:c.medico||'',
+      procedimento:c.procedimento||'', proc2:c.procedimento2||'', especialidade:c.especialidadeCirurgia||''});
   });
 
-  // Slot livre após a última cirurgia
+  let cursor = horaInicio;
+  for(let i=0; i<blocos.length; i++){
+    let b = blocos[i];
+    // Free slot before this surgery (considering interval from previous)
+    if(b.ini > cursor && b.ini - cursor >= 30){
+      slots.push({livre:true, ini:cursor, fim:b.ini});
+    }
+    // Occupied slot (the surgery itself)
+    slots.push({livre:false, ini:b.ini, fim:b.fim, paciente:b.paciente, medico:b.medico,
+      procedimento:b.procedimento, proc2:b.proc2});
+
+    // Calculate interval after this surgery
+    // If next surgery exists, check if same specialty for 30min, otherwise 60min
+    let intervalo = 60; // default: different specialty = 60min
+    if(i < blocos.length - 1){
+      let next = blocos[i+1];
+      if(b.especialidade && next.especialidade && b.especialidade === next.especialidade){
+        intervalo = 30;
+      }
+    } else {
+      // Last surgery - apply 30min minimum buffer (most lenient)
+      intervalo = 30;
+    }
+    cursor = Math.max(cursor, b.fim + intervalo);
+  }
+
+  // Free slot after last surgery + interval
   if(cursor < horaFim && horaFim - cursor >= 30){
     slots.push({livre:true, ini:cursor, fim:horaFim});
   }
@@ -5122,6 +5357,20 @@ function exportarTUSSExcel(){
 }
 
 // ============ CALCULAR IDADE ============
+function handleDatePaste(e, el){
+  e.preventDefault();
+  let text = (e.clipboardData||window.clipboardData).getData('text').trim();
+  // Try DD/MM/YYYY
+  let m = text.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if(m){ el.value = m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'); calcularIdade(); return; }
+  // Try YYYY-MM-DD
+  m = text.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+  if(m){ el.value = m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0'); calcularIdade(); return; }
+  // Try DDMMYYYY
+  m = text.match(/^(\d{2})(\d{2})(\d{4})$/);
+  if(m){ el.value = m[3]+'-'+m[2]+'-'+m[1]; calcularIdade(); return; }
+  el.value = text; calcularIdade();
+}
 function calcularIdade(){
   let dn = document.getElementById("dataNasc").value;
   if(!dn){ document.getElementById("idade").value=''; return; }
@@ -5823,9 +6072,11 @@ function alterarLimiteRecurso(key){
   if(isNaN(novo) || novo < 0){ showToast('Valor inválido'); return; }
   let antigo = REGRAS.diario[key].max;
   REGRAS.diario[key].max = novo;
+  salvarRegrasCustom();
   showToast('✓ '+REGRAS.diario[key].label+': '+antigo+' → '+novo);
   registrarLog('config_recurso', REGRAS.diario[key].label, 'Limite alterado de '+antigo+' para '+novo);
   renderRecursosGrid();
+  renderAdminRecursos();
 }
 
 function alterarLimiteSimultaneo(key){
@@ -5835,12 +6086,32 @@ function alterarLimiteSimultaneo(key){
   if(isNaN(novo) || novo < 0){ showToast('Valor inválido'); return; }
   let antigo = REGRAS.simultaneo_periodo[key].max;
   REGRAS.simultaneo_periodo[key].max = novo;
+  salvarRegrasCustom();
   showToast('✓ '+REGRAS.simultaneo_periodo[key].label+': '+antigo+' → '+novo);
   registrarLog('config_recurso', REGRAS.simultaneo_periodo[key].label, 'Limite simultâneo alterado de '+antigo+' para '+novo);
+  renderAdminRecursos();
+}
+
+function salvarRegrasCustom(){
+  let custom = { diario:{}, simultaneo_periodo:{} };
+  for(let k in REGRAS.diario) custom.diario[k] = REGRAS.diario[k].max;
+  for(let k in REGRAS.simultaneo_periodo) custom.simultaneo_periodo[k] = REGRAS.simultaneo_periodo[k].max;
+  localStorage.setItem('regrasCustom', JSON.stringify(custom));
+}
+
+function carregarRegrasCustom(){
+  let saved = localStorage.getItem('regrasCustom');
+  if(!saved) return;
+  try {
+    let custom = JSON.parse(saved);
+    if(custom.diario) for(let k in custom.diario) if(REGRAS.diario[k]) REGRAS.diario[k].max = custom.diario[k];
+    if(custom.simultaneo_periodo) for(let k in custom.simultaneo_periodo) if(REGRAS.simultaneo_periodo[k]) REGRAS.simultaneo_periodo[k].max = custom.simultaneo_periodo[k];
+  } catch(e){}
 }
 
 // ============ INIT (ASYNC - CARREGA TUDO DO SUPABASE) ============
 async function initApp(){
+  carregarRegrasCustom();
   document.getElementById("grade").innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-secondary)">Carregando dados do Supabase...</p>';
 
   try {
