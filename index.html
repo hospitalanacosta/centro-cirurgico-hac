@@ -6966,11 +6966,11 @@ function carregarSelectsEscala(){
       }
     }
   }
-  // Especialidades
+  // Especialidades (usa mesma lista do agendamento)
   let selEspec = document.getElementById('escEspecialidade');
   let selFiltroEspec = document.getElementById('escFiltroEspec');
   if(selEspec && selEspec.options.length <= 1){
-    let especs = [...new Set(MEDICOS_CACHE.map(m=>m.especialidade).filter(Boolean))].sort();
+    let especs = getEspecialidades();
     especs.forEach(e => {
       selEspec.innerHTML += '<option value="'+e+'">'+e+'</option>';
       if(selFiltroEspec) selFiltroEspec.innerHTML += '<option value="'+e+'">'+e+'</option>';
