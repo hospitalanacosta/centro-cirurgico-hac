@@ -105,7 +105,7 @@ body {
   background: linear-gradient(135deg, #0a3d0c 0%, #145a18 40%, #1a7a20 100%);
   border-radius: 0 0 20px 20px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* --- Top Bar --- */
@@ -258,6 +258,132 @@ body {
   height: 24px;
 }
 
+/* ===== USUÁRIOS ONLINE (Strip abaixo da nav) ===== */
+.online-users-strip {
+  display: flex;
+  align-items: center;
+  padding: 6px 28px;
+  gap: 12px;
+  background: rgba(0,0,0,0.12);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  min-height: 0;
+  transition: all 0.3s;
+}
+
+.online-users-strip:empty,
+.online-users-strip.hidden {
+  display: none;
+}
+
+.online-users-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.online-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4caf50;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(76,175,80,0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(76,175,80,0); }
+}
+
+.online-users-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.online-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.45);
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: default;
+  position: relative;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.online-avatar:not(:first-child) {
+  margin-left: -8px;
+}
+
+.online-avatar:hover {
+  transform: scale(1.18);
+  z-index: 2;
+  border-color: #fff;
+}
+
+.online-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.online-avatar .initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 50%;
+}
+
+.online-avatar-tooltip {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.online-avatar:hover .online-avatar-tooltip {
+  opacity: 1;
+}
+
+.online-overflow {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  margin-left: -8px;
+  border: 2px solid rgba(255,255,255,0.45);
+}
+
 .widget-icon {
   width: 36px;
   height: 36px;
@@ -366,6 +492,13 @@ body {
   margin-top: 4px;
 }
 
+.avatar-circle img.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .user-info {
   font-size: 13px;
   font-weight: 500;
@@ -453,6 +586,7 @@ body {
   gap: 0;
   overflow-x: auto;
   border-top: 1px solid rgba(255,255,255,0.08);
+  border-radius: 0 0 20px 20px;
 }
 
 .header-nav::-webkit-scrollbar {
@@ -1346,8 +1480,9 @@ tr.suspenso td { color: #e65100; font-style: italic; }
   }
   .clock-row { font-size: 11px; justify-content: flex-end; }
 
-  /* Hide ocupação and separator on mobile */
+  /* Hide ocupação, online users strip and separator on mobile */
   .ocupacao-widget { display: none !important; }
+  .online-users-strip { display: none !important; }
   .header-separator { display: none !important; }
 
   /* Server — compact, less wide */
@@ -1678,11 +1813,16 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           <svg class="chevron" id="userChevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
         </div>
         <div class="user-dropdown" id="userDropdown">
+          <button class="user-dropdown-item" onclick="document.getElementById('avatarFileInput').click()">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Alterar Foto
+          </button>
           <button class="user-dropdown-item logout" onclick="fazerLogout()">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
             Sair
           </button>
         </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
       </div>
     </div>
   </div>
@@ -1705,6 +1845,15 @@ tr.suspenso td { color: #e65100; font-style: italic; }
     <div class="tab" data-tab="adminRecursos" id="tabAdminRecursos" style="display:none">⚙️ Config. Recursos</div>
     <div class="tab" data-tab="autorizacoes" id="tabAutorizacoes" style="display:none">🔒 Autorizações</div>
   </nav>
+
+  <!-- Usuários Online (abaixo da nav) -->
+  <div class="online-users-strip" id="onlineUsersStrip">
+    <div class="online-users-label">
+      <span class="online-pulse"></span>
+      <span>Online</span>
+    </div>
+    <div class="online-users-bar" id="onlineUsersBar"></div>
+  </div>
 </div>
 
 <!-- VALIDATION BAR - INSIDE TOP-FIXED -->
@@ -2930,6 +3079,13 @@ function entrarSistema(){
   let info = document.getElementById('userInfo');
   info.innerHTML = '<b>'+usuarioLogado.nome+'</b> '+((usuarioLogado.is_admin||usuarioLogado.perfil==='admin')?'(Admin)':'');
 
+  // Load avatar
+  carregarAvatar();
+
+  // Iniciar presença online e monitoramento
+  iniciarHeartbeat();
+  iniciarMonitorOnline();
+
   // Apply user permissions
   aplicarPermissoes();
 
@@ -2937,11 +3093,229 @@ function entrarSistema(){
   initApp();
 }
 
-function fazerLogout(){
+async function fazerLogout(){
+  pararHeartbeat();
+  await removerPresenca();
   localStorage.removeItem('sessao_cc');
   usuarioLogado = null;
   location.reload();
 }
+
+// ============ AVATAR / FOTO DE PERFIL ============
+function carregarAvatar(){
+  if(!usuarioLogado) return;
+  let avatarUrl = usuarioLogado.avatar_url;
+  if(avatarUrl){
+    exibirAvatar(avatarUrl);
+  }
+}
+
+function exibirAvatar(url){
+  let circle = document.querySelector('#headerUserProfile .avatar-circle');
+  if(!circle) return;
+  // Replace SVG with img
+  circle.innerHTML = '<img class="avatar-img" src="'+url+'" onerror="this.parentElement.innerHTML=\'<svg viewBox=&quot;0 0 24 24&quot;><path d=&quot;M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z&quot;/></svg>\'">';
+}
+
+async function uploadAvatar(input){
+  if(!input.files || !input.files[0]) return;
+  if(!usuarioLogado){ await modalAlert('Faça login primeiro.','Erro'); return; }
+
+  let file = input.files[0];
+  if(!file.type.startsWith('image/')){ await modalAlert('Selecione uma imagem.','Erro'); return; }
+
+  showToast('📷 Processando foto...');
+
+  try {
+    // Compress and resize to 120x120 using canvas
+    let img = await loadImage(file);
+    let canvas = document.createElement('canvas');
+    let size = 120;
+    canvas.width = size;
+    canvas.height = size;
+    let ctx = canvas.getContext('2d');
+
+    // Crop to square (center)
+    let sx=0, sy=0, sw=img.width, sh=img.height;
+    if(sw > sh){ sx = (sw-sh)/2; sw = sh; }
+    else { sy = (sh-sw)/2; sh = sw; }
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
+
+    // Convert to blob (JPEG, quality 0.85)
+    let blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
+    let fileName = 'avatar_' + usuarioLogado.cpf.replace(/\D/g,'') + '.jpg';
+
+    // Upload to Supabase Storage
+    let {data, error} = await sb.storage.from('avatars').upload(fileName, blob, {
+      cacheControl: '60',
+      upsert: true,
+      contentType: 'image/jpeg'
+    });
+
+    if(error){
+      console.error('Upload error:', error);
+      await modalAlert('Erro ao fazer upload: '+error.message, 'Erro');
+      input.value = '';
+      return;
+    }
+
+    // Get public URL
+    let {data: urlData} = sb.storage.from('avatars').getPublicUrl(fileName);
+    let publicUrl = urlData.publicUrl + '?t=' + Date.now(); // cache bust
+
+    // Save URL to usuarios table
+    await sb.from('usuarios').update({avatar_url: publicUrl}).eq('cpf', usuarioLogado.cpf);
+    usuarioLogado.avatar_url = publicUrl;
+
+    // Display
+    exibirAvatar(publicUrl);
+    showToast('✓ Foto atualizada com sucesso!');
+  } catch(e){
+    console.error('Avatar error:', e);
+    await modalAlert('Erro ao processar a imagem.', 'Erro');
+  }
+
+  input.value = '';
+}
+
+function loadImage(file){
+  return new Promise((resolve, reject) => {
+    let reader = new FileReader();
+    reader.onload = function(e){
+      let img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ============ USUÁRIOS ONLINE (Presença) ============
+const ONLINE_MAX_AVATARS = 6;
+const HEARTBEAT_INTERVAL = 30000; // 30 segundos
+const ONLINE_THRESHOLD = 120000; // 2 minutos sem heartbeat = offline
+let heartbeatTimer = null;
+let onlineUsersTimer = null;
+
+// Cores para iniciais (sem foto)
+const AVATAR_COLORS = [
+  '#e53935','#8e24aa','#3949ab','#00897b','#f4511e',
+  '#6d4c41','#546e7a','#d81b60','#1e88e5','#43a047'
+];
+
+function getAvatarColor(nome){
+  let hash = 0;
+  for(let i=0; i<nome.length; i++) hash = nome.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getIniciais(nome){
+  if(!nome) return '?';
+  let parts = nome.trim().split(/\s+/).filter(w=>w);
+  if(parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  return parts[0].substring(0,2).toUpperCase();
+}
+
+// Heartbeat: registra/atualiza presença do usuário atual
+async function enviarHeartbeat(){
+  if(!usuarioLogado || !sb) return;
+  try {
+    await sb.from('sessoes_ativas').upsert({
+      cpf: usuarioLogado.cpf,
+      nome: usuarioLogado.nome,
+      avatar_url: usuarioLogado.avatar_url || null,
+      last_seen: new Date().toISOString()
+    }, { onConflict: 'cpf' });
+  } catch(e){
+    console.warn('Heartbeat error:', e);
+  }
+}
+
+// Remover presença ao sair
+async function removerPresenca(){
+  if(!usuarioLogado || !sb) return;
+  try {
+    await sb.from('sessoes_ativas').delete().eq('cpf', usuarioLogado.cpf);
+  } catch(e){ /* ignore */ }
+}
+
+// Iniciar heartbeat
+function iniciarHeartbeat(){
+  if(heartbeatTimer) clearInterval(heartbeatTimer);
+  enviarHeartbeat(); // imediato
+  heartbeatTimer = setInterval(enviarHeartbeat, HEARTBEAT_INTERVAL);
+}
+
+// Parar heartbeat
+function pararHeartbeat(){
+  if(heartbeatTimer){ clearInterval(heartbeatTimer); heartbeatTimer = null; }
+  if(onlineUsersTimer){ clearInterval(onlineUsersTimer); onlineUsersTimer = null; }
+}
+
+// Buscar e renderizar usuários online
+async function atualizarUsuariosOnline(){
+  if(!sb) return;
+  let bar = document.getElementById('onlineUsersBar');
+  let strip = document.getElementById('onlineUsersStrip');
+  if(!bar) return;
+
+  try {
+    let threshold = new Date(Date.now() - ONLINE_THRESHOLD).toISOString();
+    let {data, error} = await sb.from('sessoes_ativas')
+      .select('cpf, nome, avatar_url, last_seen')
+      .gte('last_seen', threshold)
+      .order('last_seen', {ascending: false});
+
+    if(error || !data){ bar.innerHTML = ''; if(strip) strip.classList.add('hidden'); return; }
+
+    // Filtrar o próprio usuário (opcional — pode manter se quiser se ver)
+    // data = data.filter(u => u.cpf !== usuarioLogado?.cpf);
+
+    if(data.length === 0){ bar.innerHTML = ''; if(strip) strip.classList.add('hidden'); return; }
+
+    if(strip) strip.classList.remove('hidden');
+
+    let html = '';
+    let mostrar = data.slice(0, ONLINE_MAX_AVATARS);
+    let restante = data.length - mostrar.length;
+
+    mostrar.forEach(u => {
+      let iniciais = getIniciais(u.nome);
+      let cor = getAvatarColor(u.nome);
+      let conteudo = u.avatar_url
+        ? '<img src="'+u.avatar_url+'" alt="'+u.nome+'" onerror="this.parentElement.innerHTML=\'<div class=&quot;initials&quot; style=&quot;background:'+cor+'&quot;>'+iniciais+'</div>\'">'
+        : '<div class="initials" style="background:'+cor+'">'+iniciais+'</div>';
+
+      html += '<div class="online-avatar" title="'+u.nome+'">'
+        + conteudo
+        + '<span class="online-avatar-tooltip">'+u.nome+'</span>'
+        + '</div>';
+    });
+
+    if(restante > 0){
+      html += '<div class="online-overflow" title="Mais '+restante+' online">+'+restante+'</div>';
+    }
+
+    bar.innerHTML = html;
+  } catch(e){
+    console.warn('Erro ao buscar usuários online:', e);
+  }
+}
+
+// Iniciar monitoramento de usuários online
+function iniciarMonitorOnline(){
+  atualizarUsuariosOnline(); // imediato
+  if(onlineUsersTimer) clearInterval(onlineUsersTimer);
+  onlineUsersTimer = setInterval(atualizarUsuariosOnline, HEARTBEAT_INTERVAL);
+}
+
+// Cleanup ao fechar aba/navegador
+window.addEventListener('beforeunload', function(){
+  removerPresenca();
+  pararHeartbeat();
+});
 
 async function verificarSessao(){
   let sessao = localStorage.getItem('sessao_cc');
