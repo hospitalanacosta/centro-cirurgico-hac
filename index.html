@@ -319,7 +319,7 @@ body {
 }
 
 .online-avatar:not(:first-child) {
-  margin-left: -8px;
+  margin-left: 4px;
 }
 
 .online-avatar:hover {
@@ -380,7 +380,7 @@ body {
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
-  margin-left: -8px;
+  margin-left: 4px;
   border: 2px solid rgba(255,255,255,0.45);
 }
 
@@ -5746,9 +5746,10 @@ function pdfOcorrencias(){
 // ============ HEADER ============
 function atualizarHeader(){
   let hoje = hojeLocal();
-  let hojeCir = dados.filter(c=>c.data===hoje&&!c.cancelado&&!c.suspenso).length;
+  let hojeCir = dados.filter(c=>(c.data||'').substring(0,10)===hoje&&!c.cancelado&&!c.suspenso&&!isHemoProc(c)).length;
   document.getElementById("headerData").innerText = formatDate(hoje);
-  document.getElementById("headerTotal").innerHTML = hojeCir + "<em>/35</em>";
+  let headerTotalEl = document.getElementById("headerTotal");
+  if(headerTotalEl) headerTotalEl.innerHTML = hojeCir + "<em>/35</em>";
 
   // Atualizar gráfico radial antigo (Limite 35)
   let percent = Math.min(hojeCir / 35, 1);
