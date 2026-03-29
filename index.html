@@ -110,6 +110,7 @@ body {
 
 /* --- Top Bar --- */
 .header-topbar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1336,14 +1337,16 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 
 /* DASHBOARD - Modern Futuristic */
 .dash-filters {
-  display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;
+  display: flex; gap: 8px; flex-wrap: nowrap; align-items: flex-end;
   padding: 4px 0;
 }
-.dash-filters .form-group { min-width: 150px; }
-.dash-filters .form-group label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); }
+.dash-filters .form-group { min-width: 0; flex: 1 1 0; }
+.dash-filters .form-group:nth-child(1) { max-width: 90px; }
+.dash-filters .form-group:nth-child(2) { max-width: 110px; }
+.dash-filters .form-group label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary); }
 .dash-filters select {
-  width: 100%; padding: 10px 14px; border: 2px solid rgba(46,125,50,0.2); border-radius: 12px;
-  font-size: 13px; font-family: 'DM Sans', sans-serif; background: rgba(255,255,255,0.9);
+  width: 100%; padding: 7px 8px; border: 2px solid rgba(46,125,50,0.2); border-radius: 10px;
+  font-size: 12px; font-family: 'DM Sans', sans-serif; background: rgba(255,255,255,0.9);
   transition: all 0.3s; backdrop-filter: blur(4px); cursor: pointer;
 }
 .dash-filters select:hover { border-color: var(--primary); }
@@ -1607,6 +1610,203 @@ tr.suspenso td { color: #e65100; font-style: italic; }
   font-size: 11px;
   font-weight: 500;
 }
+
+/* ============ MÓDULO MÉDICO ============ */
+.btn-modulo-medico {
+  display: block;
+  margin: 18px auto 0;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all .2s;
+  box-shadow: 0 4px 15px rgba(13,148,136,.3);
+}
+.btn-modulo-medico:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(13,148,136,.4); }
+
+.medico-portal {
+  display: none;
+  min-height: 100vh;
+  background: var(--bg-light, #f0f4f8);
+}
+.medico-header {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.medico-header-info { display: flex; align-items: center; gap: 14px; }
+.medico-header-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: #fff;
+  border: 2px solid rgba(255,255,255,.4);
+  overflow: hidden;
+}
+.medico-header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.medico-header-name { font-size: 16px; font-weight: 700; }
+.medico-header-crm { font-size: 12px; opacity: .8; }
+.medico-header-right { display: flex; align-items: center; gap: 16px; }
+.medico-notif-icon {
+  position: relative; cursor: pointer; font-size: 22px;
+  background: rgba(255,255,255,.15); border-radius: 50%; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center; transition: .2s;
+}
+.medico-notif-icon:hover { background: rgba(255,255,255,.25); }
+.medico-notif-badge {
+  position: absolute; top: -2px; right: -2px;
+  background: #ef4444; color: #fff; font-size: 10px; font-weight: 700;
+  min-width: 18px; height: 18px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+}
+.medico-btn-logout {
+  padding: 8px 18px; background: rgba(255,255,255,.15);
+  border: 1.5px solid rgba(255,255,255,.4); border-radius: 8px;
+  color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: .2s;
+}
+.medico-btn-logout:hover { background: rgba(255,255,255,.25); }
+
+.medico-tab {
+  padding: 10px 18px;
+  font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,0.7); cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: .2s; white-space: nowrap;
+}
+.medico-tab:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.medico-tab.active { color: #fff; border-bottom-color: #fff; }
+
+.medico-content { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+.medico-panel { display: none; }
+.medico-panel.active { display: block; }
+
+.medico-card {
+  background: #fff; border-radius: 12px;
+  padding: 20px; margin-bottom: 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.06);
+  border: 1px solid #e5e7eb;
+}
+.medico-card h3 { margin: 0 0 14px; font-size: 16px; color: #1e293b; }
+
+.medico-stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px; margin-bottom: 20px;
+}
+.medico-stat-card {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+  border-radius: 12px; padding: 18px; text-align: center;
+  border: 1px solid #99f6e4;
+}
+.medico-stat-num { font-size: 28px; font-weight: 800; color: #0d9488; }
+.medico-stat-label { font-size: 11px; color: #64748b; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.medico-cirurgia-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-bottom: 1px solid #f1f5f9;
+  transition: background .15s;
+}
+.medico-cirurgia-item:hover { background: #f8fafc; }
+.medico-cirurgia-data {
+  min-width: 70px; text-align: center;
+  background: #f0fdfa; border-radius: 8px; padding: 8px;
+  border: 1px solid #99f6e4;
+}
+.medico-cirurgia-data .dia { font-size: 20px; font-weight: 800; color: #0d9488; line-height: 1; }
+.medico-cirurgia-data .mes { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+.medico-cirurgia-info { flex: 1; }
+.medico-cirurgia-info .pac { font-weight: 700; color: #1e293b; font-size: 14px; }
+.medico-cirurgia-info .proc { font-size: 12px; color: #64748b; margin-top: 2px; }
+.medico-cirurgia-info .det { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.medico-cirurgia-status {
+  padding: 4px 12px; border-radius: 20px; font-size: 10px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.medico-cirurgia-status.agendado { background: #dbeafe; color: #1d4ed8; }
+.medico-cirurgia-status.realizado { background: #dcfce7; color: #16a34a; }
+.medico-cirurgia-status.cancelado { background: #fee2e2; color: #dc2626; }
+.medico-cirurgia-status.suspenso { background: #fef3c7; color: #d97706; }
+
+.medico-filter-bar {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 16px;
+}
+.medico-filter-bar select, .medico-filter-bar input {
+  padding: 8px 12px; border: 1.5px solid #d1d5db;
+  border-radius: 8px; font-size: 12px; background: #fff;
+}
+.medico-filter-bar .btn-sm {
+  padding: 8px 16px; font-size: 12px; border-radius: 8px;
+  border: none; cursor: pointer; font-weight: 600;
+}
+
+/* Disponibilidade grid */
+.disp-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 8px; margin-top: 12px;
+}
+.disp-day {
+  text-align: center; padding: 10px 4px; border-radius: 8px;
+  border: 1.5px solid #e5e7eb; cursor: pointer; transition: .2s;
+  font-size: 12px;
+}
+.disp-day:hover { border-color: #0d9488; background: #f0fdfa; }
+.disp-day.active { background: #0d9488; color: #fff; border-color: #0d9488; }
+.disp-day .dia-label { font-weight: 700; font-size: 13px; }
+.disp-time { font-size: 10px; color: #64748b; margin-top: 4px; }
+.disp-day.active .disp-time { color: rgba(255,255,255,.8); }
+
+/* Preferências */
+.pref-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid #f1f5f9;
+}
+.pref-item:last-child { border-bottom: none; }
+.pref-add-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: #f0fdfa; border: 1.5px dashed #0d9488;
+  border-radius: 8px; color: #0d9488; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: .2s; margin-top: 10px;
+}
+.pref-add-btn:hover { background: #ccfbf1; }
+
+/* Notificações */
+.notif-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid #f1f5f9;
+  transition: .15s;
+}
+.notif-item:hover { background: #f8fafc; }
+.notif-item.nao-lida { background: #f0fdfa; border-left: 3px solid #0d9488; }
+.notif-icon { font-size: 20px; min-width: 32px; text-align: center; }
+.notif-content { flex: 1; }
+.notif-content .titulo { font-weight: 700; color: #1e293b; font-size: 13px; }
+.notif-content .msg { font-size: 12px; color: #64748b; margin-top: 3px; }
+.notif-content .tempo { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+
+/* Médico portal - responsivo */
+@media(max-width:768px){
+  .medico-header { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
+  .medico-tabs-bar { padding: 0 8px; }
+  .medico-tab { padding: 12px 14px; font-size: 12px; }
+  .medico-content { padding: 16px; }
+  .medico-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .disp-grid { grid-template-columns: repeat(4, 1fr); }
+}
 </style>
 
 <script>(function(){
@@ -1645,6 +1845,103 @@ tr.suspenso td { color: #e65100; font-style: italic; }
     </div>
     <div class="switch-link" style="margin-top:12px">
       <a onclick="mostrarLoginAdmin()" style="font-size:11px;color:#999">Acesso Administrador</a>
+    </div>
+    <button class="btn-modulo-medico" onclick="mostrarLoginMedico()">🩺 Módulo Médico</button>
+  </div>
+
+  <!-- LOGIN MÉDICO -->
+  <div class="login-box" id="medicoLoginForm" style="display:none">
+    <h2 style="color:#0d9488">🩺 Módulo Médico</h2>
+    <div class="sub">Acesso exclusivo para médicos do corpo clínico</div>
+    <div class="msg" id="medicoLoginMsg"></div>
+    <div class="field">
+      <label>CRM</label>
+      <input type="text" id="medicoLoginCRM" placeholder="Número do CRM" onkeydown="if(event.key==='Enter')fazerLoginMedico()">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="medicoLoginSenha" placeholder="Sua senha" onkeydown="if(event.key==='Enter')fazerLoginMedico()">
+    </div>
+    <button class="btn-login" style="background:linear-gradient(135deg,#0d9488,#14b8a6)" onclick="fazerLoginMedico()">Entrar</button>
+    <div class="switch-link" style="margin-top:16px">
+      Não tem cadastro? <a onclick="mostrarCadastroMedico()" style="font-weight:600;color:#0d9488">Cadastrar-se</a>
+    </div>
+    <div class="switch-link" style="margin-top:10px">
+      <a href="javascript:void(0)" onclick="mostrarEsqueciSenhaMedico()" style="font-size:12px;color:#0d9488;font-weight:600;cursor:pointer">🔑 Esqueci minha senha</a>
+    </div>
+    <div class="switch-link" style="margin-top:14px">
+      <a onclick="mostrarLogin()" style="font-size:12px;color:#999;cursor:pointer">← Voltar ao login principal</a>
+    </div>
+  </div>
+
+  <!-- CADASTRO MÉDICO -->
+  <div class="login-box" id="medicoCadastroForm" style="display:none">
+    <h2 style="color:#0d9488">🩺 Cadastro Médico</h2>
+    <div class="sub">Preencha seus dados. Um administrador irá aprovar seu acesso.</div>
+    <div class="msg" id="medicoCadastroMsg"></div>
+    <div id="medCadDadosArea">
+      <div class="field">
+        <label>CRM <span style="color:#ef4444">*</span></label>
+        <input type="text" id="medCadCRM" placeholder="Número do CRM" onblur="verificarCrmCadastro()">
+        <div id="medCadCrmStatus" style="font-size:11px;margin-top:3px;min-height:16px"></div>
+      </div>
+      <div class="field">
+        <label>Nome Completo <span style="color:#ef4444">*</span></label>
+        <input type="text" id="medCadNome" placeholder="Dr(a). Nome Completo">
+      </div>
+      <div class="field">
+        <label>Especialidade</label>
+        <input type="text" id="medCadEspec" placeholder="Ex: Ortopedia, Cardiologia">
+      </div>
+      <div class="field">
+        <label>E-mail <span style="color:#ef4444">*</span></label>
+        <input type="email" id="medCadEmail" placeholder="seu@email.com">
+      </div>
+      <div class="field">
+        <label>Criar Senha <span style="color:#ef4444">*</span></label>
+        <input type="password" id="medCadSenha" placeholder="Mínimo 6 caracteres">
+      </div>
+      <button class="btn-login" style="background:linear-gradient(135deg,#0d9488,#14b8a6)" onclick="fazerCadastroMedico()">Solicitar Acesso</button>
+    </div>
+    <div class="switch-link" style="margin-top:12px">
+      Já tem cadastro? <a onclick="mostrarLoginMedico()" style="color:#0d9488">Fazer login</a>
+    </div>
+  </div>
+
+  <!-- ESQUECI SENHA MÉDICO -->
+  <div class="login-box" id="medicoEsqueciForm" style="display:none">
+    <h2 style="color:#0d9488">🔑 Recuperar Senha</h2>
+    <div class="sub">Digite o e-mail cadastrado para receber o código de recuperação.</div>
+    <div class="msg" id="medicoEsqueciMsg"></div>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="medicoEsqueciEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')enviarCodigoMedico()">
+    </div>
+    <button class="btn-login" style="background:linear-gradient(135deg,#0d9488,#14b8a6)" id="btnEnviarCodigoMed" onclick="enviarCodigoMedico()">Enviar Código</button>
+    <div class="switch-link" style="margin-top:8px">
+      <a onclick="mostrarLoginMedico()" style="text-decoration:none;cursor:pointer;color:#0d9488">Voltar ao login médico</a>
+    </div>
+  </div>
+
+  <!-- RESET SENHA MÉDICO -->
+  <div class="login-box" id="medicoResetForm" style="display:none">
+    <h2 style="color:#0d9488">🔑 Redefinir Senha</h2>
+    <div class="msg" id="medicoResetMsg"></div>
+    <div class="field">
+      <label>Código recebido por e-mail</label>
+      <input type="text" id="medicoResetCodigo" placeholder="Digite o código de 6 dígitos" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:8px;font-weight:700">
+    </div>
+    <div class="field">
+      <label>Nova Senha</label>
+      <input type="password" id="medicoResetNovaSenha" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="field">
+      <label>Confirmar Nova Senha</label>
+      <input type="password" id="medicoResetConfirma" placeholder="Repita a nova senha" onkeydown="if(event.key==='Enter')redefinirSenhaMedico()">
+    </div>
+    <button class="btn-login" style="background:linear-gradient(135deg,#0d9488,#14b8a6)" onclick="redefinirSenhaMedico()">Redefinir Senha</button>
+    <div class="switch-link" style="margin-top:8px">
+      <a onclick="mostrarLoginMedico()" style="text-decoration:none;cursor:pointer;color:#0d9488">Voltar ao login médico</a>
     </div>
   </div>
 
@@ -1737,6 +2034,234 @@ tr.suspenso td { color: #e65100; font-style: italic; }
     <div class="switch-link">
       <a onclick="mostrarLogin()">Voltar ao login</a>
     </div>
+  </div>
+</div>
+
+<!-- ========== PORTAL DO MÉDICO ========== -->
+<div class="medico-portal" id="medicoPortal">
+  <div class="header-wrapper" style="position:sticky;top:0;z-index:100">
+    <div class="header-topbar">
+      <!-- Left: Logo + Hospital Name (same as main) -->
+      <div class="header-left">
+        <img id="medLogoImg" class="header-logo" src="">
+        <div class="header-brand-name" id="medBrandName">Hospital Ana Costa</div>
+      </div>
+
+      <!-- Center: Portal Médico label -->
+      <div style="position:absolute;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.95);font-size:15px;font-weight:700;letter-spacing:0.5px;white-space:nowrap">
+        🩺 Portal Médico
+      </div>
+
+      <div class="header-right">
+        <div class="header-clock-block">
+          <div class="clock-row">
+            <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)" width="14" height="14"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            <span id="medHeaderClock">--:--:--</span>
+          </div>
+          <div class="clock-row">
+            <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)" width="14" height="14"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            <span id="medHeaderData">--/--/----</span>
+          </div>
+        </div>
+
+        <div class="header-separator"></div>
+
+        <!-- Status Servidor (igual ao principal, pulsando) -->
+        <div class="header-widget servidor-widget">
+          <div class="widget-status-dot"></div>
+          <div class="widget-text">
+            <span class="widget-value">Status do Servidor:</span>
+            <span class="widget-label" style="color:#4caf50;font-weight:600;">Online</span>
+          </div>
+        </div>
+
+        <div class="header-separator"></div>
+
+        <!-- Notificações -->
+        <div style="position:relative;cursor:pointer" onclick="medicoMostrarTab('med-notificacoes')" title="Notificações">
+          <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)" width="24" height="24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          <span id="medNotifBadge" style="display:none;position:absolute;top:-4px;right:-6px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;align-items:center;justify-content:center;padding:0 4px">0</span>
+        </div>
+
+        <div class="header-separator"></div>
+
+        <!-- User Profile -->
+        <div class="header-user-wrap" id="medUserWrap">
+          <div class="header-user-profile" onclick="toggleMedUserMenu()">
+            <div class="avatar-circle" id="medAvatarHeader" style="cursor:pointer">
+              <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <span class="user-info"><b id="medNomeHeader"></b><br><span id="medCrmHeader" style="font-size:10px;opacity:.8"></span></span>
+            <svg class="chevron" id="medUserChevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+          </div>
+          <div class="user-dropdown" id="medUserDropdown">
+            <button class="user-dropdown-item" onclick="document.getElementById('medAvatarFileInput').click()">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              Alterar Foto
+            </button>
+            <button class="user-dropdown-item" onclick="medicoMostrarTab('med-perfil')">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+              Meu Perfil
+            </button>
+            <button class="user-dropdown-item logout" onclick="logoutMedico()">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              Sair
+            </button>
+          </div>
+          <input type="file" id="medAvatarFileInput" accept="image/*" style="display:none" onchange="uploadAvatarMedico(this)">
+        </div>
+      </div>
+    </div>
+
+    <nav class="header-nav">
+      <div class="medico-tab active" data-medtab="med-dashboard" onclick="medicoMostrarTab('med-dashboard')">📊 Dashboard</div>
+      <div class="medico-tab" data-medtab="med-cirurgias" onclick="medicoMostrarTab('med-cirurgias')">📋 Minhas Cirurgias</div>
+      <div class="medico-tab" data-medtab="med-disponibilidade" onclick="medicoMostrarTab('med-disponibilidade')">📅 Disponibilidade</div>
+      <div class="medico-tab" data-medtab="med-preferencias" onclick="medicoMostrarTab('med-preferencias')">⚙️ Preferências</div>
+      <div class="medico-tab" data-medtab="med-notificacoes" onclick="medicoMostrarTab('med-notificacoes')">🔔 Notificações</div>
+      <div class="medico-tab" data-medtab="med-perfil" onclick="medicoMostrarTab('med-perfil')">👤 Meu Perfil</div>
+    </nav>
+  </div>
+
+  <div class="medico-content">
+
+    <!-- MINHAS CIRURGIAS -->
+    <div class="medico-panel" id="med-cirurgias">
+      <div class="medico-card">
+        <div class="medico-filter-bar">
+          <select id="medFiltroPerido" onchange="carregarCirurgiasMedico()">
+            <option value="hoje">Hoje</option>
+            <option value="semana">Esta Semana</option>
+            <option value="mes" selected>Este Mês</option>
+            <option value="proximo">Próximos 30 dias</option>
+            <option value="todos">Todos</option>
+          </select>
+          <select id="medFiltroStatus" onchange="carregarCirurgiasMedico()">
+            <option value="">Todos Status</option>
+            <option value="agendado">Agendados</option>
+            <option value="realizado">Realizados</option>
+            <option value="cancelado">Cancelados</option>
+            <option value="suspenso">Suspensos</option>
+          </select>
+          <input type="text" id="medFiltroBusca" placeholder="🔍 Buscar paciente..." oninput="carregarCirurgiasMedico()" style="flex:1;min-width:150px">
+          <span style="font-size:12px;color:#64748b;font-weight:600" id="medCirTotal">0 cirurgias</span>
+        </div>
+      </div>
+      <div class="medico-card" style="padding:0;overflow:hidden">
+        <div id="medCirurgiasLista" style="max-height:70vh;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="medico-panel active" id="med-dashboard">
+      <div class="medico-stat-grid" id="medStatGrid"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="medico-card">
+          <h3>📈 Cirurgias por Mês</h3>
+          <canvas id="medChartMensal" height="220"></canvas>
+        </div>
+        <div class="medico-card">
+          <h3>🏥 Por Convênio</h3>
+          <canvas id="medChartConvenio" height="220"></canvas>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+        <div class="medico-card">
+          <h3>🔬 Por Especialidade/Procedimento</h3>
+          <canvas id="medChartProc" height="220"></canvas>
+        </div>
+        <div class="medico-card">
+          <h3>📊 Por Sala</h3>
+          <canvas id="medChartSala" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISPONIBILIDADE -->
+    <div class="medico-panel" id="med-disponibilidade">
+      <div class="medico-card">
+        <h3>📅 Minha Disponibilidade Semanal</h3>
+        <div style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400e">
+          <strong>⚠️ Atenção:</strong> Esta disponibilidade é apenas uma <strong>sugestão</strong> e será avaliada pela equipe de agendamento do Centro Cirúrgico. O agendamento final depende da disponibilidade de salas, equipes e demais recursos.
+        </div>
+        <p style="font-size:12px;color:#64748b;margin-bottom:14px">Clique nos dias para selecionar/deselecionar. Você pode marcar vários dias e definir horários para cada um.</p>
+        <div class="disp-grid" id="medDispGrid"></div>
+        <div style="margin-top:16px;text-align:right">
+          <button class="btn btn-primary btn-sm" onclick="salvarDisponibilidadeMedico()" style="background:#0d9488;border:none;padding:10px 24px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer">💾 Salvar Disponibilidade</button>
+        </div>
+      </div>
+      <div class="medico-card" style="margin-top:16px">
+        <h3>📆 Bloqueio de Datas Específicas</h3>
+        <p style="font-size:12px;color:#64748b;margin-bottom:10px">Informe datas em que não estará disponível (férias, congressos, etc.).</p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="date" id="medBloqueioDataIni" style="padding:8px;border:1.5px solid #d1d5db;border-radius:8px;font-size:12px">
+          <span style="color:#64748b;font-size:12px">até</span>
+          <input type="date" id="medBloqueioDataFim" style="padding:8px;border:1.5px solid #d1d5db;border-radius:8px;font-size:12px">
+          <input type="text" id="medBloqueioMotivo" placeholder="Motivo (opcional)" style="padding:8px;border:1.5px solid #d1d5db;border-radius:8px;font-size:12px;flex:1;min-width:150px">
+          <button onclick="adicionarBloqueioMedico()" style="padding:8px 16px;background:#0d9488;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">+ Adicionar</button>
+        </div>
+        <div id="medBloqueiosLista" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- PREFERÊNCIAS -->
+    <div class="medico-panel" id="med-preferencias">
+      <div class="medico-card">
+        <h3>⚙️ Preferências Cirúrgicas</h3>
+        <p style="font-size:12px;color:#64748b;margin-bottom:14px">Cadastre equipamentos, materiais e preferências para cada tipo de procedimento.</p>
+        <div id="medPrefLista"></div>
+        <button class="pref-add-btn" onclick="adicionarPreferenciaMedico()">+ Adicionar Preferência</button>
+      </div>
+      <div class="medico-card" style="margin-top:16px">
+        <h3>📝 Observações Gerais</h3>
+        <p style="font-size:12px;color:#64748b;margin-bottom:14px">Adicione observações para a equipe de agendamento (lateralidade, posicionamento, materiais, etc.)</p>
+        <div id="medObsLista"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:start">
+          <textarea id="medObsNovaInput" placeholder="Digite sua observação..." style="flex:1;min-height:60px;border:1.5px solid #d1d5db;border-radius:8px;padding:10px;font-size:13px;resize:vertical;font-family:inherit"></textarea>
+          <button onclick="adicionarObsMedico()" style="padding:10px 20px;background:#0d9488;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">+ Adicionar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICAÇÕES -->
+    <div class="medico-panel" id="med-notificacoes">
+      <div class="medico-card" style="padding:0;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #e5e7eb">
+          <h3 style="margin:0">🔔 Notificações</h3>
+          <button onclick="marcarTodasLidasMedico()" style="padding:6px 14px;background:#f0fdfa;color:#0d9488;border:1.5px solid #99f6e4;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer">Marcar todas como lidas</button>
+        </div>
+        <div id="medNotifLista" style="max-height:70vh;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <!-- MEU PERFIL -->
+    <div class="medico-panel" id="med-perfil">
+      <div class="medico-card" style="max-width:500px">
+        <h3>👤 Meu Perfil</h3>
+        <div class="field" style="margin-bottom:14px">
+          <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">Nome Completo</label>
+          <input type="text" id="medPerfilNome" style="width:100%;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px">
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">CRM</label>
+          <input type="text" id="medPerfilCRM" style="width:100%;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;background:#f3f4f6" disabled>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">Especialidade</label>
+          <input type="text" id="medPerfilEspec" style="width:100%;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px">
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">E-mail</label>
+          <input type="email" id="medPerfilEmail" style="width:100%;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px">
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px;display:block">Nova Senha (deixe em branco para manter)</label>
+          <input type="password" id="medPerfilSenha" placeholder="Nova senha" style="width:100%;padding:10px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px">
+        </div>
+        <button onclick="salvarPerfilMedico()" style="padding:10px 24px;background:#0d9488;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;width:100%">💾 Salvar Perfil</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1843,7 +2368,8 @@ tr.suspenso td { color: #e65100; font-style: italic; }
     <div class="tab" data-tab="hemodinamica">Hemodinâmica</div>
     <div class="tab" data-tab="logs" id="tabLogs" style="display:none">📋 Logs</div>
     <div class="tab" data-tab="adminRecursos" id="tabAdminRecursos" style="display:none">⚙️ Config. Recursos</div>
-    <div class="tab" data-tab="autorizacoes" id="tabAutorizacoes" style="display:none">🔒 Autorizações</div>
+    <div class="tab" data-tab="autorizacoes" id="tabAutorizacoes" style="display:none;position:relative">🔒 Autorizações <span id="badgePendenteMedAut" style="display:none;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;padding:0 5px;line-height:18px;text-align:center;position:absolute;top:2px;margin-left:2px"></span></div>
+    <div class="tab" data-tab="portalMedico" id="tabPortalMedico" style="display:none;position:relative">🩺 Portal Médico <span id="badgePendenteMedPortal" style="display:none;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;padding:0 5px;line-height:18px;text-align:center;position:absolute;top:2px;margin-left:2px"></span></div>
   </nav>
 
   <!-- Usuários Online (abaixo da nav) -->
@@ -1891,6 +2417,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           <input type="checkbox" id="flutuante" onchange="toggleFlutuante(this.checked)" style="accent-color:var(--warning)">
           Reserva Flutuante
         </label>
+        <button class="btn btn-outline btn-sm" onclick="limparForm()" style="padding:6px 14px;font-size:12px;border-radius:20px;color:var(--text-secondary);border-color:#ccc" title="Limpar todos os campos do formulário">🗑 Limpar</button>
       </div>
     </div>
 
@@ -1925,9 +2452,10 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       <div class="card-title">Identificação do Paciente</div>
       <div class="form-grid">
 
-        <div class="form-group">
+        <div class="form-group" style="position:relative">
           <label>Nº Identificação / Prontuário</label>
-          <input type="text" id="identificacao" placeholder="Nº prontuário">
+          <input type="text" id="identificacao" placeholder="Nº prontuário" oninput="buscarHistoricoID()" onblur="setTimeout(()=>{let d=document.getElementById('idHistDrop');if(d)d.style.display='none';},250)">
+          <div id="idHistDrop" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:60;background:white;border:1.5px solid var(--primary);border-radius:0 0 10px 10px;max-height:280px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.15)"></div>
         </div>
         <div class="form-group span2">
           <label>Nome do Paciente</label>
@@ -2133,6 +2661,9 @@ tr.suspenso td { color: #e65100; font-style: italic; }
             <option value="extra">Mercado (Extra)</option>
           </select>
         </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn btn-outline" onclick="abrirRelatorioFlutuantes()" style="white-space:nowrap;border-color:var(--warning);color:var(--warning)">🔄 Reservas Flutuantes</button>
+        </div>
       </div>
     </div>
 
@@ -2260,6 +2791,8 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         <button class="btn btn-primary btn-sm" onclick="setDispMode('grade')" id="btnDispGrade" style="font-size:11px;padding:6px 14px">📊 Grade Visual</button>
         <button class="btn btn-outline btn-sm" onclick="setDispMode('tabela')" id="btnDispTabela" style="font-size:11px;padding:6px 14px">📋 Tabela por Sala</button>
         <button class="btn btn-outline btn-sm" onclick="setDispMode('recursos')" id="btnDispRecursos" style="font-size:11px;padding:6px 14px">⚙️ Recursos</button>
+        <button class="btn btn-outline btn-sm" onclick="setDispMode('ocioso')" id="btnDispOcioso" style="font-size:11px;padding:6px 14px">⏱️ Tempo Ocioso</button>
+
       </div>
     </div>
     <div id="dispContainer"></div>
@@ -2268,11 +2801,67 @@ tr.suspenso td { color: #e65100; font-style: italic; }
   <!-- ========== PAINEL EQUIPAMENTOS ========== -->
   <div class="panel" id="panel-equipamentos">
     <div class="card">
-      <div class="card-title">Gerenciar Disponibilidade de Equipamentos e Materiais</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="card-title" style="margin-bottom:0">Gerenciar Disponibilidade de Equipamentos e Materiais</div>
+        <button class="btn btn-primary" onclick="abrirModalPdfEquip()" style="font-size:12px;padding:8px 18px;background:#1b5e20;border-color:#1b5e20;display:flex;align-items:center;gap:6px">
+          <span style="font-size:15px">📄</span> PDF Equipamentos
+        </button>
+      </div>
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
         Desative equipamentos/caixas temporariamente (manutenção, esterilização, etc). Equipamentos desativados ficam bloqueados no agendamento.
       </p>
       <div id="painelEquipamentos"></div>
+    </div>
+
+    <!-- Modal de seleção para PDF Equipamentos -->
+    <div id="modalPdfEquip" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center">
+      <div style="background:white;border-radius:16px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);padding:20px 24px;border-radius:16px 16px 0 0">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="color:white">
+              <div style="font-size:18px;font-weight:700">📄 Gerar Relatório PDF de Equipamentos</div>
+              <div style="font-size:12px;opacity:0.85;margin-top:4px">Selecione a data e os equipamentos desejados</div>
+            </div>
+            <button onclick="fecharModalPdfEquip()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:24px">
+          <!-- Data -->
+          <div style="margin-bottom:20px">
+            <label style="font-weight:600;font-size:13px;color:#333;display:block;margin-bottom:6px">📅 Data do Relatório</label>
+            <input type="date" id="pdfEquipData" style="width:200px;padding:10px 14px;border:1.5px solid #ccc;border-radius:8px;font-size:14px" onchange="previewEquipPdf()">
+          </div>
+
+          <!-- Seleção de equipamentos -->
+          <div style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <label style="font-weight:600;font-size:13px;color:#333">⚙️ Equipamentos e Materiais</label>
+              <div style="display:flex;gap:8px">
+                <button onclick="selecionarTodosEquipPdf(true)" style="background:#e8f5e9;border:1px solid #4caf50;color:#2e7d32;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600">Selecionar Todos</button>
+                <button onclick="selecionarTodosEquipPdf(false)" style="background:#fce4ec;border:1px solid #ef5350;color:#c62828;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600">Limpar</button>
+              </div>
+            </div>
+            <div id="pdfEquipCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
+          </div>
+
+          <!-- Preview info -->
+          <div id="pdfEquipPreview" style="background:#f5f5f5;border-radius:10px;padding:14px;margin-bottom:20px;display:none">
+            <div style="font-size:12px;color:#666;font-weight:600;margin-bottom:6px">📊 Prévia do Relatório</div>
+            <div id="pdfEquipPreviewContent" style="font-size:12px;color:#333"></div>
+          </div>
+
+          <!-- Botões -->
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button onclick="fecharModalPdfEquip()" style="padding:10px 24px;border:1.5px solid #ccc;background:white;border-radius:8px;font-size:13px;cursor:pointer;color:#666">Cancelar</button>
+            <button onclick="gerarPdfEquipamentos()" style="padding:10px 28px;background:linear-gradient(135deg,#1b5e20,#2e7d32);color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:6px">
+              <span>📥</span> Gerar PDF
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2372,7 +2961,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       <div class="tabela-wrapper">
         <table>
           <thead>
-            <tr><th>Nome</th><th>CPF</th><th>Email</th><th>Setor</th><th>Data Cadastro</th><th>Status</th><th>Ações</th></tr>
+            <tr><th>Nome</th><th>CPF</th><th>Email</th><th>Setor</th><th>Data Cadastro</th><th>Status</th><th style="text-align:center">Nível</th><th>Ações</th></tr>
           </thead>
           <tbody id="tabelaAutorizacoes"></tbody>
         </table>
@@ -2398,6 +2987,46 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           <tbody id="tabelaPermissoes"></tbody>
         </table>
       </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🩺 Módulo Médico - Aprovação de Médicos</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
+        Aprove ou bloqueie médicos que solicitaram acesso ao Portal do Médico.
+      </p>
+      <div class="tabela-wrapper">
+        <table>
+          <thead>
+            <tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Email</th><th>Data Cadastro</th><th>Status</th><th>Ações</th></tr>
+          </thead>
+          <tbody id="tabelaMedicosPortal"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PORTAL MÉDICO (visão admin) ========== -->
+  <div class="panel" id="panel-portalMedico">
+    <div class="card">
+      <div class="card-title">🩺 Portal Médico — Informações dos Médicos</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
+        Visualize disponibilidade, preferências cirúrgicas e observações informadas pelos médicos do corpo clínico.
+      </p>
+      <div style="margin-bottom:16px;display:flex;gap:8px;align-items:center">
+        <div style="position:relative;flex:1;max-width:400px">
+          <input type="text" id="portalMedBusca" placeholder="🔍 Buscar por nome ou CRM..." oninput="filtrarBuscaPortalMed()" autocomplete="off" style="padding:10px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;width:100%">
+          <div id="portalMedAutoComplete" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
+        </div>
+        <button onclick="document.getElementById('portalMedBusca').value='';document.getElementById('portalMedAutoComplete').style.display='none';renderPortalMedicoAdmin();" style="padding:8px 16px;background:#f1f5f9;color:#64748b;border:1.5px solid #d1d5db;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap">🗑 Limpar</button>
+      </div>
+      <div id="portalMedicoListaAdmin"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>🔔 Avisos dos Médicos</span>
+        <button onclick="marcarTodasNotifAdminLidas()" style="font-size:11px;padding:4px 12px;background:#0d9488;color:#fff;border:none;border-radius:6px;cursor:pointer">Marcar todas como lidas</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">Notificações de disponibilidade, bloqueios e conflitos informados pelos médicos.</p>
+      <div id="portalMedNotifAdmin" style="max-height:400px;overflow-y:auto"></div>
     </div>
   </div>
 
@@ -2666,6 +3295,30 @@ tr.suspenso td { color: #e65100; font-style: italic; }
             <option value="Mercado">Mercado</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>Convênio</label>
+          <select id="dashConvenio" onchange="renderDashboard()">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Especialidade</label>
+          <select id="dashEspec" onchange="renderDashboard()">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="form-group" style="position:relative">
+          <label>Médico</label>
+          <div style="display:flex;gap:4px;align-items:center">
+            <input type="text" id="dashMedicoInput" placeholder="Todos" autocomplete="off"
+              oninput="filtrarDashMedico()" onfocus="filtrarDashMedico()"
+              onblur="setTimeout(()=>{document.getElementById('dashMedicoDrop').style.display='none'},200)"
+              style="flex:1;padding:7px 8px;border:2px solid rgba(46,125,50,0.2);border-radius:10px;font-size:12px;font-family:'DM Sans',sans-serif;background:rgba(255,255,255,0.9);cursor:text">
+            <button onclick="selecionarDashMedico('','');document.getElementById('dashMedicoInput').value=''" style="background:none;border:1.5px solid #ccc;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:13px;color:#999;line-height:1" title="Limpar médico">✕</button>
+          </div>
+          <input type="hidden" id="dashMedico" value="">
+          <div id="dashMedicoDrop" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:70;background:#fff;border:1.5px solid var(--primary);border-radius:0 0 8px 8px;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.15)"></div>
+        </div>
       </div>
     </div>
 
@@ -2835,32 +3488,27 @@ function mascaraCPF(el){
 
 function cpfLimpo(cpf){ return (cpf||'').replace(/\D/g,''); }
 
+function _hideAllLoginForms(){
+  ['loginForm','cadastroForm','adminLoginForm','resetSenhaForm','esqueciSenhaForm',
+   'medicoLoginForm','medicoCadastroForm','medicoEsqueciForm','medicoResetForm'].forEach(id=>{
+    let el = document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+}
 function mostrarLogin(){
+  _hideAllLoginForms();
   document.getElementById('loginForm').style.display='block';
-  document.getElementById('cadastroForm').style.display='none';
-  document.getElementById('adminLoginForm').style.display='none';
-  document.getElementById('resetSenhaForm').style.display='none';
-  document.getElementById('esqueciSenhaForm').style.display='none';
 }
 function mostrarCadastro(){
-  document.getElementById('loginForm').style.display='none';
+  _hideAllLoginForms();
   document.getElementById('cadastroForm').style.display='block';
-  document.getElementById('adminLoginForm').style.display='none';
-  document.getElementById('resetSenhaForm').style.display='none';
-  document.getElementById('esqueciSenhaForm').style.display='none';
 }
 function mostrarLoginAdmin(){
-  document.getElementById('loginForm').style.display='none';
-  document.getElementById('cadastroForm').style.display='none';
+  _hideAllLoginForms();
   document.getElementById('adminLoginForm').style.display='block';
-  document.getElementById('resetSenhaForm').style.display='none';
-  document.getElementById('esqueciSenhaForm').style.display='none';
 }
 function mostrarEsqueciSenhaForm(){
-  document.getElementById('loginForm').style.display='none';
-  document.getElementById('cadastroForm').style.display='none';
-  document.getElementById('adminLoginForm').style.display='none';
-  document.getElementById('resetSenhaForm').style.display='none';
+  _hideAllLoginForms();
   document.getElementById('esqueciSenhaForm').style.display='block';
   document.getElementById('esqueciMsg').className='msg';
   document.getElementById('esqueciMsg').innerText='';
@@ -2869,11 +3517,8 @@ function mostrarEsqueciSenhaForm(){
   document.getElementById('btnEnviarCodigo').innerText='Enviar Código';
 }
 function mostrarResetSenha(){
-  document.getElementById('loginForm').style.display='none';
-  document.getElementById('cadastroForm').style.display='none';
-  document.getElementById('adminLoginForm').style.display='none';
+  _hideAllLoginForms();
   document.getElementById('resetSenhaForm').style.display='block';
-  document.getElementById('esqueciSenhaForm').style.display='none';
   document.getElementById('resetMsg').className='msg';
   document.getElementById('resetMsg').innerText='';
 }
@@ -2894,7 +3539,7 @@ async function fazerLogin(){
 
   // Login OK
   usuarioLogado = data;
-  localStorage.setItem('sessao_cc', JSON.stringify({cpf:data.cpf, nome:data.nome, is_admin:data.perfil==='admin'}));
+  localStorage.setItem('sessao_cc', JSON.stringify({cpf:data.cpf, nome:data.nome, is_admin:data.perfil==='admin'||data.perfil==='admin2'}));
   entrarSistema();
 }
 
@@ -2913,10 +3558,10 @@ async function fazerLoginAdmin(){
   if(!existing){
     await sb.from('usuarios').insert({
       nome:nome, cpf:cpf, email:'admin@hac.com', setor:'Administração',
-      senha:senhaMestre, perfil:'admin', status:'aprovado', aprovado_por:'sistema'
+      senha:senhaMestre, perfil:'admin2', status:'aprovado', aprovado_por:'sistema'
     });
   } else {
-    await sb.from('usuarios').update({perfil:'admin', status:'aprovado'}).eq('cpf',cpf);
+    await sb.from('usuarios').update({perfil:'admin2', status:'aprovado'}).eq('cpf',cpf);
   }
 
   let {data:user} = await sb.from('usuarios').select('*').eq('cpf',cpf).single();
@@ -2948,6 +3593,23 @@ async function fazerCadastro(){
 
 function mostrarEsqueciSenha(){
   mostrarEsqueciSenhaForm();
+}
+
+function mostrarLoginMedico(){
+  _hideAllLoginForms();
+  document.getElementById('medicoLoginForm').style.display='block';
+}
+function mostrarCadastroMedico(){
+  _hideAllLoginForms();
+  document.getElementById('medicoCadastroForm').style.display='block';
+}
+function mostrarEsqueciSenhaMedico(){
+  _hideAllLoginForms();
+  document.getElementById('medicoEsqueciForm').style.display='block';
+}
+function mostrarResetSenhaMedico(){
+  _hideAllLoginForms();
+  document.getElementById('medicoResetForm').style.display='block';
 }
 
 async function enviarCodigoRecuperacao(){
@@ -3077,7 +3739,8 @@ function entrarSistema(){
 
   // Show user info
   let info = document.getElementById('userInfo');
-  info.innerHTML = '<b>'+usuarioLogado.nome+'</b> '+((usuarioLogado.is_admin||usuarioLogado.perfil==='admin')?'(Admin)':'');
+  let nivelTxt = usuarioLogado.perfil==='admin2' ? '(Admin II)' : (usuarioLogado.perfil==='admin'||usuarioLogado.is_admin) ? '(Admin)' : '';
+  info.innerHTML = '<b>'+usuarioLogado.nome+'</b> '+nivelTxt;
 
   // Load avatar
   carregarAvatar();
@@ -3330,30 +3993,75 @@ async function verificarSessao(){
 }
 
 // Autorizações (admin)
+// Helpers de nível
+function getNivelLabel(perfil){
+  if(perfil==='admin2') return 'Admin II';
+  if(perfil==='admin') return 'Admin I';
+  return 'Membro';
+}
+function getNivelCor(perfil){
+  if(perfil==='admin2') return '#b71c1c';
+  if(perfil==='admin') return '#e65100';
+  return '#1b5e20';
+}
+function isAdmin(u){ return u && (u.perfil==='admin'||u.perfil==='admin2'||u.is_admin); }
+function isAdmin2(u){ return u && u.perfil==='admin2'; }
+function podeAlterarNivel(alvo){
+  // Admin II pode tudo. Admin I não pode alterar Admin II.
+  if(isAdmin2(usuarioLogado)) return true;
+  if(isAdmin(usuarioLogado) && !isAdmin2({perfil:alvo})) return true;
+  return false;
+}
+
 async function renderAutorizacoes(){
-  if(!usuarioLogado || !(usuarioLogado.is_admin||usuarioLogado.perfil==='admin')) return;
+  if(!usuarioLogado || !isAdmin(usuarioLogado)) return;
   const {data} = await sb.from('usuarios').select('*').order('criado_em',{ascending:false});
   if(!data) return;
+  let meuNivel = usuarioLogado.perfil;
   let tbody = document.getElementById('tabelaAutorizacoes');
   tbody.innerHTML = data.map(u=>{
     let statusCls = u.status==='aprovado'?'status-agendado':u.status==='pendente'?'status-suspenso':'status-cancelado';
     let acoes = '';
+
+    // Aprovação / Rejeição / Bloqueio
     if(u.status==='pendente'){
       acoes = '<button class="btn btn-success btn-sm" onclick="aprovarUsuario(\''+u.cpf+'\')">Aprovar</button> '+
               '<button class="btn btn-danger btn-sm" onclick="rejeitarUsuario(\''+u.cpf+'\')">Rejeitar</button>';
     } else if(u.status==='rejeitado'){
       acoes = '<button class="btn btn-success btn-sm" onclick="aprovarUsuario(\''+u.cpf+'\')">Aprovar</button>';
     }
-    if(u.status==='aprovado' && u.perfil!=='admin'){
-      acoes += ' <button class="btn btn-danger btn-sm" onclick="bloquearUsuario(\''+u.cpf+'\')">Bloquear</button>';
+    if(u.status==='aprovado' && u.cpf !== usuarioLogado.cpf){
+      // Bloquear: Admin I não pode bloquear Admin II
+      if(isAdmin2(usuarioLogado) || u.perfil!=='admin2'){
+        acoes += ' <button class="btn btn-danger btn-sm" onclick="bloquearUsuario(\''+u.cpf+'\')">Bloquear</button>';
+      }
     }
     if(u.status==='bloqueado'){
       acoes += ' <button class="btn btn-success btn-sm" onclick="aprovarUsuario(\''+u.cpf+'\')">Desbloquear</button>';
     }
-    acoes += u.perfil==='admin'?' <span class="tag tag-recurso">ADMIN</span>':'';
+
+    // Select de nível (só para aprovados)
+    let nivelHtml = '';
+    if(u.status==='aprovado'){
+      // Pode alterar outros OU a si mesmo (para permitir auto-promoção Admin II com senha)
+      let canChange = isAdmin(usuarioLogado);
+
+      if(canChange){
+        let opts = '<option value="usuario"'+(u.perfil==='usuario'?' selected':'')+'>Membro</option>';
+        opts += '<option value="admin"'+(u.perfil==='admin'?' selected':'')+'>Admin I</option>';
+        opts += '<option value="admin2"'+(u.perfil==='admin2'?' selected':'')+'>Admin II 🔒</option>';
+        nivelHtml = '<select onchange="alterarNivel(\''+u.cpf+'\',this.value)" style="padding:4px 6px;border-radius:6px;font-size:11px;border:1.5px solid '+getNivelCor(u.perfil)+';color:'+getNivelCor(u.perfil)+';font-weight:600;background:#fff;cursor:pointer">'+opts+'</select>';
+      } else {
+        nivelHtml = '<span style="font-size:11px;font-weight:700;color:'+getNivelCor(u.perfil)+';padding:3px 10px;border:1.5px solid '+getNivelCor(u.perfil)+';border-radius:10px">'+getNivelLabel(u.perfil)+'</span>';
+      }
+    } else {
+      nivelHtml = '<span style="color:#999;font-size:11px">—</span>';
+    }
+
     return '<tr><td>'+u.nome+'</td><td>'+u.cpf+'</td><td>'+(u.email||'-')+'</td><td>'+(u.setor||'-')+'</td>'+
       '<td>'+new Date(u.criado_em).toLocaleString('pt-BR')+'</td>'+
       '<td><span class="status-badge '+statusCls+'">'+u.status.toUpperCase()+'</span></td>'+
+      '<td style="text-align:center">'+nivelHtml+'</td>'+
       '<td>'+acoes+'</td></tr>';
   }).join('');
   renderPermissoes();
@@ -3382,12 +4090,55 @@ async function bloquearUsuario(cpf){
   }
 }
 
+async function alterarNivel(cpf, novoPerfil){
+  // Validação de hierarquia — somente admins podem alterar níveis
+  if(!isAdmin(usuarioLogado)){ showToast('❌ Sem permissão'); return; }
+
+  // Próprio usuário só pode se promover para Admin II (não pode se rebaixar)
+  if(cpf === usuarioLogado.cpf && novoPerfil !== 'admin2'){
+    showToast('❌ Você não pode rebaixar seu próprio nível');
+    renderAutorizacoes();
+    return;
+  }
+
+  // Buscar usuário alvo para verificar nível atual
+  let {data:alvo} = await sb.from('usuarios').select('perfil').eq('cpf',cpf).single();
+  if(!alvo){ showToast('❌ Usuário não encontrado'); renderAutorizacoes(); return; }
+
+  // Se está promovendo PARA Admin II → exige senha 3251 (Admin I ou Admin II pode tentar)
+  if(novoPerfil==='admin2'){
+    let senha = await modalPrompt('Digite a senha para atribuir Admin II:', '', '🔒 Senha Admin II');
+    if(senha === null){ renderAutorizacoes(); return; } // cancelou
+    if(senha !== '32514078'){
+      showToast('❌ Senha incorreta');
+      renderAutorizacoes();
+      return;
+    }
+  }
+
+  // Se está rebaixando UM Admin II para outro nível → exige senha 3251
+  if(alvo.perfil==='admin2' && novoPerfil!=='admin2'){
+    let senha = await modalPrompt('Este usuário é Admin II. Digite a senha para alterar:', '', '🔒 Senha Admin II');
+    if(senha === null){ renderAutorizacoes(); return; }
+    if(senha !== '32514078'){
+      showToast('❌ Senha incorreta');
+      renderAutorizacoes();
+      return;
+    }
+  }
+
+  let label = getNivelLabel(novoPerfil);
+  await sb.from('usuarios').update({perfil: novoPerfil}).eq('cpf', cpf);
+  showToast('✅ Nível alterado para: '+label);
+  renderAutorizacoes();
+}
+
 async function renderPermissoes(){
   let tbody = document.getElementById('tabelaPermissoes');
   if(!tbody) return;
   const {data} = await sb.from('usuarios').select('*').eq('status','aprovado').order('nome');
   if(!data){ tbody.innerHTML=''; return; }
-  tbody.innerHTML = data.filter(u=>u.perfil!=='admin').map(u=>{
+  tbody.innerHTML = data.filter(u=>u.perfil!=='admin'&&u.perfil!=='admin2').map(u=>{
     let perms = {};
     try { perms = JSON.parse(u.permissoes||'{}'); } catch(e){}
     let chk = (key) => perms[key] ? 'checked' : '';
@@ -3420,34 +4171,62 @@ async function salvarPermissoes(cpf){
 }
 
 function aplicarPermissoes(){
-  let isAdmin = usuarioLogado && (usuarioLogado.is_admin || usuarioLogado.perfil==='admin');
+  let ehAdmin = usuarioLogado && (usuarioLogado.is_admin || usuarioLogado.perfil==='admin' || usuarioLogado.perfil==='admin2');
   let perms = {};
-  if(!isAdmin){
+  if(!ehAdmin){
     try { perms = JSON.parse(usuarioLogado.permissoes||'{}'); } catch(e){}
   }
 
   // Dashboard
   let tabDash = document.getElementById('tabDashboard');
-  if(tabDash) tabDash.style.display = (isAdmin || perms.dashboard) ? '' : 'none';
+  if(tabDash) tabDash.style.display = (ehAdmin || perms.dashboard) ? '' : 'none';
 
   // PDF CC button
   let btnPdf = document.getElementById('btnPdfCC');
-  if(btnPdf) btnPdf.style.display = (isAdmin || perms.pdf_cc) ? '' : 'none';
+  if(btnPdf) btnPdf.style.display = (ehAdmin || perms.pdf_cc) ? '' : 'none';
 
   // PDF Hemo button
   let btnHemo = document.getElementById('btnPdfHemo');
-  if(btnHemo) btnHemo.style.display = (isAdmin || perms.pdf_hemo) ? '' : 'none';
+  if(btnHemo) btnHemo.style.display = (ehAdmin || perms.pdf_hemo) ? '' : 'none';
 
   // Admin-only tabs (always hidden for non-admin)
-  if(isAdmin){
+  if(ehAdmin){
     let tabAut = document.getElementById('tabAutorizacoes');
     if(tabAut) tabAut.style.display='';
     let tabLogs = document.getElementById('tabLogs');
     if(tabLogs) tabLogs.style.display='';
     let tabAdmRec = document.getElementById('tabAdminRecursos');
     if(tabAdmRec) tabAdmRec.style.display='';
+    let tabPortalMed = document.getElementById('tabPortalMedico');
+    if(tabPortalMed) tabPortalMed.style.display='';
   }
+  // Atualizar badge de pendências médicas
+  atualizarBadgePendenciasMedico();
 }
+
+// ============ BADGE PENDÊNCIAS MÉDICOS ============
+async function atualizarBadgePendenciasMedico(){
+  try {
+    // Autorizações: só médicos pendentes de aprovação
+    let {count:nPendentes} = await sb.from('medicos_portal').select('crm',{count:'exact',head:true}).eq('status','pendente');
+    let b1 = document.getElementById('badgePendenteMedAut');
+    if(b1){
+      let np = nPendentes||0;
+      if(np>0){ b1.style.display='inline-block'; b1.textContent='+'+np; }
+      else { b1.style.display='none'; }
+    }
+    // Portal Médico: só notificações de atividade (disponibilidade, bloqueios, conflitos)
+    let {count:nNotif} = await sb.from('notificacoes_medicos').select('id',{count:'exact',head:true}).eq('crm','ADMIN').eq('lida',false);
+    let b2 = document.getElementById('badgePendenteMedPortal');
+    if(b2){
+      let nn = nNotif||0;
+      if(nn>0){ b2.style.display='inline-block'; b2.textContent='+'+nn; }
+      else { b2.style.display='none'; }
+    }
+  } catch(e){ console.log('Badge pendencias error:',e); }
+}
+// Atualizar a cada 30 segundos
+setInterval(atualizarBadgePendenciasMedico, 30000);
 
 // ============ TABS (executa imediatamente) ============
 document.querySelectorAll('.tab').forEach(tab => {
@@ -3475,7 +4254,8 @@ document.querySelectorAll('.tab').forEach(tab => {
       if(tab.dataset.tab==='salas'){ renderFechamentos(); carregarSelectFechSala(); }
       if(tab.dataset.tab==='equipamentos') renderEquipamentos();
       if(tab.dataset.tab==='escalaFixa'){ carregarSelectsEscala(); renderEscalasFixas(); }
-      if(tab.dataset.tab==='autorizacoes') renderAutorizacoes();
+      if(tab.dataset.tab==='autorizacoes'){ renderAutorizacoes(); renderMedicosPortalAdmin(); }
+      if(tab.dataset.tab==='portalMedico') renderPortalMedicoAdmin();
     } catch(e){ console.warn('Tab render error:', e); }
   });
 });
@@ -4117,6 +4897,31 @@ function clearFormDraft(){
   try { localStorage.removeItem(getDraftKey()); } catch(e){}
 }
 
+// ============ CACHE BLOQUEIOS/DISPONIBILIDADE MÉDICOS PORTAL ============
+let _medicoPortalBloqueios = {};    // {crm: [{inicio, fim, motivo}]}
+let _medicoPortalDisponibilidade = {}; // {crm: {0:{ativo,inicio,fim}, ...}}
+
+async function carregarBloqueiosMedicoPortal(crm){
+  if(!crm || _medicoPortalBloqueios[crm] !== undefined) return;
+  try {
+    let {data:portal} = await sb.from('medicos_portal').select('preferencias,disponibilidade').eq('crm',crm).maybeSingle();
+    if(portal){
+      let prefs = {};
+      try { prefs = JSON.parse(portal.preferencias||'{}'); } catch(e){}
+      _medicoPortalBloqueios[crm] = prefs.bloqueios || [];
+      let disp = {};
+      try { disp = JSON.parse(portal.disponibilidade||'{}'); } catch(e){}
+      _medicoPortalDisponibilidade[crm] = disp;
+    } else {
+      _medicoPortalBloqueios[crm] = [];
+      _medicoPortalDisponibilidade[crm] = {};
+    }
+  } catch(e){
+    _medicoPortalBloqueios[crm] = [];
+    _medicoPortalDisponibilidade[crm] = {};
+  }
+}
+
 // ============ VALIDAÇÃO EM TEMPO REAL ============
 let liveTimeout = null;
 
@@ -4249,6 +5054,31 @@ function _validarLive(){
     let salaJaTemVideo = diaList.some(c => c.sala === sala && c.recursos && c.recursos.video);
     if(salaJaTemVideo){
       alertas.push({tipo:'info', msg:'📹 <b>'+sala+'</b> já tem vídeo reservado — mesma equipe/sala não consome equipamento adicional'});
+    }
+  }
+
+  // 7. Verificar bloqueios do médico no portal
+  let crmVal = (document.getElementById("crm").value||'').trim();
+  if(crmVal && data && _medicoPortalBloqueios[crmVal]){
+    let bloqs = _medicoPortalBloqueios[crmVal];
+    bloqs.forEach(function(b){
+      if(data >= b.inicio && data <= b.fim){
+        alertas.push({tipo:'erro', msg:'🚫 <b>Médico indisponível</b>: bloqueio de '+b.inicio+' a '+b.fim+(b.motivo?' ('+b.motivo+')':'')});
+      }
+    });
+  }
+
+  // 7b. Verificar disponibilidade semanal do médico
+  if(crmVal && data && _medicoPortalDisponibilidade[crmVal]){
+    let disp = _medicoPortalDisponibilidade[crmVal];
+    let diaSemana = new Date(data+'T12:00:00').getDay();
+    let diaDisp = disp[diaSemana];
+    if(Object.keys(disp).some(function(k){return disp[k] && disp[k].ativo})){
+      // Médico definiu disponibilidade - verificar se este dia está incluído
+      if(!diaDisp || !diaDisp.ativo){
+        let diasNomes = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+        alertas.push({tipo:'aviso', msg:'⚠️ <b>'+diasNomes[diaSemana]+'</b> não está na disponibilidade informada pelo médico'});
+      }
     }
   }
 
@@ -4618,11 +5448,284 @@ function toggleFlutuante(on){
   if(on) showToast('🔄 Modo flutuante: campos em laranja são obrigatórios');
 }
 
+// ============ RELATÓRIO RESERVAS FLUTUANTES ============
+function abrirRelatorioFlutuantes(){
+  let flutuantes = dados.filter(c => c.flutuante && !c.cancelado && !c.suspenso);
+  flutuantes.sort((a,b) => (a.data||'').localeCompare(b.data||'') || (a.horario||'').localeCompare(b.horario||''));
+
+  let hoje = hojeLocal();
+  let pendentes = flutuantes.filter(c => {
+    // Campos que faltam preencher
+    let falta = [];
+    if(!c.identificacao) falta.push('ID');
+    if(!c.paciente) falta.push('Paciente');
+    if(!c.procedimento) falta.push('Procedimento');
+    if(!c.convenio && !c.codigoConvenio) falta.push('Convênio');
+    return falta.length > 0;
+  });
+
+  let totalFlut = flutuantes.length;
+  let totalPend = pendentes.length;
+  let completas = totalFlut - totalPend;
+
+  let rows = flutuantes.map(c => {
+    let falta = [];
+    if(!c.identificacao) falta.push('ID');
+    if(!c.paciente) falta.push('Paciente');
+    if(!c.procedimento) falta.push('Procedimento');
+    if(!c.convenio && !c.codigoConvenio) falta.push('Convênio');
+    let pendente = falta.length > 0;
+    let statusClass = pendente ? 'status-suspenso' : 'status-agendado';
+    let statusText = pendente ? 'Pendente' : 'Completa';
+    let passada = c.data < hoje;
+
+    return '<tr style="'+(passada && pendente ? 'background:#fff3e0;':'')+'">'+
+      '<td>'+formatDate(c.data)+'</td>'+
+      '<td>'+(c.horario||'-')+'</td>'+
+      '<td>'+(c.sala||'-')+'</td>'+
+      '<td>'+(c.medico||'-')+'</td>'+
+      '<td>'+(c.paciente||'<em style="color:#999">—</em>')+'</td>'+
+      '<td>'+(c.identificacao||'<em style="color:#999">—</em>')+'</td>'+
+      '<td>'+(c.procedimento||'<em style="color:#999">—</em>')+'</td>'+
+      '<td>'+(c.convenio||c.codigoConvenio||'<em style="color:#999">—</em>')+'</td>'+
+      '<td><span class="'+statusClass+'">'+statusText+'</span></td>'+
+      '<td>'+(falta.length > 0 ? '<span style="color:var(--danger);font-size:11px">'+falta.join(', ')+'</span>' : '✓')+'</td>'+
+      '<td><button class="btn btn-primary btn-sm" onclick="fecharRelatorioFlutuantes();editarCirurgia('+dados.indexOf(c)+')">✏️</button></td>'+
+    '</tr>';
+  }).join('');
+
+  let html = '<div style="padding:24px;max-height:80vh;overflow-y:auto">'+
+    '<h2 style="margin:0 0 8px;color:var(--primary)">🔄 Relatório de Reservas Flutuantes</h2>'+
+    '<p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px">Reservas flutuantes que precisam ser finalizadas com dados completos.</p>'+
+    '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">'+
+      '<div style="background:#e8f5e9;padding:10px 16px;border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--primary)">'+totalFlut+'</div><div style="font-size:11px;color:var(--text-secondary)">Total Flutuantes</div></div>'+
+      '<div style="background:#fff3e0;padding:10px 16px;border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--warning)">'+totalPend+'</div><div style="font-size:11px;color:var(--text-secondary)">Pendentes</div></div>'+
+      '<div style="background:#e8f5e9;padding:10px 16px;border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:#4caf50">'+completas+'</div><div style="font-size:11px;color:var(--text-secondary)">Completas</div></div>'+
+    '</div>'+
+    (flutuantes.length === 0
+      ? '<p style="text-align:center;color:var(--text-secondary);padding:30px">Nenhuma reserva flutuante encontrada.</p>'
+      : '<div class="tabela-wrapper"><table style="width:100%"><thead><tr>'+
+        '<th>Data</th><th>Hora</th><th>Sala</th><th>Médico</th><th>Paciente</th><th>ID</th><th>Procedimento</th><th>Convênio</th><th>Status</th><th>Faltando</th><th>Ação</th>'+
+        '</tr></thead><tbody>'+rows+'</tbody></table></div>')+
+    '<div style="margin-top:16px;text-align:right">'+
+      '<button class="btn btn-outline" onclick="fecharRelatorioFlutuantes()">Fechar</button>'+
+    '</div>'+
+  '</div>';
+
+  let overlay = document.getElementById('flutuanteReportOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'flutuanteReportOverlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;';
+    overlay.onclick = function(e){ if(e.target===overlay) fecharRelatorioFlutuantes(); };
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:1100px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'+html+'</div>';
+  overlay.style.display = 'flex';
+}
+
+function fecharRelatorioFlutuantes(){
+  let overlay = document.getElementById('flutuanteReportOverlay');
+  if(overlay) overlay.style.display = 'none';
+}
+
 // ============ VALIDAÇÃO ID DUPLICADO ============
 function verificarIdDuplicado(identificacao, data, excluirId){
   if(!identificacao) return null;
   let dup = dados.find(c => !c.cancelado && !c.suspenso && c.identificacao === identificacao && c.data === data && c.id !== excluirId);
   return dup || null;
+}
+
+// ============ BUSCA HISTÓRICO POR ID ============
+let idHistTimeout = null;
+function buscarHistoricoID(){
+  clearTimeout(idHistTimeout);
+  idHistTimeout = setTimeout(_buscarHistoricoID, 300);
+}
+
+function _buscarHistoricoID(){
+  let q = (document.getElementById('identificacao').value||'').trim();
+  let drop = document.getElementById('idHistDrop');
+  if(!drop) return;
+  if(q.length < 2){ drop.style.display='none'; return; }
+
+  // Buscar todas as cirurgias com esse ID (parcial ou exato)
+  let resultados = dados.filter(c => c.identificacao && c.identificacao.includes(q));
+
+  // Agrupar por paciente
+  let porPaciente = {};
+  resultados.forEach(c => {
+    let key = c.identificacao;
+    if(!porPaciente[key]) porPaciente[key] = {nome: c.paciente||'—', id: c.identificacao, cirurgias: []};
+    porPaciente[key].cirurgias.push(c);
+  });
+
+  let keys = Object.keys(porPaciente);
+  if(keys.length === 0){ drop.style.display='none'; return; }
+
+  drop.innerHTML = keys.slice(0,8).map(key => {
+    let p = porPaciente[key];
+    let cirs = p.cirurgias.sort((a,b) => (b.data||'').localeCompare(a.data||''));
+    let total = cirs.length;
+    let ativos = cirs.filter(c => !c.cancelado && !c.suspenso).length;
+    let ultima = cirs[0];
+
+    let detalhes = cirs.slice(0,3).map(c => {
+      let status = c.cancelado ? '❌' : c.suspenso ? '⏸' : '✅';
+      return '<div style="font-size:11px;color:#666;padding:2px 0">'+status+' '+formatDate(c.data)+' · '+(c.sala||'-')+' · '+(c.procedimento||'—').substring(0,40)+'</div>';
+    }).join('');
+    if(total > 3) detalhes += '<div style="font-size:10px;color:#999">... e mais '+(total-3)+' cirurgia(s)</div>';
+
+    return '<div style="padding:10px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.15s" '+
+      'onmouseenter="this.style.background=\'#f0faf0\'" onmouseleave="this.style.background=\'\'" '+
+      'onclick="preencherDadosPacienteID(\''+key.replace(/'/g,"\\'")+'\')">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<div><strong style="color:var(--primary)">'+(p.nome||'—')+'</strong> <span style="font-size:11px;color:#999">ID: '+p.id+'</span></div>'+
+        '<span style="font-size:11px;background:#e8f5e9;color:var(--primary);padding:2px 8px;border-radius:10px;font-weight:600">'+total+' cirurgia(s)</span>'+
+      '</div>'+
+      detalhes+
+    '</div>';
+  }).join('');
+
+  drop.style.display = 'block';
+}
+
+function preencherDadosPacienteID(identificacao){
+  let drop = document.getElementById('idHistDrop');
+  if(drop) drop.style.display = 'none';
+
+  let registros = dados.filter(c => c.identificacao === identificacao).sort((a,b) => (b.data||'').localeCompare(a.data||''));
+  if(registros.length === 0) return;
+
+  // Se só tem 1 registro, carregar direto
+  if(registros.length === 1){
+    carregarCirurgiaPorID(registros[0]);
+    return;
+  }
+
+  // Se tem múltiplos, mostrar seleção
+  let hoje = hojeLocal();
+  let html = '<div style="padding:18px;max-height:70vh;overflow-y:auto">'+
+    '<h3 style="margin:0 0 4px;color:var(--primary)">📋 Histórico — ID: '+identificacao+'</h3>'+
+    '<p style="color:var(--text-secondary);font-size:12px;margin-bottom:14px">Paciente: <strong>'+(registros[0].paciente||'—')+'</strong> · '+registros.length+' cirurgia(s). Clique para carregar no formulário.</p>'+
+    '<table style="width:100%;font-size:12px"><thead><tr style="background:#f5f5f5">'+
+    '<th style="padding:6px 8px">Data</th><th>Hora</th><th>Sala</th><th>Procedimento</th><th>Médico</th><th>Status</th><th>Ação</th>'+
+    '</tr></thead><tbody>';
+
+  registros.forEach((c,i) => {
+    let passada = (c.data||'') < hoje;
+    let status = c.cancelado ? '<span class="status-cancelado">Cancelado</span>' :
+                 c.suspenso ? '<span class="status-suspenso">Suspenso</span>' :
+                 passada ? '<span style="color:#666;font-size:11px">Realizada</span>' :
+                 '<span class="status-agendado">Agendado</span>';
+    let btnLabel = passada ? '👁 Consultar' : '✏️ Editar';
+    let btnStyle = passada ? 'background:#78909c' : 'background:var(--primary)';
+
+    html += '<tr style="border-bottom:1px solid #eee">'+
+      '<td style="padding:6px 8px">'+formatDate(c.data)+'</td>'+
+      '<td>'+(c.horario||'-')+'</td>'+
+      '<td>'+(c.sala||'-')+'</td>'+
+      '<td>'+(c.procedimento||'—').substring(0,35)+'</td>'+
+      '<td>'+(c.medico||'-')+'</td>'+
+      '<td>'+status+'</td>'+
+      '<td><button class="btn btn-sm" style="'+btnStyle+';color:#fff;font-size:11px;padding:3px 10px" onclick="fecharModalIDHist();carregarCirurgiaPorID(dados['+dados.indexOf(c)+'])">'+btnLabel+'</button></td>'+
+    '</tr>';
+  });
+
+  html += '</tbody></table>'+
+    '<div style="margin-top:12px;text-align:right"><button class="btn btn-outline" onclick="fecharModalIDHist()">Fechar</button></div></div>';
+
+  let overlay = document.getElementById('idHistOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'idHistOverlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center';
+    overlay.onclick = function(e){ if(e.target===overlay) fecharModalIDHist(); };
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:900px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'+html+'</div>';
+  overlay.style.display = 'flex';
+}
+
+function fecharModalIDHist(){
+  let o = document.getElementById('idHistOverlay');
+  if(o) o.style.display='none';
+}
+
+function carregarCirurgiaPorID(cir){
+  let hoje = hojeLocal();
+  let passada = (cir.data||'') < hoje;
+
+  // Preencher todos os campos
+  document.getElementById('identificacao').value = cir.identificacao || '';
+  document.getElementById('paciente').value = cir.paciente || '';
+  document.getElementById('dataNasc').value = cir.dataNasc || cir.data_nasc || '';
+  if(cir.dataNasc || cir.data_nasc) calcularIdade();
+  document.getElementById('data').value = cir.data || '';
+  document.getElementById('horario').value = cir.horario || '';
+  document.getElementById('tempo').value = cir.tempo || '';
+  document.getElementById('sala').value = cir.sala || '';
+  document.getElementById('especialidadeCirurgia').value = cir.especialidade_cirurgia || cir.especialidadeCirurgia || '';
+  document.getElementById('especInput').value = cir.especialidade_cirurgia || cir.especialidadeCirurgia || '';
+  document.getElementById('crm').value = cir.crm || '';
+  document.getElementById('medico').value = cir.medico || '';
+  document.getElementById('especialidade').value = cir.especialidade || '';
+  document.getElementById('procedimento').value = cir.procedimento || '';
+  document.getElementById('codigoTuss').value = cir.codigoTuss || cir.codigo_tuss || '';
+  document.getElementById('procedimento2').value = cir.procedimento2 || '';
+  document.getElementById('codigoTuss2').value = cir.codigoTuss2 || cir.codigo_tuss2 || '';
+  document.getElementById('lateralidade').value = cir.lateralidade || '';
+  document.getElementById('lateralidade2').value = cir.lateralidade2 || '';
+  document.getElementById('codigoConvenio').value = cir.codigoConvenio || cir.codigo_convenio || '';
+  document.getElementById('convenio').value = cir.convenio || '';
+  document.getElementById('convenioGrupo').value = cir.convenioGrupo || cir.convenio_grupo || '';
+  document.getElementById('observacoes').value = cir.observacoes || '';
+  document.getElementById('flutuante').checked = cir.flutuante || false;
+
+  // Recursos
+  if(typeof recursosAtivos !== 'undefined'){
+    recursosAtivos = cir.recursos ? {...cir.recursos} : {};
+    renderRecursosGrid();
+  }
+
+  if(passada){
+    // Modo consulta — bloquear campos
+    let formFields = document.querySelectorAll('#panel-form input, #panel-form select, #panel-form textarea');
+    formFields.forEach(f => { f.setAttribute('data-readonly-hist','1'); f.disabled = true; });
+    let btn = document.getElementById('btnConfirmar');
+    if(btn){ btn.disabled = true; btn.innerText = '👁 Consulta (cirurgia já realizada)'; btn.style.background = '#78909c'; }
+    // Botão para sair do modo consulta
+    let cancelBtn = document.getElementById('btnCancelarEdicao');
+    if(cancelBtn){
+      cancelBtn.style.display = '';
+      cancelBtn.innerText = '✕ Sair da Consulta';
+      cancelBtn.onclick = function(){ sairModoConsulta(); };
+    }
+    showToast('👁 Modo consulta — cirurgia já realizada em '+formatDate(cir.data));
+  } else {
+    // Modo edição — carregar para editar
+    editandoId = cir.id;
+    let btn = document.getElementById('btnConfirmar');
+    if(btn){ btn.innerText = '✏️ Atualizar Agendamento'; btn.style.background = '#e65100'; btn.disabled = false; }
+    document.getElementById('btnCancelarEdicao').style.display = '';
+    showToast('✏️ Cirurgia carregada para edição — '+cir.paciente);
+  }
+
+  document.getElementById('panel-form').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function sairModoConsulta(){
+  // Desbloquear campos
+  let formFields = document.querySelectorAll('#panel-form [data-readonly-hist]');
+  formFields.forEach(f => { f.removeAttribute('data-readonly-hist'); f.disabled = false; });
+  let btn = document.getElementById('btnConfirmar');
+  if(btn){ btn.disabled = false; btn.innerText = '✓ Confirmar Agendamento'; btn.style.background = ''; }
+  document.getElementById('btnCancelarEdicao').style.display = 'none';
+  document.getElementById('btnCancelarEdicao').innerText = 'Cancelar Edição';
+  document.getElementById('btnCancelarEdicao').onclick = function(){ cancelarEdicaoCirurgia(); };
+  editandoId = null;
+  limparForm();
+  showToast('Saiu do modo consulta');
 }
 
 // ============ REGRA INTERVALO 1H / 30MIN ============
@@ -4778,6 +5881,11 @@ async function salvar(){
     clearFormDraft();
     atualizarHeader();
     renderRecursosGrid();
+    // Notificar médico do portal
+    notificarMedico(c.crm, 'agendamento', 'Nova Cirurgia Agendada',
+      'Paciente: '+(c.paciente||'N/I')+' | '+(c.procedimento||'')+' | Data: '+(c.data||'')+' '+(c.horario||'')+' | Sala '+(c.sala||''), saved.id||null);
+    // Verificar se médico tem bloqueio nessa data
+    await verificarBloqueioNaDataCirurgia(c.crm, c.medico, c.data, c.paciente, c.procedimento);
   }
   btn.disabled = false; btn.innerText = '✓ Confirmar Agendamento';
 }
@@ -4812,6 +5920,8 @@ async function cancelar(i){
     await DB.loadCirurgias();
     registrarLog('cancelamento', dados[i].paciente, 'Motivo: '+motivo+' | '+dados[i].sala+' '+dados[i].horario);
     showToast('Cirurgia cancelada: '+dados[i].paciente);
+    notificarMedico(dados[i].crm, 'cancelamento', 'Cirurgia Cancelada',
+      'Paciente: '+(dados[i].paciente||'')+' | Motivo: '+motivo+' | Data: '+(dados[i].data||'')+' '+(dados[i].horario||''), dados[i].id);
     desenhar(); renderLista();
   }
 }
@@ -4822,6 +5932,8 @@ async function suspender(i){
     await DB.loadCirurgias();
     registrarLog('suspensao', dados[i].paciente, 'Motivo: '+motivo+' | '+dados[i].sala+' '+dados[i].horario);
     showToast('Cirurgia suspensa: '+dados[i].paciente);
+    notificarMedico(dados[i].crm, 'suspensao', 'Cirurgia Suspensa',
+      'Paciente: '+(dados[i].paciente||'')+' | Motivo: '+motivo+' | Data: '+(dados[i].data||'')+' '+(dados[i].horario||''), dados[i].id);
     desenhar(); renderLista();
   }
 }
@@ -4854,31 +5966,15 @@ async function reativar(i){
   }
 }
 
-async function editarCirurgia(i){
+function editarCirurgia(i){
   let c = dados[i];
-  let novaData = await modalPrompt("Data (AAAA-MM-DD):", c.data, 'Editar Cirurgia — Data');
-  if(novaData === null) return;
-  let novoHorario = await modalPrompt("Horário (HH:MM):", c.horario, 'Horário');
-  let novaSala = await modalPrompt("Sala (ex: Sala 1):", c.sala, 'Sala');
-  let novoId = await modalPrompt("Prontuário/Identificação:", c.identificacao||'', 'Identificação');
-  let novoPaciente = await modalPrompt("Paciente:", c.paciente, 'Paciente');
-  let novoMedico = await modalPrompt("Cirurgião:", c.medico, 'Cirurgião');
-  let novoProcedimento = await modalPrompt("Procedimento:", c.procedimento, 'Procedimento');
-  let novoTempo = await modalPrompt("Tempo (min):", c.tempo||60, 'Tempo Estimado');
-
-  let edits = {};
-  if(novaData) edits.data = novaData;
-  if(novoHorario) edits.horario = novoHorario;
-  if(novaSala) edits.sala = novaSala;
-  if(novoId !== null) edits.identificacao = novoId;
-  if(novoPaciente) edits.paciente = novoPaciente;
-  if(novoMedico) edits.medico = novoMedico;
-  if(novoProcedimento) edits.procedimento = novoProcedimento;
-  if(novoTempo) edits.tempo = parseInt(novoTempo)||60;
-  await DB.updateCirurgia(dados[i].id, edits);
-  await DB.loadCirurgias();
-  showToast('✓ Cirurgia editada');
-  desenhar(); renderLista();
+  // Navegar para aba Agendamento
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.tab[data-tab="form"]').classList.add('active');
+  document.getElementById('panel-form').classList.add('active');
+  // Carregar dados no formulário
+  carregarParaEditar(c);
 }
 
 async function excluir(i){
@@ -5218,6 +6314,7 @@ function formatDateShort(d){
 }
 
 function initDashFilters(){
+  // Anos
   let anos = new Set();
   dados.forEach(c=>{ if(c.data) anos.add(c.data.substring(0,4)); });
   let sel = document.getElementById('dashAno');
@@ -5225,16 +6322,81 @@ function initDashFilters(){
   [...anos].sort().reverse().forEach(a=> sel.innerHTML += '<option value="'+a+'">'+a+'</option>');
   let cy = new Date().getFullYear().toString();
   if(anos.has(cy)) sel.value = cy;
+
+  // Mês vigente como padrão
+  let cm = String(new Date().getMonth()+1).padStart(2,'0');
+  let mesEl = document.getElementById('dashMes');
+  if(mesEl) mesEl.value = cm;
+
+  // Convênios
+  let selConv = document.getElementById('dashConvenio');
+  if(selConv){
+    selConv.innerHTML = '<option value="">Todos</option>';
+    let convs = [...new Set(dados.map(c=>c.convenio).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    convs.forEach(c=> selConv.innerHTML += '<option value="'+c+'">'+c+'</option>');
+  }
+
+  // Especialidades
+  let selEspec = document.getElementById('dashEspec');
+  if(selEspec){
+    selEspec.innerHTML = '<option value="">Todas</option>';
+    let especs = [...new Set(dados.map(c=>c.especialidade_cirurgia||c.especialidadeCirurgia).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    especs.forEach(e=> selEspec.innerHTML += '<option value="'+e+'">'+e+'</option>');
+  }
+
+  // Médicos — limpar input
+  let medInput = document.getElementById('dashMedicoInput');
+  if(medInput){ medInput.value = ''; }
+  document.getElementById('dashMedico').value = '';
+}
+
+// Buscar/autocomplete médico no Dashboard
+function _getDashMedicos(){
+  let meds = {};
+  dados.forEach(c=>{ if(c.medico && c.crm) meds[c.crm] = c.medico; });
+  return Object.entries(meds).sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));
+}
+
+function filtrarDashMedico(){
+  let input = document.getElementById('dashMedicoInput');
+  let drop = document.getElementById('dashMedicoDrop');
+  let q = (input.value||'').trim().toLowerCase();
+  let todos = _getDashMedicos();
+  let filtrados = q.length === 0 ? todos : todos.filter(([crm,nome]) => nome.toLowerCase().includes(q) || crm.includes(q));
+
+  if(filtrados.length === 0){ drop.style.display='none'; return; }
+
+  drop.innerHTML = '<div style="padding:6px 10px;cursor:pointer;font-size:12px;color:#999;border-bottom:1px solid #eee" onmousedown="selecionarDashMedico(\'\',\'Todos\')">Todos</div>' +
+    filtrados.slice(0,15).map(([crm,nome]) =>
+      '<div style="padding:6px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f5f5" '+
+      'onmouseenter="this.style.background=\'#f0faf0\'" onmouseleave="this.style.background=\'\'" '+
+      'onmousedown="selecionarDashMedico(\''+crm+'\',\''+nome.replace(/'/g,"\\'")+' ('+crm+')\')">'+
+      '<strong>'+nome+'</strong> <span style="color:#999;font-size:11px">CRM: '+crm+'</span></div>'
+    ).join('');
+  drop.style.display = 'block';
+}
+
+function selecionarDashMedico(crm, label){
+  document.getElementById('dashMedico').value = crm;
+  document.getElementById('dashMedicoInput').value = crm ? label : '';
+  document.getElementById('dashMedicoDrop').style.display = 'none';
+  renderDashboard();
 }
 
 function getDashData(){
   let ano = document.getElementById('dashAno')?.value||'';
   let mes = document.getElementById('dashMes')?.value||'';
   let grupo = document.getElementById('dashGrupo')?.value||'';
+  let convenio = document.getElementById('dashConvenio')?.value||'';
+  let espec = document.getElementById('dashEspec')?.value||'';
+  let medico = document.getElementById('dashMedico')?.value||'';
   let lista = dados.filter(c=>c.data);
   if(ano) lista = lista.filter(c=>c.data.substring(0,4)===ano);
   if(mes) lista = lista.filter(c=>c.data.substring(5,7)===mes);
   if(grupo) lista = lista.filter(c=>(c.convenioGrupo||c.convenio_grupo||'')===grupo);
+  if(convenio) lista = lista.filter(c=>(c.convenio||'')===convenio);
+  if(espec) lista = lista.filter(c=>(c.especialidade_cirurgia||c.especialidadeCirurgia||'')===espec);
+  if(medico) lista = lista.filter(c=>(c.crm||'')===medico);
   return lista;
 }
 
@@ -5789,7 +6951,7 @@ let dispMode = 'grade';
 
 function setDispMode(mode){
   dispMode = mode;
-  ['grade','tabela','recursos'].forEach(m=>{
+  ['grade','tabela','recursos','ocioso'].forEach(m=>{
     let btn = document.getElementById('btnDisp'+m.charAt(0).toUpperCase()+m.slice(1));
     if(btn){ btn.className = m===mode ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'; }
   });
@@ -5826,6 +6988,8 @@ function renderDisponibilidade(){
     renderDispGrade(data, diaList, horaFiltro, salaFiltro, horaInicio, horaFim, container);
   } else if(dispMode === 'tabela'){
     renderDispTabela(data, diaList, salaFiltro, horaInicio, horaFim, container);
+  } else if(dispMode === 'ocioso'){
+    renderDispOcioso(data, diaList, salaFiltro, horaInicio, horaFim, container);
   } else {
     renderDispRecursos(data, diaList, container);
   }
@@ -5959,6 +7123,398 @@ function renderDispRecursos(data, diaList, container){
   container.innerHTML = html;
 }
 
+
+// ============ TEMPO OCIOSO POR SALA ============
+function renderDispOcioso(data, diaList, salaFiltro, horaInicio, horaFim, container){
+  let totalPeriodo = horaFim - horaInicio; // 720 min = 12h
+  let html = '<div class="card"><div class="card-title">\u23F1\uFE0F Tempo Ocioso por Sala \u2014 '+formatDate(data)+'</div>';
+  html += '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px">An\u00e1lise do tempo livre versus ocupado em cada sala cir\u00fargica.</p>';
+
+  let salasData = [];
+  for(let s=1;s<=9;s++){
+    if(!salas[s]) continue;
+    let salaName = 'Sala '+s;
+    if(salaFiltro && salaFiltro !== salaName) continue;
+    let cirs = diaList.filter(c=>c.sala===salaName);
+    let tempoOcupado = 0;
+    cirs.forEach(c=>{ tempoOcupado += (c.tempo||60); });
+    if(tempoOcupado > totalPeriodo) tempoOcupado = totalPeriodo;
+    let tempoOcioso = totalPeriodo - tempoOcupado;
+    let pctOcupado = Math.round((tempoOcupado/totalPeriodo)*100);
+    let pctOcioso = 100 - pctOcupado;
+    salasData.push({sala:salaName, cirs:cirs.length, ocupado:tempoOcupado, ocioso:tempoOcioso, pctOcupado, pctOcioso});
+  }
+
+  // Summary cards
+  let totalOcupado = salasData.reduce((s,d)=>s+d.ocupado,0);
+  let totalOcioso = salasData.reduce((s,d)=>s+d.ocioso,0);
+  let totalGeral = totalOcupado + totalOcioso;
+  let pctGeralOcupado = totalGeral>0?Math.round((totalOcupado/totalGeral)*100):0;
+
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
+  html += '<div style="background:#e8f5e9;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#2e7d32">'+salasData.length+'</div><div style="font-size:11px;color:#388e3c">Salas Ativas</div></div>';
+  html += '<div style="background:#e3f2fd;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#1565c0">'+salasData.reduce((s,d)=>s+d.cirs,0)+'</div><div style="font-size:11px;color:#1976d2">Cirurgias</div></div>';
+  html += '<div style="background:#fff3e0;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#e65100">'+pctGeralOcupado+'%</div><div style="font-size:11px;color:#ef6c00">Ocupa\u00e7\u00e3o Geral</div></div>';
+  html += '<div style="background:#fce4ec;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#c62828">'+Math.round(totalOcioso/60)+'h '+totalOcioso%60+'min</div><div style="font-size:11px;color:#d32f2f">Tempo Ocioso Total</div></div>';
+  html += '</div>';
+
+  // Per-sala bars
+  html += '<div style="display:flex;flex-direction:column;gap:10px">';
+  salasData.forEach(d=>{
+    let barColor = d.pctOcupado >= 80 ? '#4caf50' : d.pctOcupado >= 50 ? '#ff9800' : d.pctOcupado >= 20 ? '#f44336' : '#e0e0e0';
+    let ociosoH = Math.floor(d.ocioso/60);
+    let ociosoM = d.ocioso%60;
+    let ocupadoH = Math.floor(d.ocupado/60);
+    let ocupadoM = d.ocupado%60;
+
+    html += '<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:14px 18px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html += '<div style="font-weight:700;font-size:14px">'+d.sala+' <span style="font-size:11px;color:#888;font-weight:400">('+d.cirs+' cirurgia'+(d.cirs!==1?'s':'')+')</span></div>';
+    html += '<div style="font-size:12px">';
+    html += '<span style="color:#2e7d32;font-weight:600">'+ocupadoH+'h'+String(ocupadoM).padStart(2,'0')+' ocupado</span>';
+    html += ' \u2022 <span style="color:#c62828;font-weight:600">'+ociosoH+'h'+String(ociosoM).padStart(2,'0')+' ocioso</span>';
+    html += '</div></div>';
+    // Progress bar
+    html += '<div style="background:#e0e0e0;border-radius:6px;height:24px;overflow:hidden;position:relative">';
+    html += '<div style="background:'+barColor+';height:100%;width:'+d.pctOcupado+'%;border-radius:6px;transition:width 0.5s"></div>';
+    html += '<div style="position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+(d.pctOcupado>40?'#fff':'#333')+'">';
+    html += d.pctOcupado+'% ocupado / '+d.pctOcioso+'% ocioso</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ============ PDF EQUIPAMENTOS ============
+function abrirModalPdfEquip(){
+  // Set default date
+  let dataAtual = document.getElementById("filtroData");
+  let defaultDate = dataAtual ? dataAtual.value : hojeLocal();
+  document.getElementById("pdfEquipData").value = defaultDate;
+
+  // Build checkboxes
+  let allRecursos = [...RECURSOS_EQUIPAMENTOS, ...RECURSOS_MATERIAIS];
+  let cbHtml = '';
+  allRecursos.forEach(function(r){
+    cbHtml += '<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:white;border:1.5px solid #e0e0e0;border-radius:8px;cursor:pointer;transition:all 0.15s" '+
+      'onmouseover="this.style.borderColor=\'#4caf50\';this.style.background=\'#f1f8e9\'" '+
+      'onmouseout="if(!this.querySelector(\'input\').checked){this.style.borderColor=\'#e0e0e0\';this.style.background=\'white\'}" '+
+      'onclick="setTimeout(function(){previewEquipPdf()},50)">' +
+      '<input type="checkbox" value="'+r.id+'" checked style="accent-color:#2e7d32;width:16px;height:16px"> '+
+      '<span style="font-size:12px;font-weight:500">'+r.label+'</span></label>';
+  });
+  document.getElementById("pdfEquipCheckboxes").innerHTML = cbHtml;
+
+  // Show modal
+  let modal = document.getElementById("modalPdfEquip");
+  modal.style.display = 'flex';
+
+  // Click outside to close
+  modal.onclick = function(e){ if(e.target === modal) fecharModalPdfEquip(); };
+
+  previewEquipPdf();
+}
+
+function fecharModalPdfEquip(){
+  document.getElementById("modalPdfEquip").style.display = 'none';
+}
+
+function selecionarTodosEquipPdf(marcar){
+  let cbs = document.querySelectorAll('#pdfEquipCheckboxes input[type=checkbox]');
+  cbs.forEach(function(cb){ cb.checked = marcar; });
+  // Update label styles
+  document.querySelectorAll('#pdfEquipCheckboxes label').forEach(function(lbl){
+    let cb = lbl.querySelector('input');
+    if(cb.checked){ lbl.style.borderColor = '#4caf50'; lbl.style.background = '#f1f8e9'; }
+    else { lbl.style.borderColor = '#e0e0e0'; lbl.style.background = 'white'; }
+  });
+  previewEquipPdf();
+}
+
+function previewEquipPdf(){
+  let data = document.getElementById("pdfEquipData").value;
+  let preview = document.getElementById("pdfEquipPreview");
+  let content = document.getElementById("pdfEquipPreviewContent");
+
+  // Update checkbox label styles
+  document.querySelectorAll('#pdfEquipCheckboxes label').forEach(function(lbl){
+    let cb = lbl.querySelector('input');
+    if(cb.checked){ lbl.style.borderColor = '#4caf50'; lbl.style.background = '#f1f8e9'; }
+    else { lbl.style.borderColor = '#e0e0e0'; lbl.style.background = 'white'; }
+  });
+
+  if(!data){ preview.style.display = 'none'; return; }
+  preview.style.display = 'block';
+
+  let selecionados = [];
+  document.querySelectorAll('#pdfEquipCheckboxes input[type=checkbox]:checked').forEach(function(cb){ selecionados.push(cb.value); });
+
+  let diaList = cirurgiasDoDia(data, -1);
+  let cirComEquip = diaList.filter(function(c){
+    if(!c.recursos) return false;
+    return selecionados.some(function(eq){ return c.recursos[eq]; });
+  });
+
+  content.innerHTML = '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+    '<div><b>'+selecionados.length+'</b> equipamento(s) selecionado(s)</div>' +
+    '<div><b>'+diaList.length+'</b> cirurgia(s) no dia</div>' +
+    '<div><b>'+cirComEquip.length+'</b> cirurgia(s) usando equipamento(s) selecionado(s)</div>' +
+    '</div>';
+}
+
+async function gerarPdfEquipamentos(){
+  let data = document.getElementById("pdfEquipData").value;
+  if(!data){ showToast('\u274C Selecione uma data'); return; }
+
+  let selecionados = [];
+  document.querySelectorAll('#pdfEquipCheckboxes input[type=checkbox]:checked').forEach(function(cb){ selecionados.push(cb.value); });
+  if(selecionados.length === 0){ showToast('\u274C Selecione ao menos um equipamento'); return; }
+
+  let allRecursos = [...RECURSOS_EQUIPAMENTOS, ...RECURSOS_MATERIAIS];
+  let recursosFiltrados = allRecursos.filter(function(r){ return selecionados.indexOf(r.id) >= 0; });
+
+  let diaList = cirurgiasDoDia(data, -1);
+  let fData = formatDate(data);
+
+  const {jsPDF} = window.jspdf;
+  let doc = new jsPDF('landscape','mm','a4');
+  let pw = 297, ph = 210, mg = 10;
+  let tw = pw - 2*mg;
+
+  // ======= HEADER (estilo mapa cirúrgico) =======
+  try { doc.addImage(LOGO_HAC_B64, 'PNG', mg, 5, 25, 20); } catch(e){}
+  doc.setFontSize(14); doc.setFont(undefined,'bold');
+  doc.text('Relat\u00f3rio de Equipamentos e Recursos', pw/2, 14, {align:'center'});
+
+  doc.setDrawColor(46,125,50); doc.setLineWidth(0.8);
+  doc.line(mg, 27, pw-mg, 27);
+
+  doc.setFontSize(9); doc.setFont(undefined,'bold'); doc.setTextColor(0);
+  doc.text('Unidade: HOSPITAL ANA COSTA', mg, 33);
+  doc.text('Local: CENTRO CIR\u00daRGICO', 105, 33);
+  doc.text('Setor: EQUIPAMENTOS', 210, 33);
+  doc.setFontSize(8); doc.setFont(undefined,'normal');
+  doc.text('Data: '+fData, mg, 38);
+  doc.text('Gerado em: '+new Date().toLocaleString('pt-BR'), 200, 38);
+
+  // ======= SEÇÃO 1: Disponibilidade dos Equipamentos Selecionados =======
+  let y = 46;
+  doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.setTextColor(27,94,32);
+  doc.text('\u2699 Disponibilidade de Equipamentos', mg, y);
+  doc.setTextColor(0);
+  y += 6;
+
+  // Table header
+  let eqCols = [{l:'Equipamento/Material', w:80}, {l:'Limite Di\u00e1rio', w:35}, {l:'Em Uso', w:30}, {l:'Dispon\u00edvel', w:35}, {l:'Status', w:40}];
+  let eqTW = eqCols.reduce(function(s,c){ return s+c.w; }, 0);
+  let eqStart = mg;
+
+  doc.setFillColor(50,50,50);
+  doc.rect(eqStart, y, eqTW, 7, 'F');
+  doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.setTextColor(255);
+  let ex = eqStart;
+  eqCols.forEach(function(c){ doc.text(c.l, ex + c.w/2, y+5, {align:'center'}); ex += c.w; });
+  doc.setTextColor(0);
+  y += 9;
+  doc.setFont(undefined,'normal'); doc.setFontSize(8);
+
+  recursosFiltrados.forEach(function(r, idx){
+    let max = getLimite(r.id, data);
+    if(max === null) max = '-';
+    let usado = contarRecursoDia(diaList, r.id);
+    let disp = typeof max === 'number' ? max - usado : '-';
+    let status = '';
+    if(typeof disp === 'number'){
+      if(disp <= 0) status = 'ESGOTADO';
+      else if(disp === 1) status = 'CR\u00cdTICO';
+      else status = 'OK';
+    }
+
+    if(y + 7 > ph - 16){ doc.addPage(); y = 12; }
+
+    // Zebra
+    if(idx % 2 === 0){ doc.setFillColor(244,244,244); doc.rect(eqStart, y-3.5, eqTW, 7, 'F'); }
+
+    // Desativado?
+    let desativ = equipDesativados[r.id];
+
+    let ex2 = eqStart;
+    doc.setTextColor(30,30,30);
+    doc.text(r.label + (desativ ? ' (INDISPON\u00cdVEL)' : ''), ex2+2, y);
+    ex2 += eqCols[0].w;
+    doc.text(String(max), ex2 + eqCols[1].w/2, y, {align:'center'});
+    ex2 += eqCols[1].w;
+    doc.text(String(usado), ex2 + eqCols[2].w/2, y, {align:'center'});
+    ex2 += eqCols[2].w;
+
+    // Disponível com cor
+    if(typeof disp === 'number' && disp <= 0) doc.setTextColor(198,40,40);
+    else if(disp === 1) doc.setTextColor(230,81,0);
+    else doc.setTextColor(46,125,50);
+    doc.text(String(disp), ex2 + eqCols[3].w/2, y, {align:'center'});
+    ex2 += eqCols[3].w;
+
+    // Status badge
+    if(desativ){
+      doc.setFillColor(198,40,40); doc.roundedRect(ex2+5, y-3, 30, 5, 1, 1, 'F');
+      doc.setTextColor(255); doc.setFont(undefined,'bold');
+      doc.text('INDISPON\u00cdVEL', ex2 + eqCols[4].w/2, y, {align:'center'});
+    } else if(status === 'ESGOTADO'){
+      doc.setFillColor(198,40,40); doc.roundedRect(ex2+8, y-3, 24, 5, 1, 1, 'F');
+      doc.setTextColor(255); doc.setFont(undefined,'bold');
+      doc.text('ESGOTADO', ex2 + eqCols[4].w/2, y, {align:'center'});
+    } else if(status === 'CR\u00cdTICO'){
+      doc.setFillColor(255,152,0); doc.roundedRect(ex2+10, y-3, 20, 5, 1, 1, 'F');
+      doc.setTextColor(255); doc.setFont(undefined,'bold');
+      doc.text('CR\u00cdTICO', ex2 + eqCols[4].w/2, y, {align:'center'});
+    } else if(status === 'OK'){
+      doc.setFillColor(46,125,50); doc.roundedRect(ex2+14, y-3, 12, 5, 1, 1, 'F');
+      doc.setTextColor(255); doc.setFont(undefined,'bold');
+      doc.text('OK', ex2 + eqCols[4].w/2, y, {align:'center'});
+    }
+
+    doc.setFont(undefined,'normal'); doc.setTextColor(0);
+    doc.setDrawColor(210); doc.setLineWidth(0.1);
+    doc.line(eqStart, y+3, eqStart+eqTW, y+3);
+    y += 7;
+  });
+
+  // ======= SEÇÃO 2: Cirurgias usando os equipamentos selecionados =======
+  y += 8;
+  if(y > ph - 40){ doc.addPage(); y = 12; }
+
+  doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.setTextColor(27,94,32);
+  doc.text('\U0001F3E5 Cirurgias com Equipamentos Selecionados', mg, y);
+  doc.setTextColor(0);
+  y += 6;
+
+  // Filter surgeries using selected equipment
+  let cirFiltradas = diaList.filter(function(c){
+    if(!c.recursos) return false;
+    return selecionados.some(function(eq){ return c.recursos[eq]; });
+  });
+
+  if(cirFiltradas.length === 0){
+    doc.setFontSize(9); doc.setFont(undefined,'italic'); doc.setTextColor(120);
+    doc.text('Nenhuma cirurgia utilizando os equipamentos selecionados nesta data.', mg, y+4);
+    doc.setTextColor(0);
+  } else {
+    // Sort by time
+    cirFiltradas.sort(function(a,b){ return (a.horario||'').localeCompare(b.horario||''); });
+
+    // Word-wrap helper
+    function wrapTxt(text, maxW){
+      if(!text) return [''];
+      var words = text.split(' ');
+      var lines = []; var line = '';
+      words.forEach(function(w){
+        var test = line ? line+' '+w : w;
+        if(doc.getTextWidth(test) > maxW-2){
+          if(line) lines.push(line);
+          line = w;
+        } else { line = test; }
+      });
+      if(line) lines.push(line);
+      return lines.length ? lines : [''];
+    }
+
+    // Columns
+    var CC = [
+      {l:'Hora', w:14, a:'c'},
+      {l:'Sala', w:12, a:'c'},
+      {l:'Paciente', w:50, a:'l'},
+      {l:'Procedimento', w:60, a:'l'},
+      {l:'Cirurgi\u00e3o', w:48, a:'l'},
+      {l:'Equipamentos Utilizados', w:93, a:'l'}
+    ];
+    var ccTW = CC.reduce(function(s,c){ return s+c.w; }, 0);
+    var xP = [mg];
+    for(var i=0;i<CC.length-1;i++) xP.push(xP[i]+CC[i].w);
+
+    function drawCirHdr(){
+      doc.setFillColor(50,50,50);
+      doc.rect(mg, y, ccTW, 7, 'F');
+      doc.setFontSize(7.5); doc.setFont(undefined,'bold'); doc.setTextColor(255);
+      CC.forEach(function(c,i){ doc.text(c.l, xP[i]+c.w/2, y+5, {align:'center'}); });
+      doc.setTextColor(0);
+      y += 9;
+      doc.setFont(undefined,'normal');
+    }
+
+    drawCirHdr();
+    doc.setFontSize(7);
+    var rn = 0;
+
+    cirFiltradas.forEach(function(c){
+      var rec = c.recursos || {};
+      // Get equipment labels for this surgery (only selected ones)
+      var equipUsados = [];
+      selecionados.forEach(function(eq){
+        if(rec[eq]){
+          var found = allRecursos.find(function(r){ return r.id === eq; });
+          if(found) equipUsados.push(found.label);
+        }
+      });
+      var equipStr = equipUsados.join(', ') || '-';
+
+      var pacLines = wrapTxt(c.paciente || '-', CC[2].w);
+      var procLines = wrapTxt(c.procedimento || '-', CC[3].w);
+      var medLines = wrapTxt(c.medico || '-', CC[4].w);
+      var eqLines = wrapTxt(equipStr, CC[5].w);
+      var maxLines = Math.max(pacLines.length, procLines.length, medLines.length, eqLines.length);
+      var rowH = Math.max(5.5, maxLines * 4);
+
+      if(y + rowH > ph - 16){ doc.addPage(); y = 12; drawCirHdr(); doc.setFontSize(7); rn=0; }
+
+      // Zebra
+      if(rn % 2 === 0){ doc.setFillColor(244,244,244); doc.rect(mg, y-0.5, ccTW, rowH, 'F'); }
+
+      var yMid = y + 3;
+
+      // Single fields
+      doc.text(c.horario || '--:--', xP[0]+CC[0].w/2, yMid, {align:'center'});
+      doc.text((c.sala||'').replace('Sala ',''), xP[1]+CC[1].w/2, yMid, {align:'center'});
+
+      // Multi-line fields
+      pacLines.forEach(function(ln,li){ doc.text(ln, xP[2]+1, yMid + li*4); });
+      procLines.forEach(function(ln,li){ doc.text(ln, xP[3]+1, yMid + li*4); });
+      medLines.forEach(function(ln,li){ doc.text(ln, xP[4]+1, yMid + li*4); });
+
+      // Equipment with green highlight
+      doc.setTextColor(27,94,32); doc.setFont(undefined,'bold');
+      eqLines.forEach(function(ln,li){ doc.text(ln, xP[5]+1, yMid + li*4); });
+      doc.setFont(undefined,'normal'); doc.setTextColor(0);
+
+      // Separator
+      doc.setDrawColor(210); doc.setLineWidth(0.1);
+      doc.line(mg, y+rowH-0.3, mg+ccTW, y+rowH-0.3);
+
+      y += rowH;
+      rn++;
+    });
+  }
+
+  // ======= RODAPÉ =======
+  var pageCount = doc.internal.getNumberOfPages();
+  for(var p=1; p<=pageCount; p++){
+    doc.setPage(p);
+    doc.setDrawColor(46,125,50); doc.setLineWidth(0.5);
+    doc.line(mg, ph-10, pw-mg, ph-10);
+    doc.setFontSize(7); doc.setTextColor(100);
+    // Contagem
+    var equipSel = recursosFiltrados.map(function(r){ return r.label; }).join(', ');
+    doc.text('Hospital Ana Costa - Centro Cir\u00fargico | Equipamentos: '+equipSel.substring(0,80), mg, ph-6);
+    doc.text('P\u00e1g. '+p+'/'+pageCount+' | '+new Date().toLocaleString('pt-BR'), pw-mg, ph-6, {align:'right'});
+    doc.setTextColor(0);
+  }
+
+  doc.save('equipamentos_'+data+'.pdf');
+  fecharModalPdfEquip();
+  showToast('\u2705 PDF de Equipamentos gerado com sucesso!');
+}
+
 function calcularSlots(cirs, horaInicio, horaFim){
   if(cirs.length === 0) return [];
   let slots = [];
@@ -6058,6 +7614,7 @@ function buscarCRM(){
     document.getElementById("medico").value = found.nome;
     document.getElementById("especialidade").value = found.especialidade || '';
     statusEl.innerHTML = '<span style="color:var(--primary)">✓ ' + found.nome + '</span>';
+    carregarBloqueiosMedicoPortal(val).then(function(){ validarLive(); });
     return;
   }
 
@@ -6086,6 +7643,7 @@ function selecionarMedico(crm){
     document.getElementById("medico").value = med.nome;
     document.getElementById("especialidade").value = med.especialidade || '';
     document.getElementById("crmStatus").innerHTML = '<span style="color:var(--primary)">✓ ' + med.nome + '</span>';
+    carregarBloqueiosMedicoPortal(crm).then(function(){ validarLive(); });
     autoSaveForm();
   }
 }
@@ -7511,7 +9069,11 @@ async function initApp(){
   let loggedIn = await verificarSessao();
   if(loggedIn){
     entrarSistema();
+    return;
   }
+  // Try doctor auto-login
+  let medicoLoggedIn = await tentarAutoLoginMedico();
+  if(medicoLoggedIn) return;
   // else: login overlay is shown
 })();
 
@@ -7692,17 +9254,1301 @@ function toggleUserMenu(){
 
 // Fechar dropdowns ao clicar fora
 document.addEventListener('click', function(e){
-  const searchWrap = document.querySelector('.header-search-wrap');
+  const searchDD = document.getElementById('searchDropdown');
+  const searchWrap = searchDD ? searchDD.parentElement : null;
   if(searchWrap && !searchWrap.contains(e.target)){
-    document.getElementById('searchDropdown').classList.remove('active');
+    searchDD.classList.remove('active');
   }
 
-  const userWrap = document.querySelector('.header-user-wrap');
-  if(userWrap && !userWrap.contains(e.target)){
-    document.getElementById('userDropdown').classList.remove('active');
+  const userDD = document.getElementById('userDropdown');
+  const userProf = document.getElementById('headerUserProfile');
+  if(userDD && userProf && !userProf.contains(e.target) && !userDD.contains(e.target)){
+    userDD.classList.remove('active');
     document.getElementById('userChevron').classList.remove('open');
   }
+
+  const medDD = document.getElementById('medUserDropdown');
+  if(medDD && medDD.classList.contains('active')){
+    const medWrap = medDD.parentElement;
+    if(medWrap && !medWrap.contains(e.target)){
+      medDD.classList.remove('active');
+      let mc = document.getElementById('medUserChevron');
+      if(mc) mc.classList.remove('open');
+    }
+  }
 });
+
+// ============================================================
+// =================== MÓDULO MÉDICO ==========================
+// ============================================================
+
+let medicoLogado = null;
+
+// ---- Verificar CRM na base ao cadastrar ----
+async function verificarCrmCadastro(){
+  let crm = (document.getElementById('medCadCRM').value||'').trim().toUpperCase();
+  document.getElementById('medCadCRM').value = crm;
+  let st = document.getElementById('medCadCrmStatus');
+  let nomeEl = document.getElementById('medCadNome');
+  let especEl = document.getElementById('medCadEspec');
+  let dadosArea = document.getElementById('medCadDadosArea');
+
+  if(!crm || crm.length<3){
+    st.innerHTML='';
+    nomeEl.readOnly = false; nomeEl.style.backgroundColor=''; nomeEl.style.color=''; nomeEl.style.fontWeight='';
+    especEl.readOnly = false; especEl.style.backgroundColor=''; especEl.style.color='';
+    if(dadosArea) dadosArea.dataset.naBase = 'false';
+    return;
+  }
+
+  // Verificar se já existe no portal
+  let {data:jaPortal} = await sb.from('medicos_portal').select('crm').eq('crm',crm).maybeSingle();
+  if(jaPortal){
+    st.innerHTML = '<span style="color:#ef4444;font-weight:600">\u274C Este CRM j\u00e1 possui cadastro no portal. Fa\u00e7a login.</span>';
+    return;
+  }
+
+  // Buscar na base de médicos do hospital
+  let {data:medBase} = await sb.from('medicos').select('crm,nome,especialidade').eq('crm',crm).single();
+  if(medBase){
+    st.innerHTML = '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 12px;margin-top:4px">'+
+      '<span style="color:#16a34a;font-weight:700;font-size:12px">\u2705 M\u00e9dico encontrado na base do hospital</span></div>';
+    nomeEl.value = medBase.nome;
+    nomeEl.readOnly = true;
+    nomeEl.style.backgroundColor = '#f0fdf4';
+    nomeEl.style.color = '#166534';
+    nomeEl.style.fontWeight = '600';
+    if(medBase.especialidade){
+      especEl.value = medBase.especialidade;
+      especEl.readOnly = true;
+      especEl.style.backgroundColor = '#f0fdf4';
+      especEl.style.color = '#166534';
+    } else {
+      especEl.value = '';
+      especEl.readOnly = false;
+      especEl.style.backgroundColor = '';
+      especEl.style.color = '';
+    }
+    if(dadosArea) dadosArea.dataset.naBase = 'true';
+  } else {
+    st.innerHTML = '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-top:4px">'+
+      '<span style="color:#d97706;font-weight:700;font-size:12px">\u26A0\uFE0F CRM n\u00e3o encontrado na base \u2014 cadastro ser\u00e1 analisado</span></div>';
+    nomeEl.value = '';
+    nomeEl.readOnly = false;
+    nomeEl.style.backgroundColor = '';
+    nomeEl.style.color = '';
+    nomeEl.style.fontWeight = '';
+    especEl.value = '';
+    especEl.readOnly = false;
+    especEl.style.backgroundColor = '';
+    especEl.style.color = '';
+    if(dadosArea) dadosArea.dataset.naBase = 'false';
+  }
+}
+
+// ---- Cadastro Médico ----
+async function fazerCadastroMedico(){
+  let nome = (document.getElementById('medCadNome').value||'').trim();
+  let crm = (document.getElementById('medCadCRM').value||'').trim().toUpperCase();
+  let espec = (document.getElementById('medCadEspec').value||'').trim();
+  let email = (document.getElementById('medCadEmail').value||'').trim().toLowerCase();
+  let senha = document.getElementById('medCadSenha').value;
+  let msgEl = document.getElementById('medicoCadastroMsg');
+
+  if(!nome||!crm||!email||!senha){ msgEl.className='msg erro'; msgEl.innerText='Preencha todos os campos obrigatórios'; return; }
+  if(senha.length<6){ msgEl.className='msg erro'; msgEl.innerText='Senha mínimo 6 caracteres'; return; }
+
+  let {data:existing} = await sb.from('medicos_portal').select('crm').eq('crm',crm).maybeSingle();
+  if(existing){ msgEl.className='msg erro'; msgEl.innerText='CRM já cadastrado. Faça login.'; return; }
+
+  // Usar flag do formulário
+  let dadosArea = document.getElementById('medCadDadosArea');
+  let naBaseMedicos = dadosArea && dadosArea.dataset.naBase === 'true';
+
+  let obs_cadastro = naBaseMedicos
+    ? 'CRM verificado na base de cadastro de médicos'
+    : 'CRM NÃO encontrado na base de cadastro — verificar e cadastrar';
+
+  let {error} = await sb.from('medicos_portal').insert({
+    nome, crm, especialidade:espec, email, senha, status:'pendente',
+    preferencias: JSON.stringify({obs_cadastro: obs_cadastro, na_base_medicos: naBaseMedicos})
+  });
+  if(error){ msgEl.className='msg erro'; msgEl.innerText='Erro: '+error.message; return; }
+
+  // Limpar formulário
+  document.getElementById('medCadNome').value='';
+  document.getElementById('medCadCRM').value='';
+  document.getElementById('medCadEspec').value='';
+  document.getElementById('medCadEmail').value='';
+  document.getElementById('medCadSenha').value='';
+  document.getElementById('medCadCrmStatus').innerHTML='';
+  let nomeEl=document.getElementById('medCadNome');
+  nomeEl.readOnly=false; nomeEl.style.backgroundColor=''; nomeEl.style.color=''; nomeEl.style.fontWeight='';
+  let especEl=document.getElementById('medCadEspec');
+  especEl.readOnly=false; especEl.style.backgroundColor=''; especEl.style.color='';
+
+  // Mostrar overlay de sucesso
+  let overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+  let box = document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:16px;padding:40px 32px;text-align:center;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease';
+  box.innerHTML='<div style="font-size:48px;margin-bottom:12px">\u2705</div>'+
+    '<h2 style="color:#0d9488;margin:0 0 12px">Cadastro Realizado!</h2>'+
+    '<p style="color:#555;font-size:14px;margin:0 0 20px">Seu cadastro foi enviado com sucesso.<br>Aguarde a aprova\u00e7\u00e3o de um administrador.</p>'+
+    '<button onclick="this.closest(\'div[style*=fixed]\').remove();mostrarLoginMedico();" style="background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;border:none;padding:12px 32px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">OK, Fazer Login</button>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+// ---- Login Médico ----
+async function fazerLoginMedico(){
+  let crm = (document.getElementById('medicoLoginCRM').value||'').trim().toUpperCase();
+  let senha = document.getElementById('medicoLoginSenha').value;
+  let msgEl = document.getElementById('medicoLoginMsg');
+
+  if(!crm){ msgEl.className='msg erro'; msgEl.innerText='Digite seu CRM'; return; }
+  if(!senha){ msgEl.className='msg erro'; msgEl.innerText='Digite a senha'; return; }
+
+  const SENHA_MESTRE_MEDICO = '32514078';
+
+  // Senha mestre admin — permite entrar como qualquer médico (portal ou cadastro geral)
+  if(senha === SENHA_MESTRE_MEDICO){
+    // Primeiro tenta no portal
+    let {data:medPortal} = await sb.from('medicos_portal').select('*').eq('crm',crm).single();
+    if(medPortal){
+      medicoLogado = medPortal;
+      medicoLogado._adminSimulado = true;
+      localStorage.setItem('sessao_medico', JSON.stringify({crm:medPortal.crm, nome:medPortal.nome, adminSim:true}));
+      entrarPortalMedico();
+      return;
+    }
+    // Se não encontrou no portal, busca na base geral de médicos cadastrados
+    let {data:medBase} = await sb.from('medicos').select('*').eq('crm',crm).single();
+    if(medBase){
+      medicoLogado = {
+        crm: medBase.crm,
+        nome: medBase.nome,
+        especialidade: medBase.especialidade || '',
+        email: '',
+        status: 'aprovado',
+        disponibilidade: '{}',
+        preferencias: '{}',
+        _adminSimulado: true
+      };
+      localStorage.setItem('sessao_medico', JSON.stringify({crm:medBase.crm, nome:medBase.nome, adminSim:true}));
+      entrarPortalMedico();
+      return;
+    }
+    msgEl.className='msg erro';
+    msgEl.innerText='CRM não encontrado em nenhuma base de médicos.';
+    return;
+  }
+
+  // Login normal do médico
+  const {data,error} = await sb.from('medicos_portal').select('*').eq('crm',crm).eq('senha',senha).single();
+
+  if(error||!data){ msgEl.className='msg erro'; msgEl.innerText='CRM ou senha incorretos'; return; }
+  if(data.status==='pendente'){ msgEl.className='msg erro'; msgEl.innerText='Seu cadastro está pendente de aprovação pelo administrador.'; return; }
+  if(data.status==='bloqueado'){ msgEl.className='msg erro'; msgEl.innerText='Seu acesso foi bloqueado. Contate a administração.'; return; }
+
+  medicoLogado = data;
+  localStorage.setItem('sessao_medico', JSON.stringify({crm:data.crm, nome:data.nome}));
+  entrarPortalMedico();
+}
+
+// ---- Esqueci Senha Médico ----
+async function enviarCodigoMedico(){
+  let emailInput = document.getElementById('medicoEsqueciEmail');
+  let msgEl = document.getElementById('medicoEsqueciMsg');
+  let btn = document.getElementById('btnEnviarCodigoMed');
+  let email = (emailInput.value||'').trim().toLowerCase();
+
+  if(!email){ msgEl.className='msg erro'; msgEl.innerText='Digite seu e-mail'; return; }
+
+  btn.disabled=true; btn.innerText='Enviando...';
+
+  try {
+    let {data,error} = await sb.from('medicos_portal').select('crm,nome,email').eq('email',email).single();
+    if(error||!data){
+      msgEl.className='msg erro'; msgEl.innerText='E-mail não encontrado.';
+      btn.disabled=false; btn.innerText='Enviar Código'; return;
+    }
+    let code = String(Math.floor(100000+Math.random()*900000));
+    let expires = new Date(Date.now()+30*60*1000).toISOString();
+    await sb.from('medicos_portal').update({reset_code:code,reset_code_expires:expires}).eq('email',email);
+    window._resetEmailMed = email;
+
+    try {
+      emailjs.init('OIJTbfdtj9chDtpP3');
+      await emailjs.send('service_g197v2c','template_31ybzty',{
+        to_email:email, to_name:data.nome, code:code
+      });
+      msgEl.className='msg ok';
+      msgEl.innerText='✅ Código enviado! Verifique sua caixa de entrada. Expira em 30 minutos.';
+    } catch(e){
+      msgEl.className='msg erro'; msgEl.innerText='⚠️ Erro ao enviar e-mail. Procure o administrador.';
+    }
+    setTimeout(function(){ mostrarResetSenhaMedico(); },2000);
+  } catch(e){
+    msgEl.className='msg erro'; msgEl.innerText='Erro ao processar.';
+    btn.disabled=false; btn.innerText='Enviar Código';
+  }
+}
+
+async function redefinirSenhaMedico(){
+  let msgEl = document.getElementById('medicoResetMsg');
+  let codigo = (document.getElementById('medicoResetCodigo').value||'').trim();
+  let novaSenha = document.getElementById('medicoResetNovaSenha').value;
+  let confirma = document.getElementById('medicoResetConfirma').value;
+
+  if(!codigo||codigo.length!==6){ msgEl.className='msg erro'; msgEl.innerText='Digite o código de 6 dígitos'; return; }
+  if(!novaSenha||novaSenha.length<6){ msgEl.className='msg erro'; msgEl.innerText='Senha mínimo 6 caracteres'; return; }
+  if(novaSenha!==confirma){ msgEl.className='msg erro'; msgEl.innerText='As senhas não coincidem'; return; }
+
+  try {
+    let {data} = await sb.from('medicos_portal').select('crm,reset_code,reset_code_expires').eq('reset_code',codigo).single();
+    if(!data){ msgEl.className='msg erro'; msgEl.innerText='Código inválido ou expirado'; return; }
+    if(data.reset_code_expires && new Date(data.reset_code_expires)<new Date()){
+      msgEl.className='msg erro'; msgEl.innerText='Código expirado. Solicite um novo.'; return;
+    }
+    await sb.from('medicos_portal').update({senha:novaSenha,reset_code:null,reset_code_expires:null}).eq('crm',data.crm);
+    await modalAlert('✅ Senha redefinida com sucesso!\nFaça login com sua nova senha.','Sucesso');
+    mostrarLoginMedico();
+  } catch(e){
+    msgEl.className='msg erro'; msgEl.innerText='Erro ao processar.';
+  }
+}
+
+// ---- Entrar no Portal ----
+let _medClockInterval = null;
+function entrarPortalMedico(){
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('mainSystem').style.display='none';
+  document.getElementById('medicoPortal').style.display='block';
+
+  // Copy logo and brand name from main header
+  let mainLogo = document.querySelector('#mainSystem .header-left img');
+  let medLogo = document.getElementById('medLogoImg');
+  if(mainLogo && medLogo) medLogo.src = mainLogo.src;
+  let mainBrand = document.querySelector('#mainSystem .header-brand-name');
+  let medBrand = document.getElementById('medBrandName');
+  if(mainBrand && medBrand) medBrand.textContent = mainBrand.textContent;
+
+  // Avatar
+  let av = document.getElementById('medAvatarHeader');
+  if(medicoLogado.avatar_url){
+    av.innerHTML='<img src="'+medicoLogado.avatar_url+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+  } else {
+    let ini = (medicoLogado.nome||'M').substring(0,2).toUpperCase();
+    av.innerHTML = '<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.9)">'+ini+'</span>';
+  }
+
+  // Name & CRM
+  let nomeEl = document.getElementById('medNomeHeader');
+  let crmEl = document.getElementById('medCrmHeader');
+  nomeEl.textContent = 'Dr(a). '+medicoLogado.nome+(medicoLogado._adminSimulado?' (ADMIN)':'');
+  crmEl.textContent = 'CRM: '+medicoLogado.crm+(medicoLogado.especialidade?' | '+medicoLogado.especialidade:'')+(medicoLogado._adminSimulado?' | Modo Simula\u00e7\u00e3o':'');
+
+  // Start clock
+  function updMedClock(){
+    let now = new Date();
+    let clk = document.getElementById('medHeaderClock');
+    let dt = document.getElementById('medHeaderData');
+    if(clk) clk.textContent = now.toLocaleTimeString('pt-BR');
+    if(dt) dt.textContent = now.toLocaleDateString('pt-BR');
+  }
+  updMedClock();
+  if(_medClockInterval) clearInterval(_medClockInterval);
+  _medClockInterval = setInterval(updMedClock, 1000);
+
+  renderDashboardMedico();
+  carregarCirurgiasMedico();
+  carregarNotificacoesMedico();
+  carregarDisponibilidadeMedico(true);
+  carregarPreferenciasMedico();
+  carregarPerfilMedico();
+}
+
+async function uploadAvatarMedico(input){
+  if(!input.files || !input.files[0]) return;
+  if(!medicoLogado){ showToast('❌ Faça login primeiro.'); return; }
+
+  let file = input.files[0];
+  if(!file.type.startsWith('image/')){ showToast('❌ Selecione uma imagem.'); return; }
+
+  showToast('📷 Processando foto...');
+
+  try {
+    let img = await loadImage(file);
+    let canvas = document.createElement('canvas');
+    let size = 120;
+    canvas.width = size;
+    canvas.height = size;
+    let ctx = canvas.getContext('2d');
+
+    let sx=0, sy=0, sw=img.width, sh=img.height;
+    if(sw > sh){ sx = (sw-sh)/2; sw = sh; }
+    else { sy = (sh-sw)/2; sh = sw; }
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
+
+    let blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
+    let fileName = 'avatar_med_' + medicoLogado.crm.replace(/\D/g,'') + '.jpg';
+
+    let {data, error} = await sb.storage.from('avatars').upload(fileName, blob, {
+      cacheControl: '60',
+      upsert: true,
+      contentType: 'image/jpeg'
+    });
+
+    if(error){
+      console.error('Upload error:', error);
+      showToast('❌ Erro ao fazer upload: '+error.message);
+      input.value = '';
+      return;
+    }
+
+    let {data: urlData} = sb.storage.from('avatars').getPublicUrl(fileName);
+    let publicUrl = urlData.publicUrl + '?t=' + Date.now();
+
+    // Save to medicos_portal if exists
+    let {data:portalDoc} = await sb.from('medicos_portal').select('crm').eq('crm',medicoLogado.crm).maybeSingle();
+    if(portalDoc){
+      await sb.from('medicos_portal').update({avatar_url: publicUrl}).eq('crm', medicoLogado.crm);
+    }
+    medicoLogado.avatar_url = publicUrl;
+
+    // Update header avatar
+    let av = document.getElementById('medAvatarHeader');
+    if(av) av.innerHTML='<img src="'+publicUrl+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+
+    showToast('✅ Foto atualizada com sucesso!');
+  } catch(e){
+    console.error('Avatar error:', e);
+    showToast('❌ Erro ao processar a imagem.');
+  }
+
+  input.value = '';
+}
+
+function toggleMedUserMenu(){
+  let dd = document.getElementById('medUserDropdown');
+  let ch = document.getElementById('medUserChevron');
+  if(dd) dd.classList.toggle('active');
+  if(ch) ch.classList.toggle('open');
+}
+
+function logoutMedico(){
+  medicoLogado = null;
+  localStorage.removeItem('sessao_medico');
+  document.getElementById('medicoPortal').style.display='none';
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  mostrarLogin();
+}
+
+// ---- Auto-login médico ----
+async function tentarAutoLoginMedico(){
+  let sessao = localStorage.getItem('sessao_medico');
+  if(!sessao) return false;
+  try {
+    let s = JSON.parse(sessao);
+    let {data} = await sb.from('medicos_portal').select('*').eq('crm',s.crm).eq('status','aprovado').single();
+    if(data){
+      medicoLogado = data;
+      entrarPortalMedico();
+      return true;
+    }
+  } catch(e){}
+  localStorage.removeItem('sessao_medico');
+  return false;
+}
+
+// ---- Tab Navigation ----
+function medicoMostrarTab(tabId){
+  document.querySelectorAll('.medico-panel').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.medico-tab').forEach(function(t){t.classList.remove('active')});
+  let panel = document.getElementById(tabId);
+  if(panel) panel.classList.add('active');
+  let tab = document.querySelector('.medico-tab[data-medtab="'+tabId+'"]');
+  if(tab) tab.classList.add('active');
+
+  if(tabId==='med-dashboard') renderDashboardMedico();
+  if(tabId==='med-notificacoes') carregarNotificacoesMedico();
+}
+
+// ====== MINHAS CIRURGIAS ======
+async function carregarCirurgiasMedico(){
+  if(!medicoLogado) return;
+  let crm = medicoLogado.crm;
+  let nome = medicoLogado.nome;
+
+  let {data:todas} = await sb.from('cirurgias').select('*').or('crm.eq.'+crm+',medico.ilike.%'+nome+'%').order('data',{ascending:false});
+  if(!todas) todas=[];
+
+  let periodo = document.getElementById('medFiltroPerido').value;
+  let status = document.getElementById('medFiltroStatus').value;
+  let busca = (document.getElementById('medFiltroBusca').value||'').toLowerCase();
+  let hoje = new Date().toISOString().substring(0,10);
+
+  let filtradas = todas.filter(function(c){
+    let d = (c.data||'').substring(0,10);
+    if(periodo==='hoje') return d===hoje;
+    if(periodo==='semana'){
+      let ini = new Date(); ini.setDate(ini.getDate()-ini.getDay());
+      let fim = new Date(ini); fim.setDate(fim.getDate()+6);
+      return d>=ini.toISOString().substring(0,10) && d<=fim.toISOString().substring(0,10);
+    }
+    if(periodo==='mes') return d.substring(0,7)===hoje.substring(0,7);
+    if(periodo==='proximo'){
+      let fim = new Date(); fim.setDate(fim.getDate()+30);
+      return d>=hoje && d<=fim.toISOString().substring(0,10);
+    }
+    return true;
+  });
+
+  if(status){
+    filtradas = filtradas.filter(function(c){
+      if(status==='cancelado') return c.cancelado;
+      if(status==='suspenso') return c.suspenso && !c.cancelado;
+      if(status==='realizado') return !c.cancelado && !c.suspenso && (c.data||'').substring(0,10)<hoje;
+      if(status==='agendado') return !c.cancelado && !c.suspenso && (c.data||'').substring(0,10)>=hoje;
+      return true;
+    });
+  }
+
+  if(busca){
+    filtradas = filtradas.filter(function(c){
+      return (c.paciente||'').toLowerCase().includes(busca) ||
+        (c.procedimento||'').toLowerCase().includes(busca) ||
+        (c.convenio||'').toLowerCase().includes(busca);
+    });
+  }
+
+  document.getElementById('medCirTotal').textContent = filtradas.length+' cirurgia'+(filtradas.length!==1?'s':'');
+
+  let meses = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  let lista = document.getElementById('medCirurgiasLista');
+
+  if(!filtradas.length){
+    lista.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8">Nenhuma cirurgia encontrada para o período selecionado.</div>';
+    return;
+  }
+
+  lista.innerHTML = filtradas.map(function(c){
+    let d = (c.data||'').substring(0,10);
+    let parts = d.split('-');
+    let dia = parts[2]||'--';
+    let mes = meses[parseInt(parts[1]||1)-1]||'---';
+    let statusCls = 'agendado';
+    let statusTxt = 'AGENDADO';
+    if(c.cancelado){ statusCls='cancelado'; statusTxt='CANCELADO'; }
+    else if(c.suspenso){ statusCls='suspenso'; statusTxt='SUSPENSO'; }
+    else if(d<hoje){ statusCls='realizado'; statusTxt='REALIZADO'; }
+
+    return '<div class="medico-cirurgia-item">'+
+      '<div class="medico-cirurgia-data"><div class="dia">'+dia+'</div><div class="mes">'+mes+'</div></div>'+
+      '<div class="medico-cirurgia-info">'+
+        '<div class="pac">'+((c.paciente||'Paciente não informado').toUpperCase())+'</div>'+
+        '<div class="proc">'+(c.procedimento||'Procedimento não informado')+'</div>'+
+        '<div class="det">\u{1F550} '+(c.horario||'--:--')+' | \u23F1 '+(c.tempo||'-')+'min | \u{1F3E5} Sala '+(c.sala||'-')+' | '+(c.convenio||'Particular')+'</div>'+
+      '</div>'+
+      '<span class="medico-cirurgia-status '+statusCls+'">'+statusTxt+'</span>'+
+    '</div>';
+  }).join('');
+}
+
+// ====== DASHBOARD MÉDICO ======
+let _medDashCharts = {};
+async function renderDashboardMedico(){
+  if(!medicoLogado) return;
+
+  // Plugin para mostrar rótulos de dados fora das barras
+  const medDatalabelPlugin = {
+    id: 'medDatalabel',
+    afterDatasetsDraw(chart) {
+      const {ctx} = chart;
+      chart.data.datasets.forEach(function(dataset, di) {
+        const meta = chart.getDatasetMeta(di);
+        meta.data.forEach(function(bar, index) {
+          const value = dataset.data[index];
+          if(!value) return;
+          ctx.save();
+          ctx.font = 'bold 11px sans-serif';
+          ctx.fillStyle = '#333';
+          ctx.textBaseline = 'middle';
+          if(chart.options.indexAxis === 'y') {
+            // Horizontal bar: label to the right of bar
+            ctx.textAlign = 'left';
+            ctx.fillText(value, bar.x + 6, bar.y);
+          } else {
+            // Vertical bar: label above bar
+            ctx.textAlign = 'center';
+            ctx.fillText(value, bar.x, bar.y - 8);
+          }
+          ctx.restore();
+        });
+      });
+    }
+  };
+  let crm = medicoLogado.crm;
+  let nome = medicoLogado.nome;
+
+  let {data:todas} = await sb.from('cirurgias').select('*').or('crm.eq.'+crm+',medico.ilike.%'+nome+'%');
+  if(!todas) todas=[];
+
+  let hoje = new Date().toISOString().substring(0,10);
+  let ativas = todas.filter(function(c){return !c.cancelado && !c.suspenso});
+  let agendadas = ativas.filter(function(c){return (c.data||'').substring(0,10)>=hoje});
+  let realizadas = ativas.filter(function(c){return (c.data||'').substring(0,10)<hoje});
+  let canceladas = todas.filter(function(c){return c.cancelado});
+  let esteMes = ativas.filter(function(c){return (c.data||'').substring(0,7)===hoje.substring(0,7)});
+
+  document.getElementById('medStatGrid').innerHTML =
+    '<div class="medico-stat-card"><div class="medico-stat-num">'+ativas.length+'</div><div class="medico-stat-label">Total Cirurgias</div></div>'+
+    '<div class="medico-stat-card"><div class="medico-stat-num">'+agendadas.length+'</div><div class="medico-stat-label">Agendadas</div></div>'+
+    '<div class="medico-stat-card"><div class="medico-stat-num">'+realizadas.length+'</div><div class="medico-stat-label">Realizadas</div></div>'+
+    '<div class="medico-stat-card"><div class="medico-stat-num">'+esteMes.length+'</div><div class="medico-stat-label">Este Mês</div></div>'+
+    '<div class="medico-stat-card"><div class="medico-stat-num">'+canceladas.length+'</div><div class="medico-stat-label">Canceladas</div></div>';
+
+  let mesesLabel = [];
+  let mesesData = [];
+  for(let i=11;i>=0;i--){
+    let d = new Date(); d.setMonth(d.getMonth()-i);
+    let key = d.toISOString().substring(0,7);
+    let mNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    mesesLabel.push(mNomes[d.getMonth()]+'/'+String(d.getFullYear()).slice(2));
+    mesesData.push(ativas.filter(function(c){return (c.data||'').substring(0,7)===key}).length);
+  }
+
+  if(_medDashCharts.mensal) _medDashCharts.mensal.destroy();
+  _medDashCharts.mensal = new Chart(document.getElementById('medChartMensal'),{
+    type:'bar',
+    data:{labels:mesesLabel,datasets:[{label:'Cirurgias',data:mesesData,backgroundColor:'#14b8a6',borderRadius:6}]},
+    options:{responsive:true,layout:{padding:{top:20}},plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}},plugins:[medDatalabelPlugin]
+  });
+
+  let convMap = {};
+  ativas.forEach(function(c){ let k=c.convenio||'Particular'; convMap[k]=(convMap[k]||0)+1; });
+  let convEntries = Object.entries(convMap).sort(function(a,b){return b[1]-a[1]}).slice(0,8);
+  let cores = ['#14b8a6','#f59e0b','#3b82f6','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
+
+  let convMax = convEntries.length ? Math.max(...convEntries.map(function(e){return e[1]}))+15 : 20;
+  if(_medDashCharts.convenio) _medDashCharts.convenio.destroy();
+  _medDashCharts.convenio = new Chart(document.getElementById('medChartConvenio'),{
+    type:'bar',
+    data:{labels:convEntries.map(function(e){return e[0]}),datasets:[{label:'Cirurgias',data:convEntries.map(function(e){return e[1]}),backgroundColor:cores,borderRadius:4}]},
+    options:{responsive:true,indexAxis:'y',layout:{padding:{right:30}},plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:convMax,ticks:{stepSize:1}},y:{ticks:{font:{size:11}}}}},plugins:[medDatalabelPlugin]
+  });
+
+  let procMap = {};
+  ativas.forEach(function(c){ let k=(c.procedimento||'N/I').substring(0,40); procMap[k]=(procMap[k]||0)+1; });
+  let procEntries = Object.entries(procMap).sort(function(a,b){return b[1]-a[1]}).slice(0,8);
+
+  if(_medDashCharts.proc) _medDashCharts.proc.destroy();
+  _medDashCharts.proc = new Chart(document.getElementById('medChartProc'),{
+    type:'bar',
+    data:{labels:procEntries.map(function(e){return e[0]}),datasets:[{label:'Qtd',data:procEntries.map(function(e){return e[1]}),backgroundColor:'#3b82f6',borderRadius:4}]},
+    options:{responsive:true,indexAxis:'y',layout:{padding:{right:30}},plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1}}}},plugins:[medDatalabelPlugin]
+  });
+
+  let salaMap = {};
+  ativas.forEach(function(c){ let k=c.sala||'N/I'; salaMap[k]=(salaMap[k]||0)+1; });
+  let salaEntries = Object.entries(salaMap).sort(function(a,b){return b[1]-a[1]}).slice(0,10);
+
+  if(_medDashCharts.sala) _medDashCharts.sala.destroy();
+  _medDashCharts.sala = new Chart(document.getElementById('medChartSala'),{
+    type:'bar',
+    data:{labels:salaEntries.map(function(e){var s=e[0];return s.toLowerCase().indexOf('sala')===0?s:'Sala '+s}),datasets:[{label:'Qtd',data:salaEntries.map(function(e){return e[1]}),backgroundColor:'#8b5cf6',borderRadius:4}]},
+    options:{responsive:true,layout:{padding:{top:20}},plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}},plugins:[medDatalabelPlugin]
+  });
+}
+
+// ====== DISPONIBILIDADE ======
+let _medDisponibilidade = {};
+function carregarDisponibilidadeMedico(forceReload){
+  if(!medicoLogado) return;
+  if(forceReload || Object.keys(_medDisponibilidade).length===0){
+    try { _medDisponibilidade = JSON.parse(medicoLogado.disponibilidade||'{}'); } catch(e){ _medDisponibilidade={}; }
+  }
+
+  let dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  let diasShort = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+  let grid = document.getElementById('medDispGrid');
+
+  grid.innerHTML = dias.map(function(d,i){
+    let ativo = _medDisponibilidade[i] && _medDisponibilidade[i].ativo;
+    let ini = (_medDisponibilidade[i]||{}).inicio||'07:00';
+    let fim = (_medDisponibilidade[i]||{}).fim||'19:00';
+    return '<div class="disp-day'+(ativo?' active':'')+'" onclick="toggleDispDia('+i+')" data-dia="'+i+'">'+
+      '<div class="dia-label">'+diasShort[i]+'</div>'+
+      '<div style="font-size:10px;margin-top:2px">'+d+'</div>'+
+      '<div class="disp-time">'+(ativo?ini+' - '+fim:'\u2014')+'</div>'+
+      (ativo?'<div style="margin-top:6px" onclick="event.stopPropagation()">'+
+        '<input type="time" value="'+ini+'" onchange="updDispHora('+i+',\'ini\',this.value)" style="font-size:10px;padding:2px;border:1px solid rgba(255,255,255,.4);border-radius:4px;background:rgba(255,255,255,.2);color:inherit;width:70px"> - '+
+        '<input type="time" value="'+fim+'" onchange="updDispHora('+i+',\'fim\',this.value)" style="font-size:10px;padding:2px;border:1px solid rgba(255,255,255,.4);border-radius:4px;background:rgba(255,255,255,.2);color:inherit;width:70px">'+
+      '</div>':'')+
+    '</div>';
+  }).join('');
+
+  renderBloqueiosMedico();
+}
+
+function toggleDispDia(i){
+  if(!_medDisponibilidade[i]) _medDisponibilidade[i]={ativo:false,inicio:'07:00',fim:'19:00'};
+  _medDisponibilidade[i].ativo = !_medDisponibilidade[i].ativo;
+  carregarDisponibilidadeMedico();
+}
+
+function updDispHora(i,tipo,val){
+  if(!_medDisponibilidade[i]) _medDisponibilidade[i]={ativo:true,inicio:'07:00',fim:'19:00'};
+  if(tipo==='ini') _medDisponibilidade[i].inicio=val;
+  else _medDisponibilidade[i].fim=val;
+}
+
+async function salvarDisponibilidadeMedico(){
+  if(!medicoLogado) return;
+  // Em modo simulação, o médico pode não existir em medicos_portal
+  let {data:portalDoc} = await sb.from('medicos_portal').select('crm').eq('crm',medicoLogado.crm).maybeSingle();
+  if(!portalDoc){
+    medicoLogado.disponibilidade=JSON.stringify(_medDisponibilidade);
+    showToast('✅ Disponibilidade salva localmente (médico sem cadastro no portal)');
+    return;
+  }
+  let {error} = await sb.from('medicos_portal').update({
+    disponibilidade:JSON.stringify(_medDisponibilidade)
+  }).eq('crm',medicoLogado.crm);
+  if(error){ showToast('\u274C Erro: '+error.message); return; }
+  medicoLogado.disponibilidade=JSON.stringify(_medDisponibilidade);
+  showToast('\u2705 Disponibilidade salva!');
+  // Verificar se médico tem bloqueio na data de uma cirurgia
+async function verificarBloqueioNaDataCirurgia(crm, nomeMedico, dataCirurgia, paciente, procedimento){
+  if(!crm || !dataCirurgia) return;
+  try {
+    let {data:portal} = await sb.from('medicos_portal').select('preferencias').eq('crm',crm).maybeSingle();
+    if(!portal) return;
+    let prefs = {};
+    try { prefs = JSON.parse(portal.preferencias||'{}'); } catch(e){}
+    let bloqueios = prefs.bloqueios || [];
+    let conflitos = bloqueios.filter(function(b){
+      return dataCirurgia >= b.inicio && dataCirurgia <= b.fim;
+    });
+    if(conflitos.length > 0){
+      let motivos = conflitos.map(function(b){ return b.inicio+' a '+b.fim+(b.motivo?' ('+b.motivo+')':''); }).join(', ');
+      showToast('\u26A0\uFE0F ATEN\u00C7\u00C3O: Dr(a). '+(nomeMedico||crm)+' tem bloqueio nesta data: '+motivos, 8000);
+      await notificarEquipeAgendamento('conflito_agendamento',
+        '\u26A0\uFE0F Cirurgia agendada em data bloqueada',
+        'Cirurgia agendada para Dr(a). '+(nomeMedico||crm)+' (CRM: '+crm+') em '+dataCirurgia+' - Paciente: '+(paciente||'N/I')+' | '+(procedimento||'N/I')+' | BLOQUEIO: '+motivos,
+        crm);
+    }
+  } catch(e){ console.log('Erro check bloqueio:', e); }
+}
+
+// Notificar equipe de agendamento
+  let diasAtivos = [];
+  let diasNomes = ['Dom','Seg','Ter','Qua','Qui','Sex','S\u00e1b'];
+  for(let d in _medDisponibilidade){
+    if(_medDisponibilidade[d] && _medDisponibilidade[d].ativo){
+      diasAtivos.push(diasNomes[d]+' '+(_medDisponibilidade[d].inicio||'07:00')+'-'+(_medDisponibilidade[d].fim||'19:00'));
+    }
+  }
+  let msgDisp = 'Dr(a). '+medicoLogado.nome+' (CRM: '+medicoLogado.crm+') atualizou disponibilidade: '+(diasAtivos.length?diasAtivos.join(', '):'Nenhum dia selecionado');
+  await notificarEquipeAgendamento('disponibilidade', '\uD83D\uDCC5 Disponibilidade Atualizada', msgDisp, medicoLogado.crm);
+}
+
+function renderBloqueiosMedico(){
+  let prefs = {};
+  try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){}
+  let bloqueios = prefs.bloqueios || [];
+  let el = document.getElementById('medBloqueiosLista');
+  if(!bloqueios.length){ el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:8px">Nenhum bloqueio cadastrado.</div>'; return; }
+
+  el.innerHTML = bloqueios.map(function(b,i){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#fef2f2;border-radius:8px;margin-bottom:6px">'+
+      '<div><span style="font-weight:700;font-size:12px;color:#dc2626">\u{1F6AB} '+b.inicio+' a '+b.fim+'</span>'+
+        (b.motivo?' <span style="font-size:11px;color:#64748b">\u2014 '+b.motivo+'</span>':'')+
+      '</div>'+
+      '<button onclick="removerBloqueioMedico('+i+')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px">\u2715</button>'+
+    '</div>';
+  }).join('');
+}
+
+async function adicionarBloqueioMedico(){
+  let ini = document.getElementById('medBloqueioDataIni').value;
+  let fim = document.getElementById('medBloqueioDataFim').value||ini;
+  let motivo = (document.getElementById('medBloqueioMotivo').value||'').trim();
+  if(!ini){ showToast('\u274C Informe a data inicial'); return; }
+
+  let prefs = {};
+  try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){}
+  if(!prefs.bloqueios) prefs.bloqueios=[];
+  prefs.bloqueios.push({inicio:ini,fim:fim,motivo:motivo});
+
+  await sb.from('medicos_portal').update({preferencias:JSON.stringify(prefs)}).eq('crm',medicoLogado.crm);
+  medicoLogado.preferencias=JSON.stringify(prefs);
+  document.getElementById('medBloqueioDataIni').value='';
+  document.getElementById('medBloqueioDataFim').value='';
+  document.getElementById('medBloqueioMotivo').value='';
+  renderBloqueiosMedico();
+  showToast('\u2705 Bloqueio adicionado');
+  // Verificar cirurgias conflitantes e notificar equipe
+  await verificarConflitoBloqueio(medicoLogado.crm, medicoLogado.nome, ini, fim, motivo);
+}
+
+async function removerBloqueioMedico(idx){
+  let prefs = {};
+  try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){}
+  if(!prefs.bloqueios) return;
+  prefs.bloqueios.splice(idx,1);
+  await sb.from('medicos_portal').update({preferencias:JSON.stringify(prefs)}).eq('crm',medicoLogado.crm);
+  medicoLogado.preferencias=JSON.stringify(prefs);
+  renderBloqueiosMedico();
+  showToast('Bloqueio removido');
+}
+
+// ====== PREFERÊNCIAS CIRÚRGICAS ======
+function carregarPreferenciasMedico(){
+  if(!medicoLogado) return;
+  let prefs = {};
+  try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){}
+  let items = prefs.preferencias_cirurgicas || [];
+  let lista = document.getElementById('medPrefLista');
+  if(!items.length){
+    lista.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:12px">Nenhuma prefer\u00eancia cadastrada ainda.</div>';
+  } else {
+    lista.innerHTML = items.map(function(p,i){
+      return '<div class="pref-item">'+
+        '<div style="flex:1">'+
+          '<div style="font-weight:700;font-size:13px;color:#1e293b">'+p.procedimento+'</div>'+
+          '<div style="font-size:12px;color:#64748b;margin-top:3px">'+p.descricao+'</div>'+
+        '</div>'+
+        '<button onclick="removerPreferenciaMedico('+i+')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:16px" title="Remover">\u2715</button>'+
+      '</div>';
+    }).join('');
+  }
+
+  renderObsListaMedico(prefs);
+}
+
+async function adicionarPreferenciaMedico(){
+  let proc = await modalPrompt('Procedimento/Tipo de cirurgia:','','Prefer\u00eancia Cir\u00fargica');
+  if(!proc) return;
+  let desc = await modalPrompt('Equipamentos, materiais e observa\u00e7\u00f5es:','','Detalhes da Prefer\u00eancia');
+  if(!desc) return;
+
+  let prefs = {};
+  try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){}
+  if(!prefs.preferencias_cirurgicas) prefs.preferencias_cirurgicas=[];
+  prefs.preferencias_cirurgicas.push({procedimento:proc,descricao:desc});
+
+  await sb.from('medicos_portal').update({preferencias:JSON.stringify(prefs)}).eq('crm',medicoLogado.crm);
+  medicoLogado.preferencias=JSON.stringify(prefs);
+  carregarPreferenciasMedico();
+  showToast('\u2705 Prefer\u00eancia adicionada');
+}
+
+async function removerPreferenciaMedico(idx){
+  let prefs = {};
+  try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){}
+  if(!prefs.preferencias_cirurgicas) return;
+  prefs.preferencias_cirurgicas.splice(idx,1);
+  await sb.from('medicos_portal').update({preferencias:JSON.stringify(prefs)}).eq('crm',medicoLogado.crm);
+  medicoLogado.preferencias=JSON.stringify(prefs);
+  carregarPreferenciasMedico();
+  showToast('Prefer\u00eancia removida');
+}
+
+function renderObsListaMedico(prefs){
+  if(!prefs) { try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){ prefs={}; } }
+  // Migrar campo antigo (string) para lista
+  let obsList = prefs.observacoes_lista || [];
+  if(!obsList.length && prefs.observacoes_gerais){
+    obsList = [{texto: prefs.observacoes_gerais, data: new Date().toISOString()}];
+    prefs.observacoes_lista = obsList;
+    prefs.observacoes_gerais = '';
+    // Salvar migração silenciosamente
+    sb.from('medicos_portal').update({preferencias:JSON.stringify(prefs)}).eq('crm',medicoLogado.crm);
+    medicoLogado.preferencias=JSON.stringify(prefs);
+  }
+
+  let el = document.getElementById('medObsLista');
+  if(!el) return;
+  if(!obsList.length){
+    el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:12px">Nenhuma observa\u00e7\u00e3o cadastrada.</div>';
+    return;
+  }
+  el.innerHTML = obsList.map(function(o,i){
+    let dt = o.data ? new Date(o.data).toLocaleDateString('pt-BR') : '';
+    return '<div style="display:flex;align-items:start;justify-content:space-between;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px">'+
+      '<div style="flex:1">'+
+        '<div style="font-size:13px;color:#1e293b;line-height:1.4">'+o.texto+'</div>'+
+        (dt?'<div style="font-size:10px;color:#94a3b8;margin-top:4px">'+dt+'</div>':'')+
+      '</div>'+
+      '<div style="display:flex;gap:6px;margin-left:10px;flex-shrink:0">'+
+        '<button onclick="editarObsMedico('+i+')" style="background:none;border:none;color:#0d9488;cursor:pointer;font-size:14px" title="Editar">\u270F\uFE0F</button>'+
+        '<button onclick="removerObsMedico('+i+')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px" title="Excluir">\u2715</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+async function adicionarObsMedico(){
+  let input = document.getElementById('medObsNovaInput');
+  let texto = (input.value||'').trim();
+  if(!texto){ showToast('\u274C Digite uma observa\u00e7\u00e3o'); return; }
+
+  let prefs = {};
+  try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){}
+  if(!prefs.observacoes_lista) prefs.observacoes_lista = [];
+  prefs.observacoes_lista.push({texto: texto, data: new Date().toISOString()});
+
+  await sb.from('medicos_portal').update({preferencias:JSON.stringify(prefs)}).eq('crm',medicoLogado.crm);
+  medicoLogado.preferencias=JSON.stringify(prefs);
+  input.value = '';
+  renderObsListaMedico(prefs);
+  showToast('\u2705 Observa\u00e7\u00e3o adicionada');
+}
+
+async function editarObsMedico(idx){
+  let prefs = {};
+  try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){}
+  let obsList = prefs.observacoes_lista || [];
+  if(!obsList[idx]) return;
+
+  let novoTexto = await modalPrompt('Editar observa\u00e7\u00e3o:', obsList[idx].texto, 'Editar Observa\u00e7\u00e3o');
+  if(novoTexto === null || novoTexto === undefined) return;
+  novoTexto = novoTexto.trim();
+  if(!novoTexto) return;
+
+  obsList[idx].texto = novoTexto;
+  obsList[idx].data = new Date().toISOString();
+  prefs.observacoes_lista = obsList;
+
+  await sb.from('medicos_portal').update({preferencias:JSON.stringify(prefs)}).eq('crm',medicoLogado.crm);
+  medicoLogado.preferencias=JSON.stringify(prefs);
+  renderObsListaMedico(prefs);
+  showToast('\u2705 Observa\u00e7\u00e3o atualizada');
+}
+
+async function removerObsMedico(idx){
+  if(!await modalConfirm('Remover esta observa\u00e7\u00e3o?','Remover')) return;
+  let prefs = {};
+  try { prefs = JSON.parse(medicoLogado.preferencias||'{}'); } catch(e){}
+  let obsList = prefs.observacoes_lista || [];
+  obsList.splice(idx,1);
+  prefs.observacoes_lista = obsList;
+
+  await sb.from('medicos_portal').update({preferencias:JSON.stringify(prefs)}).eq('crm',medicoLogado.crm);
+  medicoLogado.preferencias=JSON.stringify(prefs);
+  renderObsListaMedico(prefs);
+  showToast('Observa\u00e7\u00e3o removida');
+}
+
+// ====== NOTIFICAÇÕES ======
+async function carregarNotificacoesMedico(){
+  if(!medicoLogado) return;
+  let {data:notifs} = await sb.from('notificacoes_medicos').select('*').eq('crm',medicoLogado.crm).order('criado_em',{ascending:false}).limit(50);
+  if(!notifs) notifs=[];
+
+  let naoLidas = notifs.filter(function(n){return !n.lida}).length;
+  let badge = document.getElementById('medNotifBadge');
+  if(naoLidas>0){
+    badge.style.display='flex';
+    badge.textContent=naoLidas;
+  } else {
+    badge.style.display='none';
+  }
+
+  let lista = document.getElementById('medNotifLista');
+  if(!notifs.length){
+    lista.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8">Nenhuma notifica\u00e7\u00e3o.</div>';
+    return;
+  }
+
+  let icones = {agendamento:'\u{1F4C5}',alteracao:'\u270F\uFE0F',cancelamento:'\u{1F6AB}',suspensao:'\u26A0\uFE0F',geral:'\u{1F514}'};
+
+  lista.innerHTML = notifs.map(function(n){
+    let tempo = _tempoRelativo(n.criado_em);
+    return '<div class="notif-item'+(n.lida?'':' nao-lida')+'" onclick="marcarNotifLida(\''+n.id+'\')">'+
+      '<div class="notif-icon">'+(icones[n.tipo]||'\u{1F514}')+'</div>'+
+      '<div class="notif-content">'+
+        '<div class="titulo">'+(n.titulo||'Notifica\u00e7\u00e3o')+'</div>'+
+        '<div class="msg">'+(n.mensagem||'')+'</div>'+
+        '<div class="tempo">'+tempo+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function _tempoRelativo(dt){
+  let diff = Date.now()-new Date(dt).getTime();
+  let min = Math.floor(diff/60000);
+  if(min<1) return 'Agora mesmo';
+  if(min<60) return min+' min atr\u00e1s';
+  let h = Math.floor(min/60);
+  if(h<24) return h+'h atr\u00e1s';
+  let d = Math.floor(h/24);
+  if(d<30) return d+' dia'+(d>1?'s':'')+' atr\u00e1s';
+  return new Date(dt).toLocaleDateString('pt-BR');
+}
+
+async function marcarNotifLida(id){
+  await sb.from('notificacoes_medicos').update({lida:true}).eq('id',id);
+  carregarNotificacoesMedico();
+}
+
+async function marcarTodasLidasMedico(){
+  if(!medicoLogado) return;
+  await sb.from('notificacoes_medicos').update({lida:true}).eq('crm',medicoLogado.crm).eq('lida',false);
+  carregarNotificacoesMedico();
+  showToast('\u2705 Todas marcadas como lidas');
+}
+
+// Enviar notificação para médico (chamada pelo sistema ao salvar/editar/cancelar cirurgia)
+// Notificar equipe de agendamento (cria registro em notificacoes_medicos com crm='ADMIN')
+async function notificarEquipeAgendamento(tipo, titulo, mensagem, crmMedico){
+  try {
+    await sb.from('notificacoes_medicos').insert({
+      crm: 'ADMIN',
+      tipo: tipo,
+      titulo: titulo,
+      mensagem: mensagem,
+      cirurgia_id: null,
+      lida: false
+    });
+    atualizarBadgePendenciasMedico();
+  } catch(e){ console.log('Erro notif equipe:', e); }
+}
+
+// Verificar se bloqueio conflita com cirurgias já agendadas
+async function verificarConflitoBloqueio(crm, nome, dataIni, dataFim, motivo){
+  try {
+    let {data:cirurgias} = await sb.from('cirurgias').select('*')
+      .or('crm.eq.'+crm+',medico.ilike.%'+nome+'%')
+      .gte('data', dataIni)
+      .lte('data', dataFim)
+      .eq('cancelado', false)
+      .eq('suspenso', false);
+
+    let nConflitos = cirurgias ? cirurgias.length : 0;
+    let msgBase = 'Dr(a). '+nome+' (CRM: '+crm+') bloqueou per\u00edodo: '+dataIni+' a '+dataFim+(motivo?' ('+motivo+')':'');
+
+    if(nConflitos > 0){
+      let detalhes = cirurgias.map(function(c){
+        return (c.data||'').substring(0,10)+' '+(c.horario||'')+' - '+(c.paciente||'N/I')+' ('+(c.procedimento||'').substring(0,30)+')';
+      }).join('; ');
+      msgBase += ' | \u26A0\uFE0F '+nConflitos+' CIRURGIA(S) CONFLITANTE(S): '+detalhes;
+      // Also notify the doctor about the conflict
+      await notificarMedico(crm, 'conflito', '\u26A0\uFE0F Conflito de Bloqueio',
+        'Voc\u00ea bloqueou '+dataIni+' a '+dataFim+' mas possui '+nConflitos+' cirurgia(s) agendada(s) nesse per\u00edodo. A equipe de agendamento foi notificada.', null);
+    }
+
+    await notificarEquipeAgendamento('bloqueio', '\uD83D\uDEAB Bloqueio de Data - Dr(a). '+nome, msgBase, crm);
+  } catch(e){ console.log('Erro verificar conflito:', e); }
+}
+
+async function notificarMedico(crm, tipo, titulo, mensagem, cirurgiaId){
+  if(!crm) return;
+  try {
+    let {data:med} = await sb.from('medicos_portal').select('crm').eq('crm',crm).eq('status','aprovado').single();
+    if(!med) return;
+    await sb.from('notificacoes_medicos').insert({
+      crm:crm, tipo:tipo, titulo:titulo, mensagem:mensagem, cirurgia_id:cirurgiaId
+    });
+  } catch(e){ console.log('Notif medico skip:', e); }
+}
+
+// ====== PERFIL ======
+function carregarPerfilMedico(){
+  if(!medicoLogado) return;
+  document.getElementById('medPerfilNome').value=medicoLogado.nome||'';
+  document.getElementById('medPerfilCRM').value=medicoLogado.crm||'';
+  document.getElementById('medPerfilEspec').value=medicoLogado.especialidade||'';
+  document.getElementById('medPerfilEmail').value=medicoLogado.email||'';
+  document.getElementById('medPerfilSenha').value='';
+}
+
+async function salvarPerfilMedico(){
+  if(!medicoLogado) return;
+  let updates = {
+    nome:(document.getElementById('medPerfilNome').value||'').trim(),
+    especialidade:(document.getElementById('medPerfilEspec').value||'').trim(),
+    email:(document.getElementById('medPerfilEmail').value||'').trim()
+  };
+  let novaSenha = document.getElementById('medPerfilSenha').value;
+  if(novaSenha){
+    if(novaSenha.length<6){ showToast('\u274C Senha m\u00ednimo 6 caracteres'); return; }
+    updates.senha = novaSenha;
+  }
+  let {error} = await sb.from('medicos_portal').update(updates).eq('crm',medicoLogado.crm);
+  if(error){ showToast('\u274C Erro: '+error.message); return; }
+  Object.assign(medicoLogado, updates);
+  document.getElementById('medNomeHeader').textContent='Dr(a). '+medicoLogado.nome;
+  showToast('\u2705 Perfil atualizado');
+}
+
+// ====== APROVAÇÃO DE MÉDICOS (ADMIN) ======
+async function renderMedicosPortalAdmin(){
+  let {data} = await sb.from('medicos_portal').select('*').order('criado_em',{ascending:false});
+  if(!data) data=[];
+  let tbody = document.getElementById('tabelaMedicosPortal');
+  if(!tbody) return;
+  tbody.innerHTML = data.map(function(m){
+    let statusCls = m.status==='aprovado'?'status-agendado':m.status==='pendente'?'status-suspenso':'status-cancelado';
+    let acoes = '';
+    let btnExcluir = ' <button class="btn btn-sm" style="background:#7f1d1d;color:#fff;border:none" onclick="excluirMedicoPortal(\''+m.crm+'\')">🗑 Excluir</button>';
+    if(m.status==='pendente'){
+      acoes = '<button class="btn btn-success btn-sm" onclick="aprovarMedicoPortal(\''+m.crm+'\')">Aprovar</button> '+
+              '<button class="btn btn-danger btn-sm" onclick="rejeitarMedicoPortal(\''+m.crm+'\')">Rejeitar</button>'+btnExcluir;
+    } else if(m.status==='aprovado'){
+      acoes = '<button class="btn btn-danger btn-sm" onclick="bloquearMedicoPortal(\''+m.crm+'\')">Bloquear</button>'+btnExcluir;
+    } else if(m.status==='bloqueado'){
+      acoes = '<button class="btn btn-success btn-sm" onclick="aprovarMedicoPortal(\''+m.crm+'\')">Desbloquear</button>'+btnExcluir;
+    } else {
+      acoes = btnExcluir;
+    }
+    // Verificar observação de cadastro
+    let prefs = {};
+    try { prefs = JSON.parse(m.preferencias||'{}'); } catch(e){}
+    let obsHtml = '';
+    if(prefs.na_base_medicos === true){
+      obsHtml = '<div style="font-size:10px;color:#16a34a;font-weight:600;margin-top:2px">\u2705 Na base de m\u00e9dicos</div>';
+    } else if(prefs.na_base_medicos === false){
+      obsHtml = '<div style="font-size:10px;color:#dc2626;font-weight:600;margin-top:2px">\u26A0\uFE0F N\u00e3o est\u00e1 na base — cadastrar</div>';
+    }
+    return '<tr>'+
+      '<td style="font-weight:600">'+m.nome+'</td>'+
+      '<td>'+m.crm+obsHtml+'</td>'+
+      '<td>'+(m.especialidade||'-')+'</td>'+
+      '<td>'+(m.email||'-')+'</td>'+
+      '<td>'+new Date(m.criado_em).toLocaleString('pt-BR')+'</td>'+
+      '<td><span class="status-badge '+statusCls+'">'+m.status.toUpperCase()+'</span></td>'+
+      '<td>'+acoes+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+async function aprovarMedicoPortal(crm){
+  await sb.from('medicos_portal').update({status:'aprovado',aprovado_por:usuarioLogado?usuarioLogado.nome:'Admin'}).eq('crm',crm);
+  showToast('\u2705 M\u00e9dico aprovado');
+  renderMedicosPortalAdmin();
+  atualizarBadgePendenciasMedico();
+}
+
+async function rejeitarMedicoPortal(crm){
+  if(await modalConfirm('Rejeitar este m\u00e9dico?','Rejeitar')){
+    await sb.from('medicos_portal').update({status:'rejeitado'}).eq('crm',crm);
+    showToast('M\u00e9dico rejeitado');
+    renderMedicosPortalAdmin();
+  }
+}
+
+async function bloquearMedicoPortal(crm){
+  if(await modalConfirm('Bloquear acesso deste m\u00e9dico ao portal?','Bloquear')){
+    await sb.from('medicos_portal').update({status:'bloqueado'}).eq('crm',crm);
+    showToast('\u{1F6AB} M\u00e9dico bloqueado');
+    renderMedicosPortalAdmin();
+  }
+}
+
+async function excluirMedicoPortal(crm){
+  if(await modalConfirm('Excluir PERMANENTEMENTE este médico do portal?\n\nIsso removerá todos os dados (disponibilidade, preferências, notificações) e permitirá que ele faça um novo cadastro.','Excluir')){
+    // Delete notifications
+    await sb.from('notificacoes_medicos').delete().eq('crm',crm);
+    // Delete from portal
+    await sb.from('medicos_portal').delete().eq('crm',crm);
+    showToast('🗑 Médico excluído do portal');
+    renderMedicosPortalAdmin();
+  }
+}
+
+// ====== PORTAL MÉDICO - BUSCA AUTOCOMPLETE ======
+let _portalMedCache = [];
+async function filtrarBuscaPortalMed(){
+  let input = document.getElementById('portalMedBusca');
+  let ac = document.getElementById('portalMedAutoComplete');
+  let val = (input.value||'').trim().toLowerCase();
+
+  if(val.length < 1){ ac.style.display='none'; renderPortalMedicoAdmin(); return; }
+
+  // Cache médicos se vazio
+  if(!_portalMedCache.length){
+    let {data} = await sb.from('medicos_portal').select('crm,nome,especialidade').eq('status','aprovado').order('nome');
+    _portalMedCache = data||[];
+  }
+
+  let filtrados = _portalMedCache.filter(function(m){
+    return m.nome.toLowerCase().includes(val) || m.crm.toLowerCase().includes(val);
+  }).slice(0,8);
+
+  if(!filtrados.length){
+    ac.style.display='none';
+    renderPortalMedicoAdmin();
+    return;
+  }
+
+  ac.innerHTML = filtrados.map(function(m){
+    return '<div style="padding:8px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:12px;transition:background 0.15s" '+
+      'onmousedown="selecionarMedPortalBusca(\''+m.crm+'\',\''+m.nome.replace(/'/g,"\\'")+'\')" '+
+      'onmouseover="this.style.background=\'#f0fdfa\'" onmouseout="this.style.background=\'\'">'+
+      '<span style="font-weight:600">Dr(a). '+m.nome+'</span> '+
+      '<span style="color:#64748b">CRM: '+m.crm+'</span>'+
+      (m.especialidade?' <span style="color:#0d9488;font-size:10px">'+m.especialidade+'</span>':'')+
+    '</div>';
+  }).join('');
+  ac.style.display='block';
+}
+
+function selecionarMedPortalBusca(crm, nome){
+  let input = document.getElementById('portalMedBusca');
+  input.value = nome+' ('+crm+')';
+  document.getElementById('portalMedAutoComplete').style.display='none';
+  renderPortalMedicoAdmin();
+}
+
+// Fechar autocomplete ao clicar fora
+document.addEventListener('click', function(e){
+  let ac = document.getElementById('portalMedAutoComplete');
+  if(ac && !ac.contains(e.target) && e.target.id!=='portalMedBusca'){
+    ac.style.display='none';
+  }
+});
+
+// Limpar cache quando entrar na aba
+function limparCachePortalMed(){ _portalMedCache = []; }
+
+// ====== PORTAL MÉDICO - VISÃO ADMIN (aba no sistema principal) ======
+async function renderPortalMedicoAdmin(){
+  let {data:medicos} = await sb.from('medicos_portal').select('*').eq('status','aprovado').order('nome');
+  if(!medicos) medicos=[];
+
+  let busca = (document.getElementById('portalMedBusca').value||'').trim().toLowerCase();
+  if(busca){
+    // Extrair CRM se formato "nome (CRM)"
+    let buscaCrm = '';
+    let match = busca.match(/\((\d+)\)/);
+    if(match) buscaCrm = match[1];
+    let buscaNome = busca.replace(/\s*\(\d+\)\s*/g,'').trim();
+    medicos = medicos.filter(function(m){
+      if(buscaCrm && m.crm === buscaCrm) return true;
+      let nome = m.nome.toLowerCase();
+      let crm = m.crm.toLowerCase();
+      return nome.includes(buscaNome) || crm.includes(busca);
+    });
+  }
+
+  let el = document.getElementById('portalMedicoListaAdmin');
+  if(!medicos.length){
+    el.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8">Nenhum m\u00e9dico encontrado.</div>';
+    return;
+  }
+
+  let dias = ['Dom','Seg','Ter','Qua','Qui','Sex','S\u00e1b'];
+
+  el.innerHTML = medicos.map(function(m){
+    let prefs = {};
+    try { prefs = JSON.parse(m.preferencias||'{}'); } catch(e){}
+    let disp = {};
+    try { disp = JSON.parse(m.disponibilidade||'{}'); } catch(e){}
+
+    // Disponibilidade resumo
+    let dispHtml = '';
+    let diasAtivos = [];
+    for(var i=0;i<7;i++){
+      if(disp[i] && disp[i].ativo){
+        diasAtivos.push(dias[i]+' '+disp[i].inicio+'-'+disp[i].fim);
+      }
+    }
+    if(diasAtivos.length){
+      dispHtml = '<div style="margin-top:8px"><strong style="font-size:11px;color:#0d9488">\U0001F4C5 Disponibilidade:</strong> <span style="font-size:11px;color:#374151">'+diasAtivos.join(' | ')+'</span></div>';
+    } else {
+      dispHtml = '<div style="margin-top:8px;font-size:11px;color:#94a3b8">\U0001F4C5 Disponibilidade n\u00e3o informada</div>';
+    }
+
+    // Bloqueios
+    var bloqueios = prefs.bloqueios || [];
+    var bloqHtml = '';
+    if(bloqueios.length){
+      bloqHtml = '<div style="margin-top:4px"><strong style="font-size:11px;color:#dc2626">\U0001F6AB Bloqueios:</strong> <span style="font-size:11px;color:#374151">'+bloqueios.map(function(b){return b.inicio+' a '+b.fim+(b.motivo?' ('+b.motivo+')':'')}).join(', ')+'</span></div>';
+    }
+
+    // Preferências cirúrgicas
+    var prefItems = prefs.preferencias_cirurgicas || [];
+    var prefHtml = '';
+    if(prefItems.length){
+      prefHtml = '<div style="margin-top:8px"><strong style="font-size:11px;color:#8b5cf6">\u2699\uFE0F Prefer\u00eancias:</strong><ul style="margin:4px 0 0 16px;padding:0;font-size:11px;color:#374151">';
+      prefItems.forEach(function(p){
+        prefHtml += '<li><b>'+p.procedimento+':</b> '+p.descricao+'</li>';
+      });
+      prefHtml += '</ul></div>';
+    }
+
+    // Observações (lista ou campo antigo)
+    var obsList = prefs.observacoes_lista || [];
+    var obsGerais = prefs.observacoes_gerais || '';
+    var obsHtml = '';
+    if(obsList.length){
+      obsHtml = '<div style="margin-top:6px"><strong style="font-size:11px;color:#f59e0b">\U0001F4DD Observa\u00e7\u00f5es:</strong><ul style="margin:4px 0 0 16px;padding:0;font-size:11px;color:#374151">';
+      obsList.forEach(function(o){ obsHtml+='<li>'+o.texto+'</li>'; });
+      obsHtml+='</ul></div>';
+    } else if(obsGerais){
+      obsHtml = '<div style="margin-top:6px"><strong style="font-size:11px;color:#f59e0b">\U0001F4DD Observa\u00e7\u00f5es:</strong> <span style="font-size:11px;color:#374151">'+obsGerais+'</span></div>';
+    }
+
+    var hasInfo = diasAtivos.length || bloqueios.length || prefItems.length || obsList.length || obsGerais;
+
+    return '<div style="background:#fff;border:1.5px solid '+(hasInfo?'#99f6e4':'#e5e7eb')+';border-radius:10px;padding:14px 18px;margin-bottom:10px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between">'+
+        '<div>'+
+          '<span style="font-weight:700;font-size:14px;color:#1e293b">Dr(a). '+m.nome+'</span>'+
+          '<span style="font-size:12px;color:#64748b;margin-left:12px">CRM: '+m.crm+'</span>'+
+          (m.especialidade?' <span style="font-size:11px;color:#0d9488;font-weight:600;margin-left:8px">'+m.especialidade+'</span>':'')+
+        '</div>'+
+        (hasInfo?'<span style="font-size:10px;background:#f0fdfa;color:#0d9488;padding:3px 10px;border-radius:12px;font-weight:600">\u2705 Info dispon\u00edvel</span>':
+                 '<span style="font-size:10px;background:#f3f4f6;color:#94a3b8;padding:3px 10px;border-radius:12px;font-weight:600">Sem info</span>')+
+      '</div>'+
+      dispHtml+bloqHtml+prefHtml+obsHtml+
+    '</div>';
+  }).join('');
+
+  // Renderizar notificações admin
+  await renderNotifAdmin();
+}
+
+async function renderNotifAdmin(){
+  let el = document.getElementById('portalMedNotifAdmin');
+  if(!el) return;
+  let {data:notifs} = await sb.from('notificacoes_medicos').select('*').eq('crm','ADMIN').order('criado_em',{ascending:false}).limit(50);
+  if(!notifs || !notifs.length){
+    el.innerHTML='<div style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">Nenhuma notificação.</div>';
+    return;
+  }
+  el.innerHTML = notifs.map(function(n){
+    let isConflito = n.tipo==='conflito_agendamento' || n.tipo==='bloqueio';
+    let bgColor = n.lida ? '#f9fafb' : (isConflito && n.mensagem && n.mensagem.includes('CONFLITANTE') ? '#fef2f2' : '#f0fdf4');
+    let borderColor = n.lida ? '#e5e7eb' : (isConflito && n.mensagem && n.mensagem.includes('CONFLITANTE') ? '#fca5a5' : '#86efac');
+    let icon = n.tipo==='disponibilidade' ? '\uD83D\uDCC5' : n.tipo==='bloqueio' ? '\uD83D\uDEAB' : n.tipo==='conflito_agendamento' ? '\u26A0\uFE0F' : '\uD83D\uDD14';
+    let tempo = new Date(n.criado_em).toLocaleString('pt-BR');
+    return '<div style="background:'+bgColor+';border:1px solid '+borderColor+';border-radius:8px;padding:10px 14px;margin-bottom:6px;'+(n.lida?'opacity:0.7':'')+'" onclick="marcarNotifAdminLida('+n.id+',this)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:start">'+
+        '<div><span style="font-weight:700;font-size:12px">'+icon+' '+n.titulo+'</span>'+(n.lida?'':' <span style="background:#ef4444;color:#fff;font-size:9px;padding:1px 6px;border-radius:4px;font-weight:600">NOVO</span>')+'</div>'+
+        '<span style="font-size:10px;color:#94a3b8;white-space:nowrap;margin-left:8px">'+tempo+'</span>'+
+      '</div>'+
+      '<div style="font-size:11px;color:#374151;margin-top:4px;line-height:1.4">'+n.mensagem+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+async function marcarNotifAdminLida(id, el){
+  await sb.from('notificacoes_medicos').update({lida:true}).eq('id',id);
+  if(el){ el.style.opacity='0.7'; }
+  atualizarBadgePendenciasMedico();
+}
+
+async function marcarTodasNotifAdminLidas(){
+  await sb.from('notificacoes_medicos').update({lida:true}).eq('crm','ADMIN').eq('lida',false);
+  showToast('\u2705 Todas as notificações marcadas como lidas');
+  atualizarBadgePendenciasMedico();
+  renderNotifAdmin();
+}
 
 </script>
 </body>
