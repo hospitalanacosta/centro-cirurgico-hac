@@ -1387,25 +1387,34 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 .dash-kpi.purple .kpi-val { color: #7b1fa2; }
 .dash-kpi.purple::before { background: rgba(123,31,162,0.05); }
 .dash-row {
-  display: flex; gap: 18px; margin-bottom: 18px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px;
 }
-.dash-row > .card { flex: 1; }
+.dash-row > .card { margin-bottom: 0; }
+.dash-row.dash-row-wide { grid-template-columns: 2fr 1fr; }
+.dash-row.dash-row-3 { grid-template-columns: repeat(3, 1fr); }
 .dash-chart-card {
-  padding: 22px !important; border-radius: 16px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06) !important;
-  border: 1px solid rgba(46,125,50,0.06) !important;
-  transition: box-shadow 0.3s;
+  padding: 24px !important; border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06) !important;
+  border: 1px solid #f0f0f0 !important;
+  transition: all 0.25s ease;
+  background: #fff !important;
+  margin-bottom: 0 !important;
+  min-width: 0;
 }
-.dash-chart-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.08) !important; }
+.dash-chart-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.1) !important; }
 .dash-chart-card .card-title {
   font-size: 12px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 1px; color: var(--primary); margin-bottom: 14px;
-  padding-bottom: 10px; border-bottom: 2px solid rgba(46,125,50,0.1);
-  display: flex; align-items: center; gap: 6px;
+  letter-spacing: 1px; color: #1e293b; margin-bottom: 18px;
+  padding-bottom: 12px; border-bottom: none;
+  display: flex; align-items: center; gap: 8px;
 }
 .dash-chart-card .card-title::before {
-  content: ''; display: inline-block; width: 4px; height: 16px;
-  background: var(--primary); border-radius: 2px;
+  content: ''; display: inline-block; width: 4px; height: 18px;
+  background: linear-gradient(180deg, #1b5e20, #43a047); border-radius: 3px;
+}
+.dash-chart-card .card-title::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(to right, #e5e7eb, transparent);
 }
 .dash-chart-card canvas { max-height: 320px; }
 .dash-rank-table { width: 100%; font-size: 12px; border-collapse: collapse; }
@@ -1696,24 +1705,47 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 .medico-panel.active { display: block; }
 
 .medico-card {
-  background: #fff; border-radius: 12px;
-  padding: 20px; margin-bottom: 16px;
-  box-shadow: 0 1px 6px rgba(0,0,0,.06);
-  border: 1px solid #e5e7eb;
+  background: #fff; border-radius: 16px;
+  padding: 24px; margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  border: 1px solid #f0f0f0;
+  transition: box-shadow 0.2s;
 }
-.medico-card h3 { margin: 0 0 14px; font-size: 16px; color: #1e293b; }
+.medico-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.1); }
+.medico-card h3 { margin: 0 0 16px; font-size: 15px; color: #374151; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.medico-card h3::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, #e5e7eb, transparent); }
 
 .medico-stat-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px; margin-bottom: 20px;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 16px; margin-bottom: 24px;
 }
 .medico-stat-card {
-  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
-  border-radius: 12px; padding: 18px; text-align: center;
-  border: 1px solid #99f6e4;
+  background: #fff; border-radius: 14px; padding: 0; text-align: left;
+  position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #eee; box-shadow: 0 2px 10px rgba(0,0,0,0.06);
 }
-.medico-stat-num { font-size: 28px; font-weight: 800; color: #0d9488; }
-.medico-stat-label { font-size: 11px; color: #64748b; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.medico-stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+.medico-stat-card .stat-stripe { width: 5px; height: 100%; position: absolute; left: 0; top: 0; border-radius: 14px 0 0 14px; }
+.medico-stat-card .stat-body { padding: 16px 14px 16px 20px; display: flex; align-items: center; gap: 14px; }
+.medico-stat-card .stat-icon-wrap { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.medico-stat-card .stat-info { flex: 1; }
+.medico-stat-num { font-size: 28px; font-weight: 800; line-height: 1.1; color: #1e293b; }
+.medico-stat-label { font-size: 10px; margin-top: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; }
+.medico-stat-card.st-total .stat-stripe { background: linear-gradient(90deg, #0d9488, #14b8a6); }
+.medico-stat-card.st-total .stat-icon-wrap { background: #f0fdfa; color: #0d9488; }
+.medico-stat-card.st-total .medico-stat-num { color: #0d9488; }
+.medico-stat-card.st-agendadas .stat-stripe { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.medico-stat-card.st-agendadas .stat-icon-wrap { background: #eff6ff; color: #2563eb; }
+.medico-stat-card.st-agendadas .medico-stat-num { color: #2563eb; }
+.medico-stat-card.st-realizadas .stat-stripe { background: linear-gradient(90deg, #059669, #34d399); }
+.medico-stat-card.st-realizadas .stat-icon-wrap { background: #ecfdf5; color: #059669; }
+.medico-stat-card.st-realizadas .medico-stat-num { color: #059669; }
+.medico-stat-card.st-mes .stat-stripe { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.medico-stat-card.st-mes .stat-icon-wrap { background: #f5f3ff; color: #7c3aed; }
+.medico-stat-card.st-mes .medico-stat-num { color: #7c3aed; }
+.medico-stat-card.st-canceladas .stat-stripe { background: linear-gradient(90deg, #dc2626, #f87171); }
+.medico-stat-card.st-canceladas .stat-icon-wrap { background: #fef2f2; color: #dc2626; }
+.medico-stat-card.st-canceladas .medico-stat-num { color: #dc2626; }
 
 .medico-cirurgia-item {
   display: flex; align-items: center; gap: 14px;
@@ -3324,12 +3356,12 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 
     <div class="dash-kpis" id="dashKpis"></div>
 
-    <div class="dash-row">
-      <div class="card dash-chart-card" style="flex:2">
+    <div class="dash-row dash-row-wide">
+      <div class="card dash-chart-card">
         <div class="card-title">Cirurgias por Dia</div>
         <canvas id="chartPorDia"></canvas>
       </div>
-      <div class="card dash-chart-card" style="flex:1">
+      <div class="card dash-chart-card">
         <div class="card-title">Distribuição por Grupo</div>
         <canvas id="chartPorGrupo"></canvas>
       </div>
@@ -3358,16 +3390,16 @@ tr.suspenso td { color: #e65100; font-style: italic; }
     </div>
 
     <!-- Row 4: Recursos + Status + Ranking -->
-    <div class="dash-row">
-      <div class="card dash-chart-card" style="flex:1">
+    <div class="dash-row dash-row-3">
+      <div class="card dash-chart-card">
         <div class="card-title">Uso de Recursos / Equipamentos</div>
         <canvas id="chartRecursos"></canvas>
       </div>
-      <div class="card dash-chart-card" style="flex:1">
+      <div class="card dash-chart-card">
         <div class="card-title">Status das Cirurgias</div>
         <canvas id="chartStatus"></canvas>
       </div>
-      <div class="card dash-chart-card" style="flex:1">
+      <div class="card dash-chart-card">
         <div class="card-title">🏆 Ranking de Colaboradores</div>
         <div id="rankColaboradores"></div>
       </div>
@@ -6264,15 +6296,15 @@ const DATALABEL_PLUGIN = { id:'dl', afterDatasetsDraw(chart){
       let val = ds.data[i];
       if(val===0) return;
       ctx.save();
-      ctx.fillStyle = '#1a2e1a';
-      ctx.font = 'bold 13px DM Sans';
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '700 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       if(chart.config.type==='bar' && chart.options.indexAxis==='y'){
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-        ctx.fillText(val, el.x+6, el.y);
+        ctx.fillText(val, el.x+8, el.y);
       } else if(chart.config.type==='bar'){
-        ctx.fillText(val, el.x, el.y-6);
+        ctx.fillText(val, el.x, el.y-8);
       }
       ctx.restore();
     });
@@ -6432,12 +6464,15 @@ function renderDashboard(){
   let porDia = {};
   ativos.forEach(c=>{ porDia[c.data]=(porDia[c.data]||0)+1; });
   let diasOrd = Object.keys(porDia).sort();
-  dashCharts['chartPorDia'] = new Chart(document.getElementById('chartPorDia'), {
+  let ctxDia = document.getElementById('chartPorDia').getContext('2d');
+  let gDia = ctxDia.createLinearGradient(0,0,0,300);
+  gDia.addColorStop(0,'#1b5e20'); gDia.addColorStop(1,'#81c784');
+  dashCharts['chartPorDia'] = new Chart(ctxDia, {
     type:'bar', plugins:[DATALABEL_PLUGIN],
     data:{ labels:diasOrd.map(d=>formatDateShort(d)),
       datasets:[{label:'Cirurgias', data:diasOrd.map(d=>porDia[d]),
-        backgroundColor:'rgba(46,125,50,0.75)', borderColor:'#1b5e20', borderWidth:1, borderRadius:6}]},
-    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:Math.max(...diasOrd.map(d=>porDia[d]))+10},x:{ticks:{maxRotation:45,minRotation:0,font:{size:10}}}}}
+        backgroundColor:gDia, borderWidth:0, borderRadius:8, borderSkipped:false, barPercentage:0.65}]},
+    options:{responsive:true, plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,titleFont:{size:12},bodyFont:{size:13},displayColors:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false},suggestedMax:Math.max(...diasOrd.map(d=>porDia[d]))+10},x:{ticks:{maxRotation:45,minRotation:0,font:{size:10,weight:'600'},color:'#64748b'},grid:{display:false}}}}
   });
 
   // --- Distribuição por Grupo (donut com totais e %) ---
@@ -6450,11 +6485,11 @@ function renderDashboard(){
     type:'doughnut', plugins:[DONUT_LABEL_PLUGIN],
     data:{ labels:gLabels,
       datasets:[{data:gLabels.map(g=>porGrupo[g]),
-        backgroundColor:gLabels.map(g=>coresGrupo[g]||'#90a4ae'), borderWidth:3, borderColor:'#fff'}]},
-    options:{responsive:true, cutout:'60%', layout:{padding:10},
-      plugins:{legend:{position:'bottom', labels:{font:{size:12,weight:'bold'},padding:14,usePointStyle:true,pointStyleWidth:12,
+        backgroundColor:gLabels.map(g=>coresGrupo[g]||'#90a4ae'), borderWidth:4, borderColor:'#fff', hoverOffset:8}]},
+    options:{responsive:true, cutout:'65%', layout:{padding:10},
+      plugins:{legend:{position:'bottom', labels:{font:{size:11,weight:'600'},padding:16,usePointStyle:true,pointStyleWidth:12,
         generateLabels:function(chart){ return chart.data.labels.map((l,i)=>({text:l, fillStyle:chart.data.datasets[0].backgroundColor[i], strokeStyle:'#fff', lineWidth:2, pointStyle:'circle', hidden:false, index:i})); }
-      }},tooltip:{callbacks:{label:function(ctx){let t=ctx.dataset.data.reduce((s,v)=>s+v,0);return ctx.label+': '+ctx.raw+' ('+((ctx.raw/t)*100).toFixed(1)+'%)';}}}}}
+      }},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,titleFont:{size:12},bodyFont:{size:13},callbacks:{label:function(ctx){let t=ctx.dataset.data.reduce((s,v)=>s+v,0);return ctx.label+': '+ctx.raw+' ('+((ctx.raw/t)*100).toFixed(1)+'%)';}}}}}
   });
 
   // --- Top 10 Cirurgiões (MAIÚSCULO) ---
@@ -6465,8 +6500,8 @@ function renderDashboard(){
   dashCharts['chartTopMedicos'] = new Chart(document.getElementById('chartTopMedicos'), {
     type:'bar', plugins:[DATALABEL_PLUGIN],
     data:{ labels:topMed.map(m=>m[0].substring(0,28)),
-      datasets:[{data:topMed.map(m=>m[1]), backgroundColor:coresBarra, borderRadius:6}]},
-    options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:topMed.length?topMed[0][1]+10:10},y:{ticks:{font:{size:10}}}}}
+      datasets:[{data:topMed.map(m=>m[1]), backgroundColor:coresBarra, borderRadius:6, borderSkipped:false, barPercentage:0.65}]},
+    options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,displayColors:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false},suggestedMax:topMed.length?topMed[0][1]+10:10},y:{ticks:{font:{size:10,weight:'500'},color:'#374151'},grid:{display:false}}}}
   });
 
   // --- Top 10 Procedimentos ---
@@ -6477,8 +6512,8 @@ function renderDashboard(){
   dashCharts['chartTopProc'] = new Chart(document.getElementById('chartTopProc'), {
     type:'bar', plugins:[DATALABEL_PLUGIN],
     data:{ labels:topProc.map(p=>p[0].toUpperCase().substring(0,35)),
-      datasets:[{data:topProc.map(p=>p[1]), backgroundColor:coresBarra, borderRadius:6}]},
-    options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:topProc.length?topProc[0][1]+10:10},y:{ticks:{font:{size:11}}}}}
+      datasets:[{data:topProc.map(p=>p[1]), backgroundColor:coresBarra, borderRadius:6, borderSkipped:false, barPercentage:0.65}]},
+    options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,displayColors:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false},suggestedMax:topProc.length?topProc[0][1]+10:10},y:{ticks:{font:{size:10,weight:'500'},color:'#374151'},grid:{display:false}}}}
   });
 
   // --- Por Sala ---
@@ -6486,12 +6521,15 @@ function renderDashboard(){
   let porSala = {};
   ativos.forEach(c=>{ let s=c.sala||'Hemod.'; if(s==='?') s='Hemod.'; if(s.toLowerCase().includes('hemodin')) s='Hemod.'; porSala[s]=(porSala[s]||0)+1; });
   let salasOrd = Object.keys(porSala).sort();
-  dashCharts['chartPorSala'] = new Chart(document.getElementById('chartPorSala'), {
+  let ctxSalaD = document.getElementById('chartPorSala').getContext('2d');
+  let gSala = ctxSalaD.createLinearGradient(0,0,0,300);
+  gSala.addColorStop(0,'#1b5e20'); gSala.addColorStop(1,'#a5d6a7');
+  dashCharts['chartPorSala'] = new Chart(ctxSalaD, {
     type:'bar', plugins:[DATALABEL_PLUGIN],
     data:{ labels:salasOrd,
       datasets:[{data:salasOrd.map(s=>porSala[s]),
-        backgroundColor:'rgba(46,125,50,0.75)', borderColor:'#1b5e20', borderWidth:1, borderRadius:6}]},
-    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:Math.max(...salasOrd.map(s=>porSala[s]))+10}}}
+        backgroundColor:gSala, borderWidth:0, borderRadius:8, borderSkipped:false, barPercentage:0.6}]},
+    options:{responsive:true, plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,displayColors:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false},suggestedMax:Math.max(...salasOrd.map(s=>porSala[s]))+10},x:{ticks:{font:{size:11,weight:'600'},color:'#64748b'},grid:{display:false}}}}
   });
 
   // --- Top Convênios ---
@@ -6506,8 +6544,8 @@ function renderDashboard(){
         backgroundColor:topConv.map(cv=>{
           let conv = CONVENIO_CACHE.find(x=>x.sigla===cv[0]||x.nome===cv[0]);
           return coresGrupo[conv?conv.grupo:'']||'#78909c';
-        }), borderRadius:6}]},
-    options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:topConv.length?topConv[0][1]+20:20},y:{ticks:{font:{size:10}}}}}
+        }), borderRadius:6, borderSkipped:false, barPercentage:0.65}]},
+    options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,displayColors:true}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false},suggestedMax:topConv.length?topConv[0][1]+20:20},y:{ticks:{font:{size:10,weight:'500'},color:'#374151'},grid:{display:false}}}}
   });
 
   // --- Status ---
@@ -6519,8 +6557,8 @@ function renderDashboard(){
     data:{ labels:['Agendadas ('+ativos.length+' - '+(stTotal?(ativos.length/stTotal*100).toFixed(1):0)+'%)',
                     'Canceladas ('+cancelados.length+')',
                     'Suspensas ('+suspensos.length+')'],
-      datasets:[{data:stData, backgroundColor:['#2e7d32','#c62828','#e65100'], borderWidth:3, borderColor:'#fff'}]},
-    options:{responsive:true, cutout:'60%', plugins:{legend:{position:'bottom', labels:{font:{size:11,weight:'bold'},usePointStyle:true}}}}
+      datasets:[{data:stData, backgroundColor:['#2e7d32','#c62828','#e65100'], borderWidth:4, borderColor:'#fff', hoverOffset:8}]},
+    options:{responsive:true, cutout:'65%', plugins:{legend:{position:'bottom', labels:{font:{size:11,weight:'600'},padding:16,usePointStyle:true}},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,titleFont:{size:12},bodyFont:{size:13}}}}
   });
 
   // --- Recursos ---
@@ -6532,8 +6570,8 @@ function renderDashboard(){
     type:'bar', plugins:[DATALABEL_PLUGIN],
     data:{ labels:recLabels,
       datasets:[{data:recCounts,
-        backgroundColor:['#1565c0','#6a1b9a','#00838f','#e65100','#c62828','#2e7d32','#ff8f00','#d84315'], borderRadius:6}]},
-    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1},suggestedMax:Math.max(...recCounts)+10}}}
+        backgroundColor:['#2563eb','#7c3aed','#0891b2','#ea580c','#dc2626','#059669','#d97706','#e11d48'], borderRadius:8, borderSkipped:false, barPercentage:0.6}]},
+    options:{responsive:true, plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,displayColors:true}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false},suggestedMax:Math.max(...recCounts)+10},x:{ticks:{font:{size:10,weight:'600'},color:'#64748b',maxRotation:35},grid:{display:false}}}}
   });
 
   // --- Ranking Colaboradores ---
@@ -9761,7 +9799,6 @@ let _medDashCharts = {};
 async function renderDashboardMedico(){
   if(!medicoLogado) return;
 
-  // Plugin para mostrar rótulos de dados fora das barras
   const medDatalabelPlugin = {
     id: 'medDatalabel',
     afterDatasetsDraw(chart) {
@@ -9772,17 +9809,15 @@ async function renderDashboardMedico(){
           const value = dataset.data[index];
           if(!value) return;
           ctx.save();
-          ctx.font = 'bold 11px sans-serif';
-          ctx.fillStyle = '#333';
+          ctx.font = '700 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+          ctx.fillStyle = '#1e293b';
           ctx.textBaseline = 'middle';
           if(chart.options.indexAxis === 'y') {
-            // Horizontal bar: label to the right of bar
             ctx.textAlign = 'left';
-            ctx.fillText(value, bar.x + 6, bar.y);
+            ctx.fillText(value, bar.x + 8, bar.y);
           } else {
-            // Vertical bar: label above bar
             ctx.textAlign = 'center';
-            ctx.fillText(value, bar.x, bar.y - 8);
+            ctx.fillText(value, bar.x, bar.y - 10);
           }
           ctx.restore();
         });
@@ -9802,17 +9837,28 @@ async function renderDashboardMedico(){
   let canceladas = todas.filter(function(c){return c.cancelado});
   let esteMes = ativas.filter(function(c){return (c.data||'').substring(0,7)===hoje.substring(0,7)});
 
+  function _statCard(cls, icon, num, label){
+    return '<div class="medico-stat-card '+cls+'">'+
+      '<div class="stat-stripe"></div>'+
+      '<div class="stat-body">'+
+        '<div class="stat-icon-wrap">'+icon+'</div>'+
+        '<div class="stat-info">'+
+          '<div class="medico-stat-num">'+num+'</div>'+
+          '<div class="medico-stat-label">'+label+'</div>'+
+        '</div>'+
+      '</div></div>';
+  }
   document.getElementById('medStatGrid').innerHTML =
-    '<div class="medico-stat-card"><div class="medico-stat-num">'+ativas.length+'</div><div class="medico-stat-label">Total Cirurgias</div></div>'+
-    '<div class="medico-stat-card"><div class="medico-stat-num">'+agendadas.length+'</div><div class="medico-stat-label">Agendadas</div></div>'+
-    '<div class="medico-stat-card"><div class="medico-stat-num">'+realizadas.length+'</div><div class="medico-stat-label">Realizadas</div></div>'+
-    '<div class="medico-stat-card"><div class="medico-stat-num">'+esteMes.length+'</div><div class="medico-stat-label">Este Mês</div></div>'+
-    '<div class="medico-stat-card"><div class="medico-stat-num">'+canceladas.length+'</div><div class="medico-stat-label">Canceladas</div></div>';
+    _statCard('st-total','🏥',ativas.length,'Total Cirurgias')+
+    _statCard('st-agendadas','📅',agendadas.length,'Agendadas')+
+    _statCard('st-realizadas','✅',realizadas.length,'Realizadas')+
+    _statCard('st-mes','📊',esteMes.length,'Este Mês')+
+    _statCard('st-canceladas','❌',canceladas.length,'Canceladas');
 
   let mesesLabel = [];
   let mesesData = [];
   for(let i=11;i>=0;i--){
-    let d = new Date(); d.setMonth(d.getMonth()-i);
+    let d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
     let key = d.toISOString().substring(0,7);
     let mNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
     mesesLabel.push(mNomes[d.getMonth()]+'/'+String(d.getFullYear()).slice(2));
@@ -9820,10 +9866,13 @@ async function renderDashboardMedico(){
   }
 
   if(_medDashCharts.mensal) _medDashCharts.mensal.destroy();
-  _medDashCharts.mensal = new Chart(document.getElementById('medChartMensal'),{
+  let ctxMensal = document.getElementById('medChartMensal').getContext('2d');
+  let gradMensal = ctxMensal.createLinearGradient(0,0,0,300);
+  gradMensal.addColorStop(0,'#0d9488'); gradMensal.addColorStop(1,'#5eead4');
+  _medDashCharts.mensal = new Chart(ctxMensal,{
     type:'bar',
-    data:{labels:mesesLabel,datasets:[{label:'Cirurgias',data:mesesData,backgroundColor:'#14b8a6',borderRadius:6}]},
-    options:{responsive:true,layout:{padding:{top:20}},plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}},plugins:[medDatalabelPlugin]
+    data:{labels:mesesLabel,datasets:[{label:'Cirurgias',data:mesesData,backgroundColor:gradMensal,borderRadius:8,borderSkipped:false,barPercentage:0.6}]},
+    options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',titleFont:{size:12},bodyFont:{size:13},padding:10,cornerRadius:8,displayColors:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false}},x:{ticks:{font:{size:10,weight:'600'},color:'#64748b'},grid:{display:false}}}},plugins:[medDatalabelPlugin]
   });
 
   let convMap = {};
@@ -9835,30 +9884,36 @@ async function renderDashboardMedico(){
   if(_medDashCharts.convenio) _medDashCharts.convenio.destroy();
   _medDashCharts.convenio = new Chart(document.getElementById('medChartConvenio'),{
     type:'bar',
-    data:{labels:convEntries.map(function(e){return e[0]}),datasets:[{label:'Cirurgias',data:convEntries.map(function(e){return e[1]}),backgroundColor:cores,borderRadius:4}]},
-    options:{responsive:true,indexAxis:'y',layout:{padding:{right:30}},plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:convMax,ticks:{stepSize:1}},y:{ticks:{font:{size:11}}}}},plugins:[medDatalabelPlugin]
+    data:{labels:convEntries.map(function(e){return e[0]}),datasets:[{label:'Cirurgias',data:convEntries.map(function(e){return e[1]}),backgroundColor:cores,borderRadius:6,borderSkipped:false,barPercentage:0.65}]},
+    options:{responsive:true,indexAxis:'y',layout:{padding:{right:36}},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',titleFont:{size:12},bodyFont:{size:13},padding:10,cornerRadius:8,displayColors:true}},scales:{x:{beginAtZero:true,max:convMax,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false}},y:{ticks:{font:{size:11,weight:'500'},color:'#374151'},grid:{display:false}}}},plugins:[medDatalabelPlugin]
   });
 
   let procMap = {};
   ativas.forEach(function(c){ let k=(c.procedimento||'N/I').substring(0,40); procMap[k]=(procMap[k]||0)+1; });
   let procEntries = Object.entries(procMap).sort(function(a,b){return b[1]-a[1]}).slice(0,8);
 
+  let ctxProc = document.getElementById('medChartProc').getContext('2d');
+  let gradProc = ctxProc.createLinearGradient(0,0,400,0);
+  gradProc.addColorStop(0,'#2563eb'); gradProc.addColorStop(1,'#93c5fd');
   if(_medDashCharts.proc) _medDashCharts.proc.destroy();
-  _medDashCharts.proc = new Chart(document.getElementById('medChartProc'),{
+  _medDashCharts.proc = new Chart(ctxProc,{
     type:'bar',
-    data:{labels:procEntries.map(function(e){return e[0]}),datasets:[{label:'Qtd',data:procEntries.map(function(e){return e[1]}),backgroundColor:'#3b82f6',borderRadius:4}]},
-    options:{responsive:true,indexAxis:'y',layout:{padding:{right:30}},plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1}}}},plugins:[medDatalabelPlugin]
+    data:{labels:procEntries.map(function(e){return e[0]}),datasets:[{label:'Qtd',data:procEntries.map(function(e){return e[1]}),backgroundColor:gradProc,borderRadius:6,borderSkipped:false,barPercentage:0.65}]},
+    options:{responsive:true,indexAxis:'y',layout:{padding:{right:36}},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',titleFont:{size:12},bodyFont:{size:13},padding:10,cornerRadius:8,displayColors:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false}},y:{ticks:{font:{size:10,weight:'500'},color:'#374151'},grid:{display:false}}}},plugins:[medDatalabelPlugin]
   });
 
   let salaMap = {};
   ativas.forEach(function(c){ let k=c.sala||'N/I'; salaMap[k]=(salaMap[k]||0)+1; });
   let salaEntries = Object.entries(salaMap).sort(function(a,b){return b[1]-a[1]}).slice(0,10);
 
+  let ctxSala = document.getElementById('medChartSala').getContext('2d');
+  let gradSala = ctxSala.createLinearGradient(0,0,0,300);
+  gradSala.addColorStop(0,'#7c3aed'); gradSala.addColorStop(1,'#c4b5fd');
   if(_medDashCharts.sala) _medDashCharts.sala.destroy();
-  _medDashCharts.sala = new Chart(document.getElementById('medChartSala'),{
+  _medDashCharts.sala = new Chart(ctxSala,{
     type:'bar',
-    data:{labels:salaEntries.map(function(e){var s=e[0];return s.toLowerCase().indexOf('sala')===0?s:'Sala '+s}),datasets:[{label:'Qtd',data:salaEntries.map(function(e){return e[1]}),backgroundColor:'#8b5cf6',borderRadius:4}]},
-    options:{responsive:true,layout:{padding:{top:20}},plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}},plugins:[medDatalabelPlugin]
+    data:{labels:salaEntries.map(function(e){var s=e[0];return s.toLowerCase().indexOf('sala')===0?s:'Sala '+s}),datasets:[{label:'Qtd',data:salaEntries.map(function(e){return e[1]}),backgroundColor:gradSala,borderRadius:8,borderSkipped:false,barPercentage:0.55}]},
+    options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',titleFont:{size:12},bodyFont:{size:13},padding:10,cornerRadius:8,displayColors:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false}},x:{ticks:{font:{size:11,weight:'600'},color:'#64748b'},grid:{display:false}}}},plugins:[medDatalabelPlugin]
   });
 }
 
