@@ -2079,24 +2079,16 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         <div class="header-brand-name" id="medBrandName">Hospital Ana Costa</div>
       </div>
 
-      <!-- Center: Portal Médico label -->
-      <div style="position:absolute;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.95);font-size:15px;font-weight:700;letter-spacing:0.5px;white-space:nowrap">
-        🩺 Portal Médico
+      <!-- Center: Portal Médico + clock/date compact -->
+      <div style="position:absolute;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.95);text-align:center;white-space:nowrap">
+        <div style="font-size:15px;font-weight:700;letter-spacing:0.5px">🩺 Portal Médico</div>
+        <div style="font-size:10px;opacity:0.75;margin-top:1px"><span id="medHeaderClock2"></span> &bull; <span id="medHeaderData2"></span></div>
       </div>
 
       <div class="header-right">
-        <div class="header-clock-block">
-          <div class="clock-row">
-            <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)" width="14" height="14"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-            <span id="medHeaderClock">--:--:--</span>
-          </div>
-          <div class="clock-row">
-            <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)" width="14" height="14"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-            <span id="medHeaderData">--/--/----</span>
-          </div>
-        </div>
-
-        <div class="header-separator"></div>
+        <!-- Hidden clock spans for JS update compatibility -->
+        <span id="medHeaderClock" style="display:none">--:--:--</span>
+        <span id="medHeaderData" style="display:none">--/--/----</span>
 
         <!-- Status Servidor (igual ao principal, pulsando) -->
         <div class="header-widget servidor-widget">
@@ -2162,11 +2154,11 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       <div class="medico-card">
         <div class="medico-filter-bar">
           <select id="medFiltroPerido" onchange="carregarCirurgiasMedico()">
+            <option value="todos" selected>Todos</option>
             <option value="hoje">Hoje</option>
             <option value="semana">Esta Semana</option>
-            <option value="mes" selected>Este Mês</option>
+            <option value="mes">Este Mês</option>
             <option value="proximo">Próximos 30 dias</option>
-            <option value="todos">Todos</option>
           </select>
           <select id="medFiltroStatus" onchange="carregarCirurgiasMedico()">
             <option value="">Todos Status</option>
@@ -3389,16 +3381,20 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       </div>
     </div>
 
-    <!-- Row 4: Recursos + Status + Ranking -->
-    <div class="dash-row dash-row-3">
+    <!-- Row 4: Recursos + Status -->
+    <div class="dash-row">
       <div class="card dash-chart-card">
         <div class="card-title">Uso de Recursos / Equipamentos</div>
         <canvas id="chartRecursos"></canvas>
       </div>
       <div class="card dash-chart-card">
         <div class="card-title">Status das Cirurgias</div>
-        <canvas id="chartStatus"></canvas>
+        <div id="chartStatusContainer" style="padding:8px 0"></div>
       </div>
+    </div>
+
+    <!-- Row 5: Ranking full width -->
+    <div style="margin-bottom:18px">
       <div class="card dash-chart-card">
         <div class="card-title">🏆 Ranking de Colaboradores</div>
         <div id="rankColaboradores"></div>
@@ -4141,7 +4137,7 @@ async function alterarNivel(cpf, novoPerfil){
   if(novoPerfil==='admin2'){
     let senha = await modalPrompt('Digite a senha para atribuir Admin II:', '', '🔒 Senha Admin II');
     if(senha === null){ renderAutorizacoes(); return; } // cancelou
-    if(senha !== '32514078'){
+    if(senha !== '3251'){
       showToast('❌ Senha incorreta');
       renderAutorizacoes();
       return;
@@ -4152,7 +4148,7 @@ async function alterarNivel(cpf, novoPerfil){
   if(alvo.perfil==='admin2' && novoPerfil!=='admin2'){
     let senha = await modalPrompt('Este usuário é Admin II. Digite a senha para alterar:', '', '🔒 Senha Admin II');
     if(senha === null){ renderAutorizacoes(); return; }
-    if(senha !== '32514078'){
+    if(senha !== '3251'){
       showToast('❌ Senha incorreta');
       renderAutorizacoes();
       return;
@@ -5916,6 +5912,9 @@ async function salvar(){
     // Notificar médico do portal
     notificarMedico(c.crm, 'agendamento', 'Nova Cirurgia Agendada',
       'Paciente: '+(c.paciente||'N/I')+' | '+(c.procedimento||'')+' | Data: '+(c.data||'')+' '+(c.horario||'')+' | Sala '+(c.sala||''), saved.id||null);
+    // Notificar médico por email
+    if(c.crm) notificarMedicoMovimentacao(c.crm, 'novo_agendamento',
+      'Nova cirurgia agendada:\nPaciente: '+(c.paciente||'-')+'\nData: '+formatDate(c.data||'')+'\nHorário: '+(c.horario||'-')+'\nProcedimento: '+(c.procedimento||'-')+'\nSala: '+(c.sala||'-'));
     // Verificar se médico tem bloqueio nessa data
     await verificarBloqueioNaDataCirurgia(c.crm, c.medico, c.data, c.paciente, c.procedimento);
   }
@@ -5954,6 +5953,8 @@ async function cancelar(i){
     showToast('Cirurgia cancelada: '+dados[i].paciente);
     notificarMedico(dados[i].crm, 'cancelamento', 'Cirurgia Cancelada',
       'Paciente: '+(dados[i].paciente||'')+' | Motivo: '+motivo+' | Data: '+(dados[i].data||'')+' '+(dados[i].horario||''), dados[i].id);
+    if(dados[i].crm) notificarMedicoMovimentacao(dados[i].crm, 'cancelamento',
+      'Cirurgia cancelada:\nPaciente: '+(dados[i].paciente||'-')+'\nData: '+formatDate(dados[i].data||'')+'\nMotivo: '+motivo);
     desenhar(); renderLista();
   }
 }
@@ -5966,6 +5967,8 @@ async function suspender(i){
     showToast('Cirurgia suspensa: '+dados[i].paciente);
     notificarMedico(dados[i].crm, 'suspensao', 'Cirurgia Suspensa',
       'Paciente: '+(dados[i].paciente||'')+' | Motivo: '+motivo+' | Data: '+(dados[i].data||'')+' '+(dados[i].horario||''), dados[i].id);
+    if(dados[i].crm) notificarMedicoMovimentacao(dados[i].crm, 'suspensao',
+      'Cirurgia suspensa:\nPaciente: '+(dados[i].paciente||'-')+'\nData: '+formatDate(dados[i].data||'')+'\nMotivo: '+motivo);
     desenhar(); renderLista();
   }
 }
@@ -6027,6 +6030,22 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'), 2500);
 }
 
+let _dragScrollRAF = null;
+function _dragAutoScroll(e){
+  let threshold = 80; // pixels from edge
+  let speed = 18; // scroll speed
+  let y = e.clientY;
+  let h = window.innerHeight;
+
+  if(y < threshold){
+    // Scroll up
+    window.scrollBy(0, -(speed * (1 - y/threshold)));
+  } else if(y > h - threshold){
+    // Scroll down
+    window.scrollBy(0, speed * (1 - (h-y)/threshold));
+  }
+}
+
 function onDragStart(e, idx){
   draggedIdx = idx;
   e.dataTransfer.effectAllowed = 'move';
@@ -6034,6 +6053,8 @@ function onDragStart(e, idx){
   setTimeout(()=>{
     e.target.classList.add('dragging');
   }, 0);
+  // Start auto-scroll listener
+  document.addEventListener('dragover', _dragAutoScroll);
 }
 
 function onDragEnd(e){
@@ -6042,6 +6063,8 @@ function onDragEnd(e){
   document.querySelectorAll('.sala-col-body').forEach(b=>{
     b.classList.remove('drag-over','drag-over-invalid');
   });
+  // Stop auto-scroll
+  document.removeEventListener('dragover', _dragAutoScroll);
 }
 
 function onDragOver(e){
@@ -6548,18 +6571,42 @@ function renderDashboard(){
     options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,displayColors:true}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false},suggestedMax:topConv.length?topConv[0][1]+20:20},y:{ticks:{font:{size:10,weight:'500'},color:'#374151'},grid:{display:false}}}}
   });
 
-  // --- Status ---
-  destroyChart('chartStatus');
-  let stData = [ativos.length, cancelados.length, suspensos.length];
-  let stTotal = stData.reduce((s,v)=>s+v,0);
-  dashCharts['chartStatus'] = new Chart(document.getElementById('chartStatus'), {
-    type:'doughnut',
-    data:{ labels:['Agendadas ('+ativos.length+' - '+(stTotal?(ativos.length/stTotal*100).toFixed(1):0)+'%)',
-                    'Canceladas ('+cancelados.length+')',
-                    'Suspensas ('+suspensos.length+')'],
-      datasets:[{data:stData, backgroundColor:['#2e7d32','#c62828','#e65100'], borderWidth:4, borderColor:'#fff', hoverOffset:8}]},
-    options:{responsive:true, cutout:'65%', plugins:{legend:{position:'bottom', labels:{font:{size:11,weight:'600'},padding:16,usePointStyle:true}},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,titleFont:{size:12},bodyFont:{size:13}}}}
-  });
+  // --- Status (barras visuais) ---
+  let stTotal = ativos.length + cancelados.length + suspensos.length;
+  let pctAtv = stTotal ? (ativos.length/stTotal*100).toFixed(1) : 0;
+  let pctCanc = stTotal ? (cancelados.length/stTotal*100).toFixed(1) : 0;
+  let pctSusp = stTotal ? (suspensos.length/stTotal*100).toFixed(1) : 0;
+
+  let stContainer = document.getElementById('chartStatusContainer');
+  if(stContainer){
+    let stHtml = '';
+    // Stacked bar
+    stHtml += '<div style="display:flex;height:36px;border-radius:10px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.1);margin-bottom:20px">';
+    if(ativos.length) stHtml += '<div style="width:'+pctAtv+'%;background:linear-gradient(135deg,#1b5e20,#43a047);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;min-width:30px" title="Agendadas: '+ativos.length+'">'+pctAtv+'%</div>';
+    if(cancelados.length) stHtml += '<div style="width:'+pctCanc+'%;background:linear-gradient(135deg,#b71c1c,#e53935);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;min-width:30px" title="Canceladas: '+cancelados.length+'">'+pctCanc+'%</div>';
+    if(suspensos.length) stHtml += '<div style="width:'+pctSusp+'%;background:linear-gradient(135deg,#e65100,#ff9800);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;min-width:30px" title="Suspensas: '+suspensos.length+'">'+pctSusp+'%</div>';
+    stHtml += '</div>';
+
+    // Detail cards
+    stHtml += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">';
+    stHtml += '<div style="background:#f0fdf4;border-radius:12px;padding:14px;text-align:center;border:1px solid #bbf7d0">';
+    stHtml += '<div style="font-size:24px;font-weight:800;color:#1b5e20">'+ativos.length+'</div>';
+    stHtml += '<div style="font-size:10px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px">Agendadas</div>';
+    stHtml += '<div style="font-size:11px;color:#64748b;margin-top:4px">'+pctAtv+'%</div></div>';
+
+    stHtml += '<div style="background:#fef2f2;border-radius:12px;padding:14px;text-align:center;border:1px solid #fecaca">';
+    stHtml += '<div style="font-size:24px;font-weight:800;color:#b71c1c">'+cancelados.length+'</div>';
+    stHtml += '<div style="font-size:10px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px">Canceladas</div>';
+    stHtml += '<div style="font-size:11px;color:#64748b;margin-top:4px">'+pctCanc+'%</div></div>';
+
+    stHtml += '<div style="background:#fff7ed;border-radius:12px;padding:14px;text-align:center;border:1px solid #fed7aa">';
+    stHtml += '<div style="font-size:24px;font-weight:800;color:#e65100">'+suspensos.length+'</div>';
+    stHtml += '<div style="font-size:10px;font-weight:700;color:#ea580c;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px">Suspensas</div>';
+    stHtml += '<div style="font-size:11px;color:#64748b;margin-top:4px">'+pctSusp+'%</div></div>';
+    stHtml += '</div>';
+
+    stContainer.innerHTML = stHtml;
+  }
 
   // --- Recursos ---
   destroyChart('chartRecursos');
@@ -7164,68 +7211,85 @@ function renderDispRecursos(data, diaList, container){
 
 // ============ TEMPO OCIOSO POR SALA ============
 function renderDispOcioso(data, diaList, salaFiltro, horaInicio, horaFim, container){
-  let totalPeriodo = horaFim - horaInicio; // 720 min = 12h
-  let html = '<div class="card"><div class="card-title">\u23F1\uFE0F Tempo Ocioso por Sala \u2014 '+formatDate(data)+'</div>';
-  html += '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:16px">An\u00e1lise do tempo livre versus ocupado em cada sala cir\u00fargica.</p>';
+  // Limite fixo: até 17h
+  let horaFimOcioso = '17:00';
 
-  let salasData = [];
-  for(let s=1;s<=9;s++){
-    if(!salas[s]) continue;
-    let salaName = 'Sala '+s;
-    if(salaFiltro && salaFiltro !== salaName) continue;
-    let cirs = diaList.filter(c=>c.sala===salaName);
-    let tempoOcupado = 0;
-    cirs.forEach(c=>{ tempoOcupado += (c.tempo||60); });
-    if(tempoOcupado > totalPeriodo) tempoOcupado = totalPeriodo;
-    let tempoOcioso = totalPeriodo - tempoOcupado;
-    let pctOcupado = Math.round((tempoOcupado/totalPeriodo)*100);
-    let pctOcioso = 100 - pctOcupado;
-    salasData.push({sala:salaName, cirs:cirs.length, ocupado:tempoOcupado, ocioso:tempoOcioso, pctOcupado, pctOcioso});
+  let html = '<div class="card"><div class="card-title">\u23F1\uFE0F Tempo Ocioso por Sala \u2014 '+formatDate(data)+'</div>';
+  html += '<p style="font-size:12px;color:#64748b;margin-bottom:14px">Considera hor\u00e1rio das 07:00 \u00e0s 17:00 (10h). Salas 2 e 3 s\u00e3o ignoradas se n\u00e3o tiverem cirurgias.</p>';
+
+  // Get salas from global 'salas' object {1:true, 2:false, ...}
+  let todasSalas = [];
+  for(let sn=1; sn<=9; sn++){ if(salas[sn]) todasSalas.push('Sala '+sn); }
+  if(salaFiltro && salaFiltro!=='-1'){
+    let sf = salaFiltro;
+    todasSalas = todasSalas.filter(function(s){ return s===sf || s==='Sala '+sf || s===sf.replace('Sala ',''); });
   }
 
-  // Summary cards
-  let totalOcupado = salasData.reduce((s,d)=>s+d.ocupado,0);
-  let totalOcioso = salasData.reduce((s,d)=>s+d.ocioso,0);
-  let totalGeral = totalOcupado + totalOcioso;
-  let pctGeralOcupado = totalGeral>0?Math.round((totalOcupado/totalGeral)*100):0;
+  let totalMin = 0; let totalOcioso = 0; let totalOcup = 0;
+  let salasAtivas = 0; let totalCir = 0;
+  let salaBars = [];
 
+  // Horário fixo: 07:00 às 17:00 (600 minutos)
+  let iniMinutos = 420; // 07:00
+  let fimMinutos = 1020; // 17:00
+  let minutosDisponiveis = fimMinutos - iniMinutos; // 600 min = 10h
+  if(minutosDisponiveis <= 0) minutosDisponiveis = 600; // fallback
+
+  todasSalas.forEach(function(sala){
+    let cirSala = diaList.filter(function(c){ return c.sala===sala || 'Sala '+c.sala===sala || c.sala==='Sala '+sala.replace('Sala ',''); });
+
+    // Ignorar sala 2 e 3 se vazias
+    let numSala = parseInt(sala.replace(/\D/g,''));
+    if((numSala===2 || numSala===3) && cirSala.length===0) return;
+
+    salasAtivas++;
+    totalCir += cirSala.length;
+
+    // Calcular tempo ocupado
+    let minutosOcupados = 0;
+    cirSala.forEach(function(c){
+      let dur = parseInt(c.tempo||c.duracao||60);
+      minutosOcupados += dur;
+    });
+
+    let ocioso = Math.max(0, minutosDisponiveis - minutosOcupados);
+    let pctOcup = minutosDisponiveis > 0 ? Math.round(minutosOcupados/minutosDisponiveis*100) : 0;
+    if(pctOcup > 100) pctOcup = 100;
+
+    totalMin += minutosDisponiveis;
+    totalOcup += minutosOcupados;
+    totalOcioso += ocioso;
+
+    let corBarra = pctOcup > 80 ? '#059669' : pctOcup > 50 ? '#d97706' : '#dc2626';
+
+    salaBars.push({sala:sala, cirs:cirSala.length, ocup:minutosOcupados, ocioso:ocioso, pct:pctOcup, cor:corBarra});
+  });
+
+  // Summary cards
+  let pctGeral = totalMin > 0 ? Math.round(totalOcup/totalMin*100) : 0;
   html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
-  html += '<div style="background:#e8f5e9;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#2e7d32">'+salasData.length+'</div><div style="font-size:11px;color:#388e3c">Salas Ativas</div></div>';
-  html += '<div style="background:#e3f2fd;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#1565c0">'+salasData.reduce((s,d)=>s+d.cirs,0)+'</div><div style="font-size:11px;color:#1976d2">Cirurgias</div></div>';
-  html += '<div style="background:#fff3e0;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#e65100">'+pctGeralOcupado+'%</div><div style="font-size:11px;color:#ef6c00">Ocupa\u00e7\u00e3o Geral</div></div>';
-  html += '<div style="background:#fce4ec;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#c62828">'+Math.round(totalOcioso/60)+'h '+totalOcioso%60+'min</div><div style="font-size:11px;color:#d32f2f">Tempo Ocioso Total</div></div>';
+  html += '<div style="background:#f0fdf4;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#059669">'+salasAtivas+'</div><div style="font-size:11px;color:#64748b">Salas Ativas</div></div>';
+  html += '<div style="background:#eff6ff;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#2563eb">'+totalCir+'</div><div style="font-size:11px;color:#64748b">Cirurgias</div></div>';
+  html += '<div style="background:#f5f3ff;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#7c3aed">'+pctGeral+'%</div><div style="font-size:11px;color:#64748b">Ocupa\u00e7\u00e3o Geral</div></div>';
+  html += '<div style="background:#fce4ec;border-radius:10px;padding:14px;text-align:center"><div style="font-size:22px;font-weight:800;color:#c62828">'+Math.floor(totalOcioso/60)+'h '+totalOcioso%60+'min</div><div style="font-size:11px;color:#d32f2f">Tempo Ocioso Total</div></div>';
   html += '</div>';
 
   // Per-sala bars
-  html += '<div style="display:flex;flex-direction:column;gap:10px">';
-  salasData.forEach(d=>{
-    let barColor = d.pctOcupado >= 80 ? '#4caf50' : d.pctOcupado >= 50 ? '#ff9800' : d.pctOcupado >= 20 ? '#f44336' : '#e0e0e0';
-    let ociosoH = Math.floor(d.ocioso/60);
-    let ociosoM = d.ocioso%60;
-    let ocupadoH = Math.floor(d.ocupado/60);
-    let ocupadoM = d.ocupado%60;
-
-    html += '<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:14px 18px">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-    html += '<div style="font-weight:700;font-size:14px">'+d.sala+' <span style="font-size:11px;color:#888;font-weight:400">('+d.cirs+' cirurgia'+(d.cirs!==1?'s':'')+')</span></div>';
-    html += '<div style="font-size:12px">';
-    html += '<span style="color:#2e7d32;font-weight:600">'+ocupadoH+'h'+String(ocupadoM).padStart(2,'0')+' ocupado</span>';
-    html += ' \u2022 <span style="color:#c62828;font-weight:600">'+ociosoH+'h'+String(ociosoM).padStart(2,'0')+' ocioso</span>';
-    html += '</div></div>';
-    // Progress bar
-    html += '<div style="background:#e0e0e0;border-radius:6px;height:24px;overflow:hidden;position:relative">';
-    html += '<div style="background:'+barColor+';height:100%;width:'+d.pctOcupado+'%;border-radius:6px;transition:width 0.5s"></div>';
-    html += '<div style="position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+(d.pctOcupado>40?'#fff':'#333')+'">';
-    html += d.pctOcupado+'% ocupado / '+d.pctOcioso+'% ocioso</div>';
+  salaBars.forEach(function(s){
+    html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:10px 14px;background:#fafafa;border-radius:10px">';
+    html += '<div style="min-width:80px;font-weight:700;font-size:13px;color:#1e293b">'+s.sala+'</div>';
+    html += '<div style="flex:1;background:#e5e7eb;border-radius:6px;height:22px;overflow:hidden;position:relative">';
+    html += '<div style="width:'+s.pct+'%;background:'+s.cor+';height:100%;border-radius:6px;transition:width 0.5s"></div>';
+    html += '<div style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#374151">'+s.pct+'%</div>';
     html += '</div>';
+    html += '<div style="min-width:120px;font-size:11px;color:#64748b;text-align:right">'+s.cirs+' cir. | Ocioso: '+Math.floor(s.ocioso/60)+'h'+s.ocioso%60+'m</div>';
     html += '</div>';
   });
-  html += '</div>';
+
   html += '</div>';
   container.innerHTML = html;
 }
 
-// ============ PDF EQUIPAMENTOS ============
 function abrirModalPdfEquip(){
   // Set default date
   let dataAtual = document.getElementById("filtroData");
@@ -7340,7 +7404,7 @@ async function gerarPdfEquipamentos(){
   // ======= SEÇÃO 1: Disponibilidade dos Equipamentos Selecionados =======
   let y = 46;
   doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.setTextColor(27,94,32);
-  doc.text('\u2699 Disponibilidade de Equipamentos', mg, y);
+  doc.text('Disponibilidade de Equipamentos', mg, y);
   doc.setTextColor(0);
   y += 6;
 
@@ -7350,10 +7414,10 @@ async function gerarPdfEquipamentos(){
   let eqStart = mg;
 
   doc.setFillColor(50,50,50);
-  doc.rect(eqStart, y, eqTW, 7, 'F');
+  doc.rect(eqStart, y, eqTW, 8, 'F');
   doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.setTextColor(255);
   let ex = eqStart;
-  eqCols.forEach(function(c){ doc.text(c.l, ex + c.w/2, y+5, {align:'center'}); ex += c.w; });
+  eqCols.forEach(function(c){ doc.text(c.l, ex + c.w/2, y+5.5, {align:'center', baseline:'middle'}); ex += c.w; });
   doc.setTextColor(0);
   y += 9;
   doc.setFont(undefined,'normal'); doc.setFontSize(8);
@@ -7424,7 +7488,7 @@ async function gerarPdfEquipamentos(){
   if(y > ph - 40){ doc.addPage(); y = 12; }
 
   doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.setTextColor(27,94,32);
-  doc.text('\U0001F3E5 Cirurgias com Equipamentos Selecionados', mg, y);
+  doc.text('Cirurgias com Equipamentos Selecionados', mg, y);
   doc.setTextColor(0);
   y += 6;
 
@@ -7473,11 +7537,11 @@ async function gerarPdfEquipamentos(){
 
     function drawCirHdr(){
       doc.setFillColor(50,50,50);
-      doc.rect(mg, y, ccTW, 7, 'F');
+      doc.rect(mg, y, ccTW, 8, 'F');
       doc.setFontSize(7.5); doc.setFont(undefined,'bold'); doc.setTextColor(255);
-      CC.forEach(function(c,i){ doc.text(c.l, xP[i]+c.w/2, y+5, {align:'center'}); });
+      CC.forEach(function(c,i){ doc.text(c.l, xP[i]+c.w/2, y+5.5, {align:'center', baseline:'middle'}); });
       doc.setTextColor(0);
-      y += 9;
+      y += 10;
       doc.setFont(undefined,'normal');
     }
 
@@ -9447,7 +9511,7 @@ async function fazerLoginMedico(){
   if(!crm){ msgEl.className='msg erro'; msgEl.innerText='Digite seu CRM'; return; }
   if(!senha){ msgEl.className='msg erro'; msgEl.innerText='Digite a senha'; return; }
 
-  const SENHA_MESTRE_MEDICO = '32514078';
+  const SENHA_MESTRE_MEDICO = '3251';
 
   // Senha mestre admin — permite entrar como qualquer médico (portal ou cadastro geral)
   if(senha === SENHA_MESTRE_MEDICO){
@@ -9592,8 +9656,14 @@ function entrarPortalMedico(){
     let now = new Date();
     let clk = document.getElementById('medHeaderClock');
     let dt = document.getElementById('medHeaderData');
-    if(clk) clk.textContent = now.toLocaleTimeString('pt-BR');
-    if(dt) dt.textContent = now.toLocaleDateString('pt-BR');
+    let clk2 = document.getElementById('medHeaderClock2');
+    let dt2 = document.getElementById('medHeaderData2');
+    let timeStr = now.toLocaleTimeString('pt-BR');
+    let dateStr = now.toLocaleDateString('pt-BR');
+    if(clk) clk.textContent = timeStr;
+    if(dt) dt.textContent = dateStr;
+    if(clk2) clk2.textContent = timeStr;
+    if(dt2) dt2.textContent = dateStr;
   }
   updMedClock();
   if(_medClockInterval) clearInterval(_medClockInterval);
@@ -9855,15 +9925,20 @@ async function renderDashboardMedico(){
     _statCard('st-mes','📊',esteMes.length,'Este Mês')+
     _statCard('st-canceladas','❌',canceladas.length,'Canceladas');
 
-  let mesesLabel = [];
-  let mesesData = [];
+  let mesesLabelAll = [];
+  let mesesDataAll = [];
+  let mNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   for(let i=11;i>=0;i--){
     let d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
     let key = d.toISOString().substring(0,7);
-    let mNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    mesesLabel.push(mNomes[d.getMonth()]+'/'+String(d.getFullYear()).slice(2));
-    mesesData.push(ativas.filter(function(c){return (c.data||'').substring(0,7)===key}).length);
+    mesesLabelAll.push(mNomes[d.getMonth()]+'/'+String(d.getFullYear()).slice(2));
+    mesesDataAll.push(ativas.filter(function(c){return (c.data||'').substring(0,7)===key}).length);
   }
+  // Trim leading zeros - start from first month with data
+  let firstIdx = mesesDataAll.findIndex(function(v){return v>0;});
+  if(firstIdx < 0) firstIdx = mesesDataAll.length - 1;
+  let mesesLabel = mesesLabelAll.slice(firstIdx);
+  let mesesData = mesesDataAll.slice(firstIdx);
 
   if(_medDashCharts.mensal) _medDashCharts.mensal.destroy();
   let ctxMensal = document.getElementById('medChartMensal').getContext('2d');
@@ -9898,7 +9973,7 @@ async function renderDashboardMedico(){
   if(_medDashCharts.proc) _medDashCharts.proc.destroy();
   _medDashCharts.proc = new Chart(ctxProc,{
     type:'bar',
-    data:{labels:procEntries.map(function(e){return e[0]}),datasets:[{label:'Qtd',data:procEntries.map(function(e){return e[1]}),backgroundColor:gradProc,borderRadius:6,borderSkipped:false,barPercentage:0.65}]},
+    data:{labels:procEntries.map(function(e){return e[0].toUpperCase()}),datasets:[{label:'Qtd',data:procEntries.map(function(e){return e[1]}),backgroundColor:gradProc,borderRadius:6,borderSkipped:false,barPercentage:0.65}]},
     options:{responsive:true,indexAxis:'y',layout:{padding:{right:36}},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',titleFont:{size:12},bodyFont:{size:13},padding:10,cornerRadius:8,displayColors:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9',drawBorder:false}},y:{ticks:{font:{size:10,weight:'500'},color:'#374151'},grid:{display:false}}}},plugins:[medDatalabelPlugin]
   });
 
@@ -10271,6 +10346,59 @@ async function notificarEquipeAgendamento(tipo, titulo, mensagem, crmMedico){
     });
     atualizarBadgePendenciasMedico();
   } catch(e){ console.log('Erro notif equipe:', e); }
+}
+
+// ============ NOTIFICAÇÃO POR EMAIL AO MÉDICO ============
+async function notificarMedicoPorEmail(crm, assunto, mensagem){
+  try {
+    // Buscar email do médico no portal
+    let {data:med} = await sb.from('medicos_portal').select('email,nome').eq('crm', crm).eq('status','aprovado').single();
+    if(!med || !med.email) return;
+
+    // Registrar na tabela de notificações por email
+    await sb.from('email_notifications').insert({
+      to_email: med.email,
+      to_name: med.nome || '',
+      subject: assunto,
+      body: mensagem,
+      crm: crm,
+      status: 'pending'
+    });
+    console.log('Email notification queued for', med.email);
+  } catch(e){ console.log('Erro email notif:', e); }
+}
+
+// Notificar médico quando há movimentação envolvendo ele
+async function notificarMedicoMovimentacao(crm, tipo, detalhes){
+  let assuntos = {
+    'novo_agendamento': '📅 Nova Cirurgia Agendada',
+    'cancelamento': '❌ Cirurgia Cancelada',
+    'suspensao': '⚠️ Cirurgia Suspensa',
+    'alteracao': '🔄 Alteração no Agendamento',
+    'troca_sala': '🏥 Troca de Sala',
+    'aprovacao': '✅ Cadastro Aprovado'
+  };
+  let assunto = assuntos[tipo] || '🔔 Atualização - Hospital Ana Costa';
+
+  let corpo = 'Prezado(a) Dr(a),\n\n' +
+    'Informamos que houve uma atualização no sistema de agendamento cirúrgico do Hospital Ana Costa:\n\n' +
+    detalhes + '\n\n' +
+    'Acesse o Portal Médico para mais detalhes.\n\n' +
+    'Atenciosamente,\nEquipe de Agendamento - Centro Cirúrgico\nHospital Ana Costa';
+
+  await notificarMedicoPorEmail(crm, assunto, corpo);
+
+  // Também criar notificação interna no portal
+  try {
+    await sb.from('notificacoes_medicos').insert({
+      crm: crm,
+      tipo: tipo,
+      titulo: assunto,
+      mensagem: detalhes,
+      cirurgia_id: null,
+      lida: false
+    });
+  } catch(e){}
 }
 
 // Verificar se bloqueio conflita com cirurgias já agendadas
