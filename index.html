@@ -5117,6 +5117,15 @@ function _validarLive(){
     }
   }
 
+  // 8. Verificar conflito com flutuante existente
+  if(data && horario && sala){
+    let cTempo = parseInt(document.getElementById("tempo").value)||60;
+    let confFlut = verificarConflitoFlutuante(data, horario, cTempo, sala, editandoId);
+    if(confFlut){
+      alertas.push({tipo:'erro', msg:'🔄 <b>Flutuante neste horario</b> — Agendado por: <b>'+(confFlut.registrado_por||'N/I')+'</b> | Medico: '+(confFlut.medico||'-')+' ('+confFlut.horario+')'});
+    }
+  }
+
   // Render
   let temErro = alertas.some(a => a.tipo==='erro');
 
@@ -5485,12 +5494,12 @@ function toggleFlutuante(on){
 
 // ============ RELATÓRIO RESERVAS FLUTUANTES ============
 function abrirRelatorioFlutuantes(){
-  let flutuantes = dados.filter(c => c.flutuante && !c.cancelado && !c.suspenso);
+  let hoje = hojeLocal();
+  // Filtrar apenas flutuantes futuros (>= hoje) por padrao
+  let flutuantes = dados.filter(c => c.flutuante && !c.cancelado && !c.suspenso && (c.data||'') >= hoje);
   flutuantes.sort((a,b) => (a.data||'').localeCompare(b.data||'') || (a.horario||'').localeCompare(b.horario||''));
 
-  let hoje = hojeLocal();
   let pendentes = flutuantes.filter(c => {
-    // Campos que faltam preencher
     let falta = [];
     if(!c.identificacao) falta.push('ID');
     if(!c.paciente) falta.push('Paciente');
@@ -5552,11 +5561,11 @@ function abrirRelatorioFlutuantes(){
   if(!overlay){
     overlay = document.createElement('div');
     overlay.id = 'flutuanteReportOverlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
     overlay.onclick = function(e){ if(e.target===overlay) fecharRelatorioFlutuantes(); };
     document.body.appendChild(overlay);
   }
-  overlay.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:1100px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'+html+'</div>';
+  overlay.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:1300px;width:100%;max-height:90vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'+html+'</div>';
   overlay.style.display = 'flex';
 }
 
@@ -6112,17 +6121,31 @@ async function salvar(){
   if(!editandoId){
     let conflitoFlut = verificarConflitoFlutuante(c.data, c.horario, c.tempo, c.sala, null);
     if(conflitoFlut){
-      let msgFlut = (c.flutuante ? 'Este periodo ja esta reservado por outro flutuante!' : 'Atencao: existe uma reserva flutuante neste periodo!')+
-        '\n\nSala: '+conflitoFlut.sala+
-        '\nData: '+formatDate(conflitoFlut.data)+
-        '\nHorario: '+conflitoFlut.horario+
-        '\nMedico: '+(conflitoFlut.medico||'-')+
-        '\nAgendado por: '+(conflitoFlut.registrado_por||'N/I')+
-        '\n\nHorarios alternativos disponiveis:\n'+
-        sugerirHorariosAlternativos(c.data, c.sala, c.tempo, c.horario)+
-        '\n\nDeseja prosseguir mesmo assim?';
-      let prosseguir = await modalConfirm(msgFlut, 'Conflito de Flutuante');
-      if(!prosseguir) return;
+      let msgFlut = 'BLOQUEADO: Existe uma reserva flutuante neste periodo!\n\n'+
+        'Sala: '+conflitoFlut.sala+'\n'+
+        'Data: '+formatDate(conflitoFlut.data)+'\n'+
+        'Horario: '+conflitoFlut.horario+'\n'+
+        'Medico: '+(conflitoFlut.medico||'-')+'\n'+
+        'Agendado por: '+(conflitoFlut.registrado_por||'N/I')+'\n\n'+
+        'Para usar este horario, entre em contato com "'+(conflitoFlut.registrado_por||'o responsavel')+'" para negociar a liberacao.\n'+
+        'Somente quem criou o flutuante (ou admin) pode edita-lo para liberar a grade.\n\n'+
+        'Horarios alternativos disponiveis:\n'+
+        sugerirHorariosAlternativos(c.data, c.sala, c.tempo, c.horario);
+      await modalAlert(msgFlut, 'Conflito de Flutuante');
+      return;
+    }
+  }
+  // ====== VALIDAR DATA DO FLUTUANTE ======
+  if(c.flutuante && !editandoId){
+    let hoje = hojeLocal();
+    if(c.data <= hoje){
+      await modalAlert('Flutuante nao pode ser agendado para data atual ou passada.\n\nSelecione uma data futura.', 'Data Invalida');
+      return;
+    }
+    let diasUteisAte = diffDiasUteis(hoje, c.data);
+    if(diasUteisAte < 30){
+      await modalAlert('Flutuante so pode ser agendado com no minimo 30 dias uteis de antecedencia.\n\nData selecionada: '+formatDate(c.data)+' ('+diasUteisAte+' dias uteis)\nMinimo necessario: 30 dias uteis', 'Antecedencia Insuficiente');
+      return;
     }
   }
 
@@ -6242,6 +6265,15 @@ async function reativar(i){
 
 function editarCirurgia(i){
   let c = dados[i];
+  // Se for flutuante, só criador ou admin pode editar
+  if(c.flutuante && !c.cancelado && !c.suspenso){
+    let isAdmin = usuarioLogado && (usuarioLogado.perfil==='admin' || usuarioLogado.perfil==='admin2' || usuarioLogado.is_admin);
+    let isCriador = usuarioLogado && c.registrado_por && usuarioLogado.nome === c.registrado_por;
+    if(!isAdmin && !isCriador){
+      modalAlert('Somente quem criou este flutuante ('+(c.registrado_por||'N/I')+') ou um administrador pode edita-lo.', 'Sem Permissao');
+      return;
+    }
+  }
   // Navegar para aba Agendamento
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -6529,6 +6561,7 @@ function renderLista(){
       '<td>'+(c.tempo||'-')+'min</td>'+
       '<td><span class="status-badge status-'+status+'">'+statusLabel+'</span>'+
         (motivo?'<br><span style="font-size:10px;color:var(--text-secondary)">'+motivo+'</span>':'')+
+        '<br><span style="font-size:10px;color:#6b7280">'+abreviarNome(c.registrado_por)+'</span>'+
       '</td>'+
       '<td style="white-space:nowrap">'+
         '<button class="btn btn-primary btn-sm" onclick="editarCirurgia('+idx+')" title="Editar">✏️</button> '+
@@ -6580,6 +6613,13 @@ function selecionarMedicoFiltro(nome, crm){
   input.value = nome;
   document.getElementById('filtroMedicoSugestoes').style.display='none';
   renderLista();
+}
+
+function abreviarNome(nome){
+  if(!nome) return '-';
+  var partes = nome.trim().split(/\s+/);
+  if(partes.length <= 1) return partes[0].toLowerCase();
+  return (partes[0]+' '+partes[partes.length-1].charAt(0)+'.').toLowerCase();
 }
 
 function hojeLocal(){
