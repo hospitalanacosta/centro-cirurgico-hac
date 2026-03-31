@@ -2685,6 +2685,11 @@ tr.suspenso td { color: #e65100; font-style: italic; }
             <option value="extra">Mercado (Extra)</option>
           </select>
         </div>
+        <div class="form-group" style="position:relative">
+          <label>Médico / CRM</label>
+          <input type="text" id="filtroListaMedico" placeholder="Digite nome ou CRM..." oninput="autocompleteMedicoFiltro(this)" onchange="renderLista()" autocomplete="off" style="min-width:180px">
+          <div id="filtroMedicoSugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.12)"></div>
+        </div>
         <div class="form-group" style="display:flex;align-items:flex-end">
           <button class="btn btn-outline" onclick="abrirRelatorioFlutuantes()" style="white-space:nowrap;border-color:var(--warning);color:var(--warning)">🔄 Reservas Flutuantes</button>
         </div>
@@ -4332,6 +4337,8 @@ const DB = {
       identificacao: c.identificacao || '',
       motivoCancelamento: c.motivo_cancelamento || '',
       motivoSuspensao: c.motivo_suspensao || '',
+      registrado_por: c.registrado_por || '',
+      registrado_por_email: c.registrado_por_email || '',
     }));
   },
 
@@ -4352,9 +4359,9 @@ const DB = {
     };
     const {data,error} = await sb.from('cirurgias').insert(row).select();
     if(error){ await modalAlert('Erro ao salvar: '+error.message, 'Erro'); return null; }
-    // Try to set registrado_por (column may not exist yet)
+    // Try to set registrado_por and email (column may not exist yet)
     if(data[0] && typeof usuarioLogado !== 'undefined' && usuarioLogado){
-      try { await sb.from('cirurgias').update({registrado_por: usuarioLogado.nome}).eq('id', data[0].id); } catch(e){}
+      try { await sb.from('cirurgias').update({registrado_por: usuarioLogado.nome, registrado_por_email: usuarioLogado.email||null}).eq('id', data[0].id); } catch(e){}
     }
     return data[0];
   },
@@ -5516,6 +5523,7 @@ function abrirRelatorioFlutuantes(){
       '<td>'+(c.identificacao||'<em style="color:#999">—</em>')+'</td>'+
       '<td>'+(c.procedimento||'<em style="color:#999">—</em>')+'</td>'+
       '<td>'+(c.convenio||c.codigoConvenio||'<em style="color:#999">—</em>')+'</td>'+
+      '<td style="font-size:11px">'+(c.registrado_por||'<em style="color:#999">—</em>')+'</td>'+
       '<td><span class="'+statusClass+'">'+statusText+'</span></td>'+
       '<td>'+(falta.length > 0 ? '<span style="color:var(--danger);font-size:11px">'+falta.join(', ')+'</span>' : '✓')+'</td>'+
       '<td><button class="btn btn-primary btn-sm" onclick="fecharRelatorioFlutuantes();editarCirurgia('+dados.indexOf(c)+')">✏️</button></td>'+
@@ -5533,7 +5541,7 @@ function abrirRelatorioFlutuantes(){
     (flutuantes.length === 0
       ? '<p style="text-align:center;color:var(--text-secondary);padding:30px">Nenhuma reserva flutuante encontrada.</p>'
       : '<div class="tabela-wrapper"><table style="width:100%"><thead><tr>'+
-        '<th>Data</th><th>Hora</th><th>Sala</th><th>Médico</th><th>Paciente</th><th>ID</th><th>Procedimento</th><th>Convênio</th><th>Status</th><th>Faltando</th><th>Ação</th>'+
+        '<th>Data</th><th>Hora</th><th>Sala</th><th>Médico</th><th>Paciente</th><th>ID</th><th>Procedimento</th><th>Convênio</th><th>Agendado por</th><th>Status</th><th>Faltando</th><th>Ação</th>'+
         '</tr></thead><tbody>'+rows+'</tbody></table></div>')+
     '<div style="margin-top:16px;text-align:right">'+
       '<button class="btn btn-outline" onclick="fecharRelatorioFlutuantes()">Fechar</button>'+
@@ -5555,6 +5563,219 @@ function abrirRelatorioFlutuantes(){
 function fecharRelatorioFlutuantes(){
   let overlay = document.getElementById('flutuanteReportOverlay');
   if(overlay) overlay.style.display = 'none';
+}
+
+// ============ CONFLITO DE FLUTUANTES ============
+function verificarConflitoFlutuante(data, horario, tempo, sala, excluirId){
+  if(!data || !horario || !sala) return null;
+  var h = parseInt(horario.split(':')[0])||0;
+  var m = parseInt(horario.split(':')[1])||0;
+  var iniMin = h*60+m;
+  var dur = parseInt(tempo)||60;
+  var fimMin = iniMin + dur;
+  var flutuantes = dados.filter(function(c){
+    return c.flutuante && !c.cancelado && !c.suspenso && c.data===data && c.sala===sala && c.id!==excluirId;
+  });
+  for(var i=0; i<flutuantes.length; i++){
+    var fc = flutuantes[i];
+    var fh = parseInt((fc.horario||'00:00').split(':')[0])||0;
+    var fm = parseInt((fc.horario||'00:00').split(':')[1])||0;
+    var fIni = fh*60+fm;
+    var fDur = parseInt(fc.tempo)||60;
+    var fFim = fIni + fDur;
+    if(iniMin < fFim && fimMin > fIni) return fc;
+  }
+  return null;
+}
+
+function sugerirHorariosAlternativos(data, sala, tempo, horarioAtual){
+  var dur = parseInt(tempo)||60;
+  var ocupados = dados.filter(function(c){
+    return !c.cancelado && !c.suspenso && c.data===data && c.sala===sala;
+  }).map(function(c){
+    var h = parseInt((c.horario||'00:00').split(':')[0])||0;
+    var m = parseInt((c.horario||'00:00').split(':')[1])||0;
+    return {ini: h*60+m, fim: h*60+m+(parseInt(c.tempo)||60)};
+  }).sort(function(a,b){ return a.ini-b.ini; });
+  var sugestoes = [];
+  for(var slot=420; slot<=1020-dur; slot+=30){
+    var livre = true;
+    for(var j=0; j<ocupados.length; j++){
+      if(slot < ocupados[j].fim && slot+dur > ocupados[j].ini){ livre=false; break; }
+    }
+    if(livre){
+      var hh = String(Math.floor(slot/60)).padStart(2,'0');
+      var mm = String(slot%60).padStart(2,'0');
+      var horSug = hh+':'+mm;
+      if(horSug !== horarioAtual) sugestoes.push(horSug);
+      if(sugestoes.length >= 3) break;
+    }
+  }
+  if(sugestoes.length === 0) return '- Nenhum horario disponivel nesta sala/data';
+  return sugestoes.map(function(s){ return '- '+s; }).join('\n');
+}
+
+// ============ SISTEMA DE LEMBRETES FLUTUANTES ============
+function diffDiasUteis(dataStr1, dataStr2){
+  // Conta apenas dias úteis (seg-sex) entre duas datas YYYY-MM-DD
+  var d1 = new Date(dataStr1+'T12:00:00');
+  var d2 = new Date(dataStr2+'T12:00:00');
+  if(d2 <= d1) return 0;
+  var count = 0;
+  var cur = new Date(d1);
+  cur.setDate(cur.getDate()+1);
+  while(cur <= d2){
+    var dow = cur.getDay(); // 0=dom, 6=sab
+    if(dow !== 0 && dow !== 6) count++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return count;
+}
+
+async function verificarLembretesFlutuantes(){
+  var hoje = hojeLocal();
+  var flutuantes = dados.filter(function(c){
+    return c.flutuante && !c.cancelado && !c.suspenso && c.data >= hoje;
+  });
+  for(var i=0; i<flutuantes.length; i++){
+    var c = flutuantes[i];
+    var diasUteis = diffDiasUteis(hoje, c.data);
+    var pendente = !c.paciente || !c.identificacao || !c.procedimento || (!c.convenio && !c.codigoConvenio);
+    if(!pendente) continue;
+    if(diasUteis === 5) await enviarLembreteFlutuante(c, 1, 5);
+    else if(diasUteis === 3) await enviarLembreteFlutuante(c, 2, 3);
+    else if(diasUteis <= 2) await autoCancelarFlutuante(c);
+  }
+}
+
+async function enviarLembreteFlutuante(cir, numAviso, diasRestantes){
+  var jaEnviou = false;
+  try {
+    var {data:existing} = await sb.from('email_notifications').select('id').eq('crm','FLUT_LEMBRETE_'+numAviso+'_'+cir.id).limit(1);
+    if(existing && existing.length > 0) jaEnviou = true;
+  } catch(e){}
+  if(jaEnviou) return;
+
+  var todosEmails = await coletarEmailsFlutuante(cir);
+  if(todosEmails.length === 0) return;
+
+  var nomeCriador = cir.registrado_por || 'Operador';
+  var cor = diasRestantes <= 3 ? '#dc2626' : '#d97706';
+  var urgencia = diasRestantes <= 3 ? 'URGENTE' : 'AVISO';
+  var assunto = 'Lembrete '+numAviso+' - Flutuante Pendente ('+diasRestantes+' dias) - Hospital Ana Costa';
+
+  var corpo = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">'+
+    '<div style="max-width:600px;margin:0 auto;padding:20px">'+
+    '<div style="background:'+cor+';border-radius:12px 12px 0 0;padding:24px 30px;text-align:center">'+
+    '<div style="font-size:28px;margin-bottom:6px">&#9888;&#65039;</div>'+
+    '<h1 style="color:#fff;margin:0;font-size:20px;font-weight:700">'+urgencia+': Flutuante Pendente</h1>'+
+    '<p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">Lembrete '+numAviso+' - Faltam '+diasRestantes+' dias</p>'+
+    '</div>'+
+    '<div style="background:#fff;padding:28px 30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">'+
+    '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a),</p>'+
+    '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">A reserva flutuante abaixo precisa ser finalizada com dados completos. <strong>Faltam '+diasRestantes+' dias</strong> para a data da cirurgia.</p>'+
+    '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:16px">'+
+    '<p style="margin:0;color:#92400e;font-size:13px;font-weight:600">Se nao for finalizada ate 2 dias antes, a reserva sera cancelada automaticamente e a grade liberada.</p>'+
+    '</div>'+
+    '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">'+
+    '<table style="width:100%;border-collapse:collapse">'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Sala</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.sala||'-')+'</td></tr>'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Data</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+formatDate(cir.data)+'</td></tr>'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Horario</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.horario||'-')+'</td></tr>'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Medico</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.medico||'-')+'</td></tr>'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Agendado por</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+nomeCriador+'</td></tr>'+
+    '</table></div>'+
+    '<p style="color:#6b7280;font-size:13px;margin:0 0 20px;line-height:1.5">Acesse o sistema para completar os dados da cirurgia.</p>'+
+    '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">'+
+    '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>'+
+    '</div></div>'+
+    '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">E-mail automatico do sistema de gestao cirurgica.</p>'+
+    '</div></body></html>';
+
+  for(var ei=0; ei<todosEmails.length; ei++){
+    await sb.from('email_notifications').insert({
+      to_email: todosEmails[ei], to_name: '', subject: assunto,
+      body: corpo, crm: 'FLUT_LEMBRETE_'+numAviso+'_'+cir.id, status: 'pending'
+    });
+  }
+  try {
+    await sb.from('notificacoes_medicos').insert({
+      crm: 'ADMIN', tipo: 'lembrete_flutuante',
+      titulo: 'Lembrete '+numAviso+': Flutuante pendente ('+diasRestantes+' dias)',
+      mensagem: 'Sala '+(cir.sala||'-')+' | Data: '+formatDate(cir.data)+' | Medico: '+(cir.medico||'-')+' | Agendado por: '+nomeCriador,
+      lida: false
+    });
+  } catch(e){}
+}
+
+async function autoCancelarFlutuante(cir){
+  var jaCancelou = false;
+  try {
+    var {data:existing} = await sb.from('email_notifications').select('id').eq('crm','FLUT_AUTOCANCEL_'+cir.id).limit(1);
+    if(existing && existing.length > 0) jaCancelou = true;
+  } catch(e){}
+  if(jaCancelou) return;
+
+  await DB.updateCirurgia(cir.id, {cancelado: true, motivo_cancelamento: 'Auto-cancelamento: flutuante nao finalizado (2 dias antes)'});
+  registrarLog('cancelamento', cir.paciente||'Flutuante', 'Auto-cancelamento flutuante: '+(cir.sala||'')+' '+(cir.horario||'')+' data '+(cir.data||'')+' | Criado por: '+(cir.registrado_por||'N/I'));
+
+  var todosEmails = await coletarEmailsFlutuante(cir);
+
+  var assunto = 'Flutuante Cancelado - Grade Liberada - Hospital Ana Costa';
+  var corpo = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">'+
+    '<div style="max-width:600px;margin:0 auto;padding:20px">'+
+    '<div style="background:#dc2626;border-radius:12px 12px 0 0;padding:24px 30px;text-align:center">'+
+    '<div style="font-size:28px;margin-bottom:6px">&#10060;</div>'+
+    '<h1 style="color:#fff;margin:0;font-size:20px;font-weight:700">Flutuante Cancelado Automaticamente</h1>'+
+    '<p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">Grade liberada para novo agendamento</p>'+
+    '</div>'+
+    '<div style="background:#fff;padding:28px 30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">'+
+    '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a),</p>'+
+    '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">A reserva flutuante abaixo foi <strong>cancelada automaticamente</strong> por nao ter sido finalizada a tempo. A grade esta liberada para novo agendamento.</p>'+
+    '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">'+
+    '<table style="width:100%;border-collapse:collapse">'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Sala</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.sala||'-')+'</td></tr>'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Data</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+formatDate(cir.data)+'</td></tr>'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Horario</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.horario||'-')+'</td></tr>'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Medico</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.medico||'-')+'</td></tr>'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Agendado por</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.registrado_por||'N/I')+'</td></tr>'+
+    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Motivo</td><td style="padding:8px 12px;color:#dc2626;border-bottom:1px solid #f3f4f6;font-weight:600">Nao finalizado ate 2 dias antes</td></tr>'+
+    '</table></div>'+
+    '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">'+
+    '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>'+
+    '</div></div>'+
+    '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">E-mail automatico do sistema de gestao cirurgica.</p>'+
+    '</div></body></html>';
+
+  for(var ei=0; ei<todosEmails.length; ei++){
+    await sb.from('email_notifications').insert({
+      to_email: todosEmails[ei], to_name: '', subject: assunto,
+      body: corpo, crm: 'FLUT_AUTOCANCEL_'+cir.id, status: 'pending'
+    });
+  }
+  try {
+    await sb.from('notificacoes_medicos').insert({
+      crm: 'ADMIN', tipo: 'cancelamento_flutuante',
+      titulo: 'Flutuante cancelado automaticamente',
+      mensagem: 'Sala '+(cir.sala||'-')+' | Data: '+formatDate(cir.data)+' | Grade liberada | Criado por: '+(cir.registrado_por||'N/I'),
+      lida: false
+    });
+  } catch(e){}
+  showToast('Flutuante auto-cancelado: '+(cir.sala||'')+' '+formatDate(cir.data));
+}
+
+async function coletarEmailsFlutuante(cir){
+  var emails = [];
+  if(cir.registrado_por_email) emails.push(cir.registrado_por_email);
+  try {
+    var {data:admins} = await sb.from('usuarios').select('email').or('perfil.eq.admin,perfil.eq.admin2,is_admin.eq.true').eq('status','aprovado');
+    if(admins){
+      for(var a=0; a<admins.length; a++){
+        if(admins[a].email && emails.indexOf(admins[a].email)<0) emails.push(admins[a].email);
+      }
+    }
+  } catch(e){}
+  return emails;
 }
 
 // ============ VALIDAÇÃO ID DUPLICADO ============
@@ -5887,6 +6108,24 @@ async function salvar(){
     await modalAlert(msgInt, 'Intervalo Insuficiente');
     return;
   }
+  // ====== VERIFICAR CONFLITO COM FLUTUANTES ======
+  if(!editandoId){
+    let conflitoFlut = verificarConflitoFlutuante(c.data, c.horario, c.tempo, c.sala, null);
+    if(conflitoFlut){
+      let msgFlut = (c.flutuante ? 'Este periodo ja esta reservado por outro flutuante!' : 'Atencao: existe uma reserva flutuante neste periodo!')+
+        '\n\nSala: '+conflitoFlut.sala+
+        '\nData: '+formatDate(conflitoFlut.data)+
+        '\nHorario: '+conflitoFlut.horario+
+        '\nMedico: '+(conflitoFlut.medico||'-')+
+        '\nAgendado por: '+(conflitoFlut.registrado_por||'N/I')+
+        '\n\nHorarios alternativos disponiveis:\n'+
+        sugerirHorariosAlternativos(c.data, c.sala, c.tempo, c.horario)+
+        '\n\nDeseja prosseguir mesmo assim?';
+      let prosseguir = await modalConfirm(msgFlut, 'Conflito de Flutuante');
+      if(!prosseguir) return;
+    }
+  }
+
   let btn = document.getElementById("btnConfirmar");
   if(btn.classList.contains('disabled')){
     await modalAlert("Existem conflitos que impedem o agendamento.", 'Conflitos');
@@ -6252,6 +6491,9 @@ function renderLista(){
   let fStatus = document.getElementById("filtroListaStatus").value;
   let fGrupo = document.getElementById("filtroListaGrupo").value;
 
+  let fMedico = (document.getElementById("filtroListaMedico")||{}).value||'';
+  let fMedicoLower = fMedico.trim().toLowerCase();
+
   let lista = [...dados];
   if(fDataIni) lista = lista.filter(c=>c.data>=fDataIni);
   if(fDataFim) lista = lista.filter(c=>c.data<=fDataFim);
@@ -6260,6 +6502,7 @@ function renderLista(){
   if(fStatus==='suspenso') lista = lista.filter(c=>c.suspenso);
   if(fGrupo==='grupo') lista = lista.filter(c=>grupoConvenio(c)==='grupo');
   if(fGrupo==='extra') lista = lista.filter(c=>grupoConvenio(c)==='extra');
+  if(fMedicoLower) lista = lista.filter(c=>(c.medico||'').toLowerCase().indexOf(fMedicoLower)>=0 || (c.crm||'').toLowerCase().indexOf(fMedicoLower)>=0);
 
   lista.sort((a,b)=>(a.data+a.horario).localeCompare(b.data+b.horario));
 
@@ -6296,6 +6539,47 @@ function renderLista(){
       '</td>'+
     '</tr>';
   }).join('');
+}
+
+// ============ AUTOCOMPLETE MÉDICO NO FILTRO DA LISTA ============
+function autocompleteMedicoFiltro(input){
+  var box = document.getElementById('filtroMedicoSugestoes');
+  var val = (input.value||'').trim().toLowerCase();
+  if(val.length < 2){ box.style.display='none'; renderLista(); return; }
+
+  // Buscar médicos que batem (nome ou CRM)
+  var matches = MEDICOS_CACHE.filter(function(m){
+    return (m.nome||'').toLowerCase().indexOf(val)>=0 || (m.crm||'').toLowerCase().indexOf(val)>=0;
+  }).slice(0, 8);
+
+  if(matches.length === 0){ box.style.display='none'; renderLista(); return; }
+
+  box.innerHTML = matches.map(function(m){
+    return '<div style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;font-size:13px" '+
+      'onmousedown="selecionarMedicoFiltro(\''+((m.nome||'').replace(/'/g,"\\'"))+'\',\''+m.crm+'\')">'+
+      '<strong>'+(m.nome||'-')+'</strong> <span style="color:#6b7280;font-size:11px">CRM '+(m.crm||'-')+'</span>'+
+    '</div>';
+  }).join('');
+  box.style.display='block';
+
+  // Fechar ao clicar fora
+  setTimeout(function(){
+    document.addEventListener('click', function _closeMedFiltro(e){
+      if(!box.contains(e.target) && e.target !== input){
+        box.style.display='none';
+        document.removeEventListener('click', _closeMedFiltro);
+      }
+    });
+  }, 100);
+
+  renderLista();
+}
+
+function selecionarMedicoFiltro(nome, crm){
+  var input = document.getElementById('filtroListaMedico');
+  input.value = nome;
+  document.getElementById('filtroMedicoSugestoes').style.display='none';
+  renderLista();
 }
 
 function hojeLocal(){
@@ -7414,12 +7698,12 @@ async function gerarPdfEquipamentos(){
   let eqStart = mg;
 
   doc.setFillColor(50,50,50);
-  doc.rect(eqStart, y, eqTW, 8, 'F');
+  doc.rect(eqStart, y, eqTW, 9, 'F');
   doc.setFontSize(8); doc.setFont(undefined,'bold'); doc.setTextColor(255);
   let ex = eqStart;
-  eqCols.forEach(function(c){ doc.text(c.l, ex + c.w/2, y+5.5, {align:'center', baseline:'middle'}); ex += c.w; });
+  eqCols.forEach(function(c){ doc.text(c.l, ex + c.w/2, y+5, {align:'center'}); ex += c.w; });
   doc.setTextColor(0);
-  y += 9;
+  y += 10;
   doc.setFont(undefined,'normal'); doc.setFontSize(8);
 
   recursosFiltrados.forEach(function(r, idx){
@@ -9160,6 +9444,8 @@ async function initApp(){
 
     // Restaurar rascunho do formulário (se houver)
     setTimeout(()=> autoRestoreForm(), 500);
+    // Verificar lembretes de flutuantes pendentes
+    setTimeout(()=> verificarLembretesFlutuantes(), 3000);
   } catch(err) {
     console.error('Erro ao carregar:', err);
     document.getElementById("grade").innerHTML = '<p style="text-align:center;padding:40px;color:var(--danger)">Erro ao conectar ao Supabase. Verifique a conexão.</p>';
@@ -10371,20 +10657,84 @@ async function notificarMedicoPorEmail(crm, assunto, mensagem){
 // Notificar médico quando há movimentação envolvendo ele
 async function notificarMedicoMovimentacao(crm, tipo, detalhes){
   let assuntos = {
-    'novo_agendamento': '📅 Nova Cirurgia Agendada',
-    'cancelamento': '❌ Cirurgia Cancelada',
-    'suspensao': '⚠️ Cirurgia Suspensa',
-    'alteracao': '🔄 Alteração no Agendamento',
-    'troca_sala': '🏥 Troca de Sala',
-    'aprovacao': '✅ Cadastro Aprovado'
+    'novo_agendamento': 'Nova Cirurgia Agendada - Hospital Ana Costa',
+    'cancelamento': 'Cirurgia Cancelada - Hospital Ana Costa',
+    'suspensao': 'Cirurgia Suspensa - Hospital Ana Costa',
+    'alteracao': 'Alteracao no Agendamento - Hospital Ana Costa',
+    'troca_sala': 'Troca de Sala - Hospital Ana Costa',
+    'aprovacao': 'Cadastro Aprovado - Portal Medico'
   };
-  let assunto = assuntos[tipo] || '🔔 Atualização - Hospital Ana Costa';
+  let assunto = assuntos[tipo] || 'Atualizacao - Hospital Ana Costa';
 
-  let corpo = 'Prezado(a) Dr(a),\n\n' +
-    'Informamos que houve uma atualização no sistema de agendamento cirúrgico do Hospital Ana Costa:\n\n' +
-    detalhes + '\n\n' +
-    'Acesse o Portal Médico para mais detalhes.\n\n' +
-    'Atenciosamente,\nEquipe de Agendamento - Centro Cirúrgico\nHospital Ana Costa';
+  let cores = {
+    'novo_agendamento': '#0d9488',
+    'cancelamento': '#dc2626',
+    'suspensao': '#d97706',
+    'alteracao': '#2563eb',
+    'troca_sala': '#7c3aed',
+    'aprovacao': '#059669'
+  };
+  let icones = {
+    'novo_agendamento': '&#128197;',
+    'cancelamento': '&#10060;',
+    'suspensao': '&#9888;&#65039;',
+    'alteracao': '&#128260;',
+    'troca_sala': '&#127963;&#65039;',
+    'aprovacao': '&#9989;'
+  };
+  let titulos = {
+    'novo_agendamento': 'Nova Cirurgia Agendada',
+    'cancelamento': 'Cirurgia Cancelada',
+    'suspensao': 'Cirurgia Suspensa',
+    'alteracao': 'Alteracao no Agendamento',
+    'troca_sala': 'Troca de Sala',
+    'aprovacao': 'Cadastro Aprovado no Portal'
+  };
+  let cor = cores[tipo] || '#0d9488';
+  let icone = icones[tipo] || '&#128276;';
+  let titulo = titulos[tipo] || 'Atualizacao';
+
+  // Formatar detalhes em linhas HTML
+  let detalhesHTML = detalhes.replace(/\n/g, '<br>');
+  // Extrair linhas para cards individuais
+  let linhas = detalhes.split('\n').filter(function(l){return l.trim();});
+  let linhasHTML = '';
+  for(let li=0; li<linhas.length; li++){
+    let partes = linhas[li].split(':');
+    if(partes.length >= 2){
+      let label = partes[0].trim();
+      let valor = partes.slice(1).join(':').trim();
+      linhasHTML += '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">'+label+'</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+valor+'</td></tr>';
+    } else {
+      linhasHTML += '<tr><td colspan="2" style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+linhas[li]+'</td></tr>';
+    }
+  }
+
+  let corpo = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">' +
+    '<div style="max-width:600px;margin:0 auto;padding:20px">' +
+    // Header
+    '<div style="background:'+cor+';border-radius:12px 12px 0 0;padding:24px 30px;text-align:center">' +
+    '<div style="font-size:28px;margin-bottom:6px">'+icone+'</div>' +
+    '<h1 style="color:#fff;margin:0;font-size:20px;font-weight:700">'+titulo+'</h1>' +
+    '<p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">Hospital Ana Costa - Centro Cirurgico</p>' +
+    '</div>' +
+    // Body
+    '<div style="background:#fff;padding:28px 30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
+    '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a) Dr(a),</p>' +
+    '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">Informamos que houve uma atualizacao no sistema de agendamento cirurgico:</p>' +
+    // Detalhes em tabela
+    '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">' +
+    '<table style="width:100%;border-collapse:collapse">' + linhasHTML + '</table>' +
+    '</div>' +
+    '<p style="color:#6b7280;font-size:13px;margin:0 0 20px;line-height:1.5">Acesse o Portal Medico para mais detalhes sobre esta movimentacao.</p>' +
+    // Assinatura
+    '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">' +
+    '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>' +
+    '</div>' +
+    '</div>' +
+    // Footer
+    '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">Este e-mail foi enviado automaticamente pelo sistema de gestao cirurgica.<br>Favor nao responder.</p>' +
+    '</div></body></html>';
 
   await notificarMedicoPorEmail(crm, assunto, corpo);
 
