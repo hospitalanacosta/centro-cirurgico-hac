@@ -6183,8 +6183,8 @@ async function salvar(){
     let dHoje = new Date(hoje+'T12:00:00');
     let dData = new Date(c.data+'T12:00:00');
     let diasCorridos = Math.round((dData - dHoje) / (1000*60*60*24));
-    if(diasCorridos < 45){
-      await modalAlert('Flutuante so pode ser agendado com no minimo 45 dias de antecedencia.\n\nData selecionada: '+formatDate(c.data)+' ('+diasCorridos+' dias)\nMinimo necessario: 45 dias corridos', 'Antecedencia Insuficiente');
+    if(diasCorridos < 60){
+      await modalAlert('Flutuante so pode ser agendado com no minimo 60 dias de antecedencia.\n\nData selecionada: '+formatDate(c.data)+' ('+diasCorridos+' dias)\nMinimo necessario: 60 dias corridos', 'Antecedencia Insuficiente');
       return;
     }
   }
