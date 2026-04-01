@@ -1192,6 +1192,42 @@ body {
   border-left-color: var(--accent);
   background: linear-gradient(135deg, #edf7ee, #f8fdf8);
 }
+.cirurgia-card.flutuante {
+  background: repeating-linear-gradient(
+    135deg,
+    #f5f5f5,
+    #f5f5f5 8px,
+    #e0e0e0 8px,
+    #e0e0e0 10px
+  ) !important;
+  border-left: 4px solid #616161 !important;
+  border-color: #9e9e9e !important;
+  position: relative;
+}
+.cirurgia-card.flutuante::before {
+  content: '⏳ FLUTUANTE';
+  position: absolute;
+  top: 4px;
+  right: 28px;
+  background: #424242;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+.cirurgia-card.flutuante .hora {
+  color: #424242 !important;
+}
+.cirurgia-card.flutuante .paciente-nome {
+  color: #616161 !important;
+}
+.cirurgia-card.flutuante .detalhe {
+  color: #757575 !important;
+}
 .cirurgia-card .hora {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
@@ -5701,9 +5737,9 @@ async function enviarLembreteFlutuante(cir, numAviso, diasRestantes){
     '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">E-mail automatico do sistema de gestao cirurgica.</p>'+
     '</div></body></html>';
 
-  for(var ei=0; ei<todosEmails.length; ei++){
+  if(todosEmails.length > 0){
     await sb.from('email_notifications').insert({
-      to_email: todosEmails[ei], to_name: '', subject: assunto,
+      to_email: todosEmails.join(','), to_name: '', subject: assunto,
       body: corpo, crm: 'FLUT_LEMBRETE_'+numAviso+'_'+cir.id, status: 'pending'
     });
   }
@@ -5756,9 +5792,9 @@ async function autoCancelarFlutuante(cir){
     '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">E-mail automatico do sistema de gestao cirurgica.</p>'+
     '</div></body></html>';
 
-  for(var ei=0; ei<todosEmails.length; ei++){
+  if(todosEmails.length > 0){
     await sb.from('email_notifications').insert({
-      to_email: todosEmails[ei], to_name: '', subject: assunto,
+      to_email: todosEmails.join(','), to_name: '', subject: assunto,
       body: corpo, crm: 'FLUT_AUTOCANCEL_'+cir.id, status: 'pending'
     });
   }
@@ -6077,6 +6113,8 @@ async function salvar(){
     clearFormDraft();
     atualizarHeader();
     renderRecursosGrid();
+    desenhar();
+    renderLista();
     return;
   }
 
@@ -6135,16 +6173,18 @@ async function salvar(){
       return;
     }
   }
-  // ====== VALIDAR DATA DO FLUTUANTE ======
+  // ====== VALIDAR DATA DO FLUTUANTE (45 DIAS CORRIDOS) ======
   if(c.flutuante && !editandoId){
     let hoje = hojeLocal();
     if(c.data <= hoje){
       await modalAlert('Flutuante nao pode ser agendado para data atual ou passada.\n\nSelecione uma data futura.', 'Data Invalida');
       return;
     }
-    let diasUteisAte = diffDiasUteis(hoje, c.data);
-    if(diasUteisAte < 30){
-      await modalAlert('Flutuante so pode ser agendado com no minimo 30 dias uteis de antecedencia.\n\nData selecionada: '+formatDate(c.data)+' ('+diasUteisAte+' dias uteis)\nMinimo necessario: 30 dias uteis', 'Antecedencia Insuficiente');
+    let dHoje = new Date(hoje+'T12:00:00');
+    let dData = new Date(c.data+'T12:00:00');
+    let diasCorridos = Math.round((dData - dHoje) / (1000*60*60*24));
+    if(diasCorridos < 45){
+      await modalAlert('Flutuante so pode ser agendado com no minimo 45 dias de antecedencia.\n\nData selecionada: '+formatDate(c.data)+' ('+diasCorridos+' dias)\nMinimo necessario: 45 dias corridos', 'Antecedencia Insuficiente');
       return;
     }
   }
@@ -6207,16 +6247,24 @@ const MOTIVOS_SUSPENSAO = [
 ];
 
 async function cancelar(i){
-  let motivo = await promptMotivo('Cancelar cirurgia de '+dados[i].paciente, MOTIVOS_CANCELAMENTO);
+  let cir = dados[i];
+  let _pac = cir.paciente||'';
+  let _crm = cir.crm||'';
+  let _id = cir.id;
+  let _sala = cir.sala||'';
+  let _hor = cir.horario||'';
+  let _data = cir.data||'';
+  let _proc = cir.procedimento||'-';
+  let motivo = await promptMotivo('Cancelar cirurgia de '+_pac, MOTIVOS_CANCELAMENTO);
   if(motivo !== null){
-    await DB.updateCirurgia(dados[i].id, {cancelado:true, motivo_cancelamento:motivo});
+    await DB.updateCirurgia(_id, {cancelado:true, motivo_cancelamento:motivo});
     await DB.loadCirurgias();
-    registrarLog('cancelamento', dados[i].paciente, 'Motivo: '+motivo+' | '+dados[i].sala+' '+dados[i].horario);
-    showToast('Cirurgia cancelada: '+dados[i].paciente);
-    notificarMedico(dados[i].crm, 'cancelamento', 'Cirurgia Cancelada',
-      'Paciente: '+(dados[i].paciente||'')+' | Motivo: '+motivo+' | Data: '+(dados[i].data||'')+' '+(dados[i].horario||''), dados[i].id);
-    if(dados[i].crm) notificarMedicoMovimentacao(dados[i].crm, 'cancelamento',
-      'Cirurgia cancelada:\nPaciente: '+(dados[i].paciente||'-')+'\nData: '+formatDate(dados[i].data||'')+'\nMotivo: '+motivo);
+    registrarLog('cancelamento', _pac, 'Motivo: '+motivo+' | '+_sala+' '+_hor);
+    showToast('Cirurgia cancelada: '+_pac);
+    notificarMedico(_crm, 'cancelamento', 'Cirurgia Cancelada',
+      'Paciente: '+_pac+' | Motivo: '+motivo+' | Data: '+_data+' '+_hor, _id);
+    if(_crm) notificarMedicoMovimentacao(_crm, 'cancelamento',
+      'Cirurgia cancelada:\nPaciente: '+_pac+'\nProcedimento: '+_proc+'\nData: '+formatDate(_data)+'\nHorário: '+_hor+'\nSala: '+_sala+'\nMotivo: '+motivo);
     desenhar(); renderLista();
   }
 }
@@ -6247,18 +6295,33 @@ async function promptMotivo(titulo, opcoes){
 }
 
 async function reativar(i){
-  if(await modalConfirm("Reativar cirurgia de "+dados[i].paciente+"?", 'Reativar Cirurgia')){
+  let cir = dados[i];
+  let _pac = cir.paciente||'';
+  let _crm = cir.crm||'';
+  let _id = cir.id;
+  let _sala = cir.sala||'';
+  let _hor = cir.horario||'';
+  let _data = cir.data||'';
+  let _proc = cir.procedimento||'-';
+  if(await modalConfirm("Reativar cirurgia de "+_pac+"?", 'Reativar Cirurgia')){
     let updates = {cancelado:false, suspenso:false, motivo_cancelamento:null, motivo_suspensao:null};
     let alterarData = await modalConfirm("Deseja alterar a data da cirurgia?", 'Alterar Data');
     if(alterarData){
       let novaData = await modalPrompt("Nova data (AAAA-MM-DD):", hojeLocal(), 'Nova Data');
-      let novoHorario = await modalPrompt("Novo horário (HH:MM):", dados[i].horario, 'Novo Horário');
+      let novoHorario = await modalPrompt("Novo horário (HH:MM):", _hor, 'Novo Horário');
       if(novaData && /^\d{4}-\d{2}-\d{2}$/.test(novaData)) updates.data = novaData;
       if(novoHorario && /^\d{2}:\d{2}$/.test(novoHorario)) updates.horario = novoHorario;
     }
-    await DB.updateCirurgia(dados[i].id, updates);
+    await DB.updateCirurgia(_id, updates);
     await DB.loadCirurgias();
-    showToast('✓ Cirurgia reativada: '+dados[i].paciente);
+    let dataFinal = updates.data || _data;
+    let horarioFinal = updates.horario || _hor;
+    showToast('✓ Cirurgia reativada: '+_pac);
+    registrarLog('reativacao', _pac, 'Reativada: '+_proc+' | '+_sala+' '+horarioFinal+' | Data: '+formatDate(dataFinal));
+    notificarMedico(_crm, 'alteracao', 'Cirurgia Reativada',
+      'Paciente: '+_pac+' | Procedimento: '+_proc+' | Data: '+formatDate(dataFinal)+' '+horarioFinal+' | Sala: '+_sala, _id);
+    if(_crm) notificarMedicoMovimentacao(_crm, 'reativacao',
+      'Cirurgia reativada:\nPaciente: '+_pac+'\nProcedimento: '+_proc+'\nData: '+formatDate(dataFinal)+'\nHorário: '+horarioFinal+'\nSala: '+_sala);
     desenhar(); renderLista();
   }
 }
@@ -6484,7 +6547,7 @@ function desenhar(){
         let recursos = c.recursos ? Object.keys(c.recursos).filter(k=>c.recursos[k]) : [];
 
         let card = document.createElement("div");
-        card.className = "cirurgia-card" + (isGrupo?" grupo":" extra");
+        card.className = "cirurgia-card" + (isGrupo?" grupo":" extra") + (c.flutuante?" flutuante":"");
         card.setAttribute("draggable","true");
         card.addEventListener('dragstart', function(e){ onDragStart(e, idx); });
         card.addEventListener('dragend', onDragEnd);
@@ -6492,10 +6555,11 @@ function desenhar(){
         card.innerHTML =
           '<span class="drag-handle" title="Arraste para mover de sala">⠿</span>'+
           '<div class="hora">'+c.horario + (c.tempo?' <span style="font-size:10px;opacity:0.7">('+c.tempo+'min)</span>':'') + '</div>'+
-          '<div class="paciente-nome">'+c.paciente+(c.identificacao?' <span class="detalhe">#'+c.identificacao+'</span>':'')+'</div>'+
+          '<div class="paciente-nome">'+(c.flutuante && !c.paciente ? '(Reserva Flutuante)' : c.paciente)+(c.identificacao?' <span class="detalhe">#'+c.identificacao+'</span>':'')+'</div>'+
           '<div class="detalhe">Dr(a). '+c.medico+(c.crm?' | CRM/CRO: '+c.crm:'')+'</div>'+
           '<div class="detalhe">'+c.procedimento+(c.codigoTuss?' | TUSS: '+c.codigoTuss:'')+'</div>'+
           '<div class="tags">'+
+            (c.flutuante?'<span class="tag" style="background:#424242;color:#fff;font-weight:700">\u23f3 FLUTUANTE</span>':'')+
             (isGrupo?'<span class="tag tag-grupo">GRUPO</span>':'<span class="tag tag-extra">EXTRA</span>')+
             (c.convenio?'<span class="tag tag-convenio">'+c.convenio+'</span>':'')+
             recursos.map(r=>'<span class="tag tag-recurso">'+r.toUpperCase()+'</span>').join('')+
@@ -8044,23 +8108,36 @@ function buscarCRM(){
     return;
   }
 
-  // Busca por nome (se digitou texto, não número)
-  if(isNaN(val) || val.length > 8){
-    let resultados = MEDICOS_CACHE.filter(m => m.nome.toLowerCase().includes(val.toLowerCase())).slice(0,8);
-    if(resultados.length > 0){
-      let html = '<div style="background:white;border:1.5px solid var(--primary);border-radius:8px;max-height:200px;overflow-y:auto;position:absolute;z-index:50;width:300px;box-shadow:var(--shadow-lg)">';
-      resultados.forEach(m => {
-        html += '<div onclick="selecionarMedico(\''+m.crm+'\')" style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0f0f0;transition:background 0.15s" onmouseover="this.style.background=\'#e8f5e9\'" onmouseout="this.style.background=\'white\'">';
-        html += '<b>'+m.nome+'</b> <span style="color:var(--text-secondary)">CRM/CRO: '+m.crm+'</span></div>';
-      });
-      html += '</div>';
-      statusEl.innerHTML = html;
-      return;
-    }
+  // Busca parcial — funciona tanto para CRM (números) quanto para nome (texto)
+  let ql = val.toLowerCase();
+  let resultados = MEDICOS_CACHE.filter(function(m){
+    return m.crm.startsWith(val) || m.crm.includes(val) || m.nome.toLowerCase().includes(ql);
+  }).slice(0,10);
+
+  if(resultados.length > 0){
+    let html = '<div id="crmSuggestions" style="background:white;border:1.5px solid var(--primary);border-radius:8px;max-height:240px;overflow-y:auto;position:absolute;z-index:50;width:340px;box-shadow:var(--shadow-lg)">';
+    resultados.forEach(function(m){
+      html += '<div onclick="selecionarMedico(\''+m.crm+'\')" style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0f0f0;transition:background 0.15s;display:flex;justify-content:space-between;align-items:center" onmouseover="this.style.background=\'#e8f5e9\'" onmouseout="this.style.background=\'white\'">' +
+        '<div><b>'+m.nome+'</b></div>' +
+        '<div style="text-align:right"><span style="color:var(--primary);font-family:JetBrains Mono,monospace;font-weight:700;font-size:11px">'+m.crm+'</span>' +
+        (m.especialidade ? '<br><span style="color:var(--text-secondary);font-size:10px">'+m.especialidade+'</span>' : '') +
+        '</div></div>';
+    });
+    html += '</div>';
+    statusEl.innerHTML = html;
+    return;
   }
 
   statusEl.innerHTML = '<span style="color:var(--warning)">⚠ Não encontrado. Preencha manualmente — será salvo ao confirmar.</span>';
 }
+
+// Fechar dropdown CRM ao clicar fora
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#crm') && !e.target.closest('#crmStatus')){
+    let dd = document.getElementById('crmSuggestions');
+    if(dd) dd.remove();
+  }
+});
 
 function selecionarMedico(crm){
   let med = indiceCRM[crm];
@@ -9803,6 +9880,38 @@ async function fazerCadastroMedico(){
   });
   if(error){ msgEl.className='msg erro'; msgEl.innerText='Erro: '+error.message; return; }
 
+  // Enviar email de boas-vindas
+  try {
+    let corpoBoasVindas = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">' +
+      '<div style="max-width:600px;margin:0 auto;padding:20px">' +
+      '<div style="background:linear-gradient(135deg,#0d9488,#14b8a6);border-radius:12px 12px 0 0;padding:24px 30px;text-align:center">' +
+      '<div style="font-size:28px;margin-bottom:6px">&#128075;</div>' +
+      '<h1 style="color:#fff;margin:0;font-size:20px;font-weight:700">Bem-vindo(a) ao Portal Medico!</h1>' +
+      '<p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">Hospital Ana Costa - Centro Cirurgico</p>' +
+      '</div>' +
+      '<div style="background:#fff;padding:28px 30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
+      '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a) Dr(a). '+nome+',</p>' +
+      '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">Seu cadastro no Portal Medico do Hospital Ana Costa foi recebido com sucesso!</p>' +
+      '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">' +
+      '<table style="width:100%;border-collapse:collapse">' +
+      '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Nome</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+nome+'</td></tr>' +
+      '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">CRM/CRO</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+crm+'</td></tr>' +
+      (espec ? '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Especialidade</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+espec+'</td></tr>' : '') +
+      '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Status</td><td style="padding:8px 12px;color:#d97706;font-weight:600;border-bottom:1px solid #f3f4f6">Aguardando Aprovacao</td></tr>' +
+      '</table></div>' +
+      '<p style="color:#6b7280;font-size:13px;margin:0 0 20px;line-height:1.5">Seu cadastro sera analisado pela equipe administrativa. Voce recebera um e-mail de confirmacao quando for aprovado.</p>' +
+      '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">' +
+      '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>' +
+      '</div></div>' +
+      '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">Este e-mail foi enviado automaticamente pelo sistema.</p>' +
+      '</div></body></html>';
+    await sb.from('email_notifications').insert({
+      to_email: email, to_name: nome,
+      subject: 'Bem-vindo ao Portal Medico - Hospital Ana Costa',
+      body: corpoBoasVindas, crm: crm, status: 'pending'
+    });
+  } catch(e){ console.log('Erro email boas-vindas:', e); }
+
   // Limpar formulário
   document.getElementById('medCadNome').value='';
   document.getElementById('medCadCRM').value='';
@@ -10702,7 +10811,9 @@ async function notificarMedicoMovimentacao(crm, tipo, detalhes){
     'suspensao': 'Cirurgia Suspensa - Hospital Ana Costa',
     'alteracao': 'Alteracao no Agendamento - Hospital Ana Costa',
     'troca_sala': 'Troca de Sala - Hospital Ana Costa',
-    'aprovacao': 'Cadastro Aprovado - Portal Medico'
+    'aprovacao': 'Cadastro Aprovado - Portal Medico',
+    'reativacao': 'Cirurgia Reativada - Hospital Ana Costa',
+    'boas_vindas': 'Bem-vindo ao Portal Medico - Hospital Ana Costa'
   };
   let assunto = assuntos[tipo] || 'Atualizacao - Hospital Ana Costa';
 
@@ -10712,7 +10823,9 @@ async function notificarMedicoMovimentacao(crm, tipo, detalhes){
     'suspensao': '#d97706',
     'alteracao': '#2563eb',
     'troca_sala': '#7c3aed',
-    'aprovacao': '#059669'
+    'aprovacao': '#059669',
+    'reativacao': '#16a34a',
+    'boas_vindas': '#0d9488'
   };
   let icones = {
     'novo_agendamento': '&#128197;',
@@ -10720,7 +10833,9 @@ async function notificarMedicoMovimentacao(crm, tipo, detalhes){
     'suspensao': '&#9888;&#65039;',
     'alteracao': '&#128260;',
     'troca_sala': '&#127963;&#65039;',
-    'aprovacao': '&#9989;'
+    'aprovacao': '&#9989;',
+    'reativacao': '&#9989;',
+    'boas_vindas': '&#128075;'
   };
   let titulos = {
     'novo_agendamento': 'Nova Cirurgia Agendada',
@@ -10728,7 +10843,9 @@ async function notificarMedicoMovimentacao(crm, tipo, detalhes){
     'suspensao': 'Cirurgia Suspensa',
     'alteracao': 'Alteracao no Agendamento',
     'troca_sala': 'Troca de Sala',
-    'aprovacao': 'Cadastro Aprovado no Portal'
+    'aprovacao': 'Cadastro Aprovado no Portal',
+    'reativacao': 'Cirurgia Reativada',
+    'boas_vindas': 'Bem-vindo ao Portal Medico'
   };
   let cor = cores[tipo] || '#0d9488';
   let icone = icones[tipo] || '&#128276;';
@@ -10904,6 +11021,9 @@ async function aprovarMedicoPortal(crm){
   showToast('\u2705 M\u00e9dico aprovado');
   renderMedicosPortalAdmin();
   atualizarBadgePendenciasMedico();
+  // Enviar email e notificação de aprovação
+  notificarMedicoMovimentacao(crm, 'aprovacao',
+    'Seu cadastro no Portal Medico foi APROVADO!\nVoce ja pode acessar o sistema com seu CRM e senha.\nBem-vindo(a) ao Hospital Ana Costa!');
 }
 
 async function rejeitarMedicoPortal(crm){
