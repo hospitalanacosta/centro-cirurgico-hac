@@ -4339,11 +4339,34 @@ function aplicarPermissoes(){
   let hasCC = ehAdmin || perms.acesso_cc !== false;
   let hasHemo = ehAdmin || perms.acesso_hemo !== false;
 
-  let abasCC = ['form','mapa','disponibilidade','lista','escalaFixa','equipamentos','salas']; // Abas exclusivas de CC
+  let abasCC = ['form','mapa','disponibilidade','escalaFixa','equipamentos','salas']; // Abas exclusivas de CC
   abasCC.forEach(tabName => {
     let tabEl = document.querySelector('.tab[data-tab="'+tabName+'"]');
     if(tabEl) tabEl.style.display = hasCC ? '' : 'none';
   });
+
+  // Lista Geral: visível se tem CC OU Hemo
+  let tabLista = document.querySelector('.tab[data-tab="lista"]');
+  if(tabLista) tabLista.style.display = (hasCC || hasHemo) ? '' : 'none';
+
+  // Toggle buttons da lista: mostrar/ocultar conforme permissão
+  let btnListaTodosEl = document.getElementById('btnListaTodos');
+  let btnListaCCEl = document.getElementById('btnListaCC');
+  let btnListaHemoEl = document.getElementById('btnListaHemo');
+  if(btnListaTodosEl) btnListaTodosEl.style.display = (hasCC && hasHemo) ? '' : 'none';
+  if(btnListaCCEl) btnListaCCEl.style.display = hasCC ? '' : 'none';
+  if(btnListaHemoEl) btnListaHemoEl.style.display = hasHemo ? '' : 'none';
+
+  // Definir módulo padrão da lista conforme acesso
+  if(hasCC && hasHemo){ window._listaModulo = 'todos'; }
+  else if(hasCC){ window._listaModulo = 'cirurgia'; }
+  else if(hasHemo){ window._listaModulo = 'hemodinamica'; }
+  // Ativar visualmente o botão correto
+  if(btnListaTodosEl && btnListaCCEl && btnListaHemoEl){
+    [btnListaTodosEl,btnListaCCEl,btnListaHemoEl].forEach(b=>{ b.style.background='#fff'; b.style.color='var(--text-primary)'; b.classList.remove('active'); });
+    let activeBtn = window._listaModulo==='cirurgia' ? btnListaCCEl : window._listaModulo==='hemodinamica' ? btnListaHemoEl : btnListaTodosEl;
+    if(activeBtn){ activeBtn.style.background='var(--primary)'; activeBtn.style.color='#fff'; activeBtn.classList.add('active'); }
+  }
 
   let tabHemo = document.querySelector('.tab[data-tab="hemodinamica"]');
   if(tabHemo) tabHemo.style.display = hasHemo ? '' : 'none';
@@ -6740,10 +6763,17 @@ function renderLista(){
 
   let lista = [...dados];
 
-  // Filtrar por módulo (Cirurgia vs Hemodinâmica)
+  // Filtrar por módulo (Cirurgia vs Hemodinâmica) + respeitar permissões
   let mod = window._listaModulo || 'todos';
-  if(mod === 'cirurgia') lista = lista.filter(c => c.sala !== 'Hemodinâmica');
-  if(mod === 'hemodinamica') lista = lista.filter(c => c.sala === 'Hemodinâmica');
+  let ehAdm = usuarioLogado && (usuarioLogado.is_admin || usuarioLogado.perfil==='admin' || usuarioLogado.perfil==='admin2');
+  let prms = {};
+  if(!ehAdm){ try { prms = JSON.parse(usuarioLogado.permissoes||'{}'); } catch(e){} }
+  let temCC = ehAdm || prms.acesso_cc !== false;
+  let temHemo = ehAdm || prms.acesso_hemo !== false;
+
+  if(mod === 'cirurgia' || (!temHemo && temCC)) lista = lista.filter(c => c.sala !== 'Hemodinâmica');
+  else if(mod === 'hemodinamica' || (temHemo && !temCC)) lista = lista.filter(c => c.sala === 'Hemodinâmica');
+  // mod === 'todos' e tem ambos: mostra tudo
 
   if(fDataIni) lista = lista.filter(c=>c.data>=fDataIni);
   if(fDataFim) lista = lista.filter(c=>c.data<=fDataFim);
