@@ -4122,6 +4122,10 @@ async function renderAutorizacoes(){
     if(u.status==='bloqueado'){
       acoes += ' <button class="btn btn-success btn-sm" onclick="aprovarUsuario(\''+u.cpf+'\')">Desbloquear</button>';
     }
+    // Botão excluir (nunca para si mesmo, Admin I não exclui Admin II)
+    if(u.cpf !== usuarioLogado.cpf && (isAdmin2(usuarioLogado) || u.perfil!=='admin2')){
+      acoes += ' <button class="btn btn-sm" style="background:#7f1d1d;color:#fff;font-size:11px" onclick="excluirUsuario(\''+u.cpf+'\',\''+u.nome.replace(/'/g,"\\'")+'\')" title="Excluir permanentemente">🗑️</button>';
+    }
 
     // Select de nível (só para aprovados)
     let nivelHtml = '';
@@ -4151,9 +4155,53 @@ async function renderAutorizacoes(){
 }
 
 async function aprovarUsuario(cpf){
+  // Buscar dados do usuário para enviar email
+  let {data:usr} = await sb.from('usuarios').select('*').eq('cpf',cpf).single();
   await sb.from('usuarios').update({status:'aprovado',aprovado_por:usuarioLogado.nome}).eq('cpf',cpf);
   showToast('✅ Usuário aprovado');
   renderAutorizacoes();
+  atualizarBadgePendenciasMedico();
+
+  // Enviar email de aprovação
+  if(usr && usr.email){
+    try {
+      let corpoAprovacao =
+        '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f3f4f6;font-family:Segoe UI,Arial,sans-serif">'+
+        '<div style="max-width:520px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08)">'+
+        '<div style="background:linear-gradient(135deg,#166534,#22c55e);padding:24px 30px;text-align:center">'+
+        '<h1 style="color:#fff;margin:0;font-size:20px">&#9989; Acesso Aprovado!</h1>'+
+        '<p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:13px">Sistema de Agendamento Cirurgico</p>'+
+        '</div>'+
+        '<div style="padding:28px 30px">'+
+        '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a) <strong>'+usr.nome+'</strong>,</p>'+
+        '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">Seu cadastro no sistema de Agendamento Cirurgico do <strong>Hospital Ana Costa</strong> foi <strong style="color:#16a34a">APROVADO</strong> com sucesso!</p>'+
+        '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin-bottom:20px">'+
+        '<p style="margin:0;color:#166534;font-size:14px;font-weight:600">&#128273; Voce ja pode acessar o sistema</p>'+
+        '<p style="margin:6px 0 0;color:#15803d;font-size:13px">Utilize seu CPF e senha cadastrados para fazer login.</p>'+
+        '</div>'+
+        '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">'+
+        '<table style="width:100%;border-collapse:collapse">'+
+        '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:120px">Nome</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+usr.nome+'</td></tr>'+
+        '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:120px">CPF</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+usr.cpf+'</td></tr>'+
+        (usr.setor ? '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:120px">Setor</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+usr.setor+'</td></tr>' : '')+
+        '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:120px">Status</td><td style="padding:8px 12px;color:#16a34a;font-weight:600;border-bottom:1px solid #f3f4f6">Aprovado &#9989;</td></tr>'+
+        '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;width:120px">Aprovado por</td><td style="padding:8px 12px;color:#1f2937">'+usuarioLogado.nome+'</td></tr>'+
+        '</table></div>'+
+        '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">'+
+        '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>'+
+        '</div></div>'+
+        '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0">Este e-mail foi enviado automaticamente pelo sistema.</p>'+
+        '</div></body></html>';
+      await sb.from('email_notifications').insert({
+        to_email: usr.email,
+        to_name: usr.nome,
+        subject: 'Acesso Aprovado - Sistema de Agendamento Cirurgico - Hospital Ana Costa',
+        body: corpoAprovacao,
+        crm: 'USR_APROVADO_'+usr.cpf,
+        status: 'pending'
+      });
+    } catch(e){ console.log('Erro email aprovacao usuario:', e); }
+  }
 }
 
 async function rejeitarUsuario(cpf){
@@ -4171,6 +4219,16 @@ async function bloquearUsuario(cpf){
     showToast('🚫 Usuário bloqueado');
     renderAutorizacoes();
   }
+}
+
+async function excluirUsuario(cpf, nome){
+  if(!await modalConfirm('Excluir PERMANENTEMENTE o usuário "'+nome+'" (CPF: '+cpf+')?\n\nEsta ação não pode ser desfeita!','🗑️ Excluir Usuário')) return;
+  try {
+    await sb.from('usuarios').delete().eq('cpf',cpf);
+    showToast('🗑️ Usuário excluído permanentemente');
+    renderAutorizacoes();
+    atualizarBadgePendenciasMedico();
+  } catch(e){ showToast('❌ Erro ao excluir: '+e.message); }
 }
 
 async function alterarNivel(cpf, novoPerfil){
