@@ -4320,12 +4320,14 @@ function aplicarPermissoes(){
 // ============ BADGE PENDÊNCIAS MÉDICOS ============
 async function atualizarBadgePendenciasMedico(){
   try {
-    // Autorizações: só médicos pendentes de aprovação
-    let {count:nPendentes} = await sb.from('medicos_portal').select('crm',{count:'exact',head:true}).eq('status','pendente');
+    // Autorizações: médicos pendentes de aprovação no portal
+    let {count:nPendentesMed} = await sb.from('medicos_portal').select('crm',{count:'exact',head:true}).eq('status','pendente');
+    // Autorizações: usuários pendentes de aprovação no sistema
+    let {count:nPendentesUsr} = await sb.from('usuarios').select('cpf',{count:'exact',head:true}).eq('status','pendente');
     let b1 = document.getElementById('badgePendenteMedAut');
     if(b1){
-      let np = nPendentes||0;
-      if(np>0){ b1.style.display='inline-block'; b1.textContent='+'+np; }
+      let totalPend = (nPendentesMed||0) + (nPendentesUsr||0);
+      if(totalPend>0){ b1.style.display='inline-block'; b1.textContent='+'+totalPend; }
       else { b1.style.display='none'; }
     }
     // Portal Médico: só notificações de atividade (disponibilidade, bloqueios, conflitos)
