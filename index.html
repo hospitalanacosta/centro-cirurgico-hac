@@ -4489,8 +4489,15 @@ let ESCALAS_CACHE = [];
 const DB = {
   // --- CIRURGIAS ---
   async loadCirurgias(){
-    const {data,error} = await sb.from('cirurgias').select('*').order('data').order('horario');
-    if(error){ console.error('Erro cirurgias:', error); return; }
+    let all = []; let from = 0; let batchSize = 1000;
+    while(true){
+      const {data,error} = await sb.from('cirurgias').select('*').order('data').order('horario').range(from, from+batchSize-1);
+      if(error){ console.error('Erro cirurgias:', error); break; }
+      all = all.concat(data);
+      if(data.length < batchSize) break;
+      from += batchSize;
+    }
+    const data = all;
     dados = data.map(c=>({
       ...c,
       horario: c.horario ? c.horario.substring(0,5) : '',
@@ -4629,9 +4636,8 @@ const DB = {
 
   // --- CONVÊNIOS ---
   async loadConvenios(){
-    const {data,error} = await sb.from('convenios').select('*').order('sigla');
-    if(error){ console.error('Erro convenios:', error); return; }
-    CONVENIO_CACHE = data;
+    const data = await this.fetchAll('convenios', 'sigla');
+    CONVENIO_CACHE = data || [];
   },
 
   async upsertConvenio(c){
