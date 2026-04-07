@@ -2729,6 +2729,13 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         <div class="form-group" style="display:flex;align-items:flex-end">
           <button class="btn btn-outline" onclick="abrirRelatorioFlutuantes()" style="white-space:nowrap;border-color:var(--warning);color:var(--warning)">🔄 Reservas Flutuantes</button>
         </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <div id="listaModuloToggle" style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);font-size:12px;font-weight:600">
+            <button class="btn-toggle-modulo active" onclick="setListaModulo('todos')" id="btnListaTodos" style="padding:6px 14px;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all .2s">📋 Todos</button>
+            <button class="btn-toggle-modulo" onclick="setListaModulo('cirurgia')" id="btnListaCC" style="padding:6px 14px;border:none;border-left:1px solid var(--border);cursor:pointer;background:#fff;color:var(--text-primary);transition:all .2s">🏥 Cirurgias</button>
+            <button class="btn-toggle-modulo" onclick="setListaModulo('hemodinamica')" id="btnListaHemo" style="padding:6px 14px;border:none;border-left:1px solid var(--border);cursor:pointer;background:#fff;color:var(--text-primary);transition:all .2s">🫀 Hemodinâmica</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3044,6 +3051,8 @@ tr.suspenso td { color: #e65100; font-style: italic; }
               <th>Nome</th>
               <th>Setor</th>
               <th style="text-align:center">📊 Dashboard</th>
+              <th style="text-align:center">🏥 Acesso CC</th>
+              <th style="text-align:center">❤️ Acesso Hemo</th>
               <th style="text-align:center">📄 PDF Mapa CC</th>
               <th style="text-align:center">📄 PDF Hemo</th>
               <th>Ação</th>
@@ -3241,8 +3250,13 @@ tr.suspenso td { color: #e65100; font-style: italic; }
     <div class="card">
       <div class="card-title">Agendar Hemodinâmica</div>
       <div class="form-grid">
-        <div class="form-group"><label>Data</label><input type="date" id="hemoAgData"></div>
-        <div class="form-group"><label>Horário</label><input type="time" id="hemoAgHorario"></div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="hemoFlutuante" onchange="alternarHemoFlutuante()"> Reserva Flutuante
+          </label>
+        </div>
+        <div class="form-group" id="hemoGroupData"><label>Data</label><input type="date" id="hemoAgData"></div>
+        <div class="form-group" id="hemoGroupHorario"><label>Horário</label><input type="time" id="hemoAgHorario"></div>
         <div class="form-group"><label>Tempo (min)</label><input type="number" id="hemoAgTempo" placeholder="60"></div>
         <div class="form-group"><label>Paciente</label><input type="text" id="hemoAgPaciente" placeholder="Nome" oninput="this.value=this.value.toUpperCase()"></div>
         <div class="form-group"><label>Prontuário</label><input type="text" id="hemoAgId" placeholder="Nº prontuário"></div>
@@ -4210,11 +4224,17 @@ async function renderPermissoes(){
   tbody.innerHTML = data.filter(u=>u.perfil!=='admin'&&u.perfil!=='admin2').map(u=>{
     let perms = {};
     try { perms = JSON.parse(u.permissoes||'{}'); } catch(e){}
-    let chk = (key) => perms[key] ? 'checked' : '';
+    let chk = (key) => {
+      if(perms[key] !== undefined) return perms[key] ? 'checked' : '';
+      if(key === 'acesso_cc' || key === 'acesso_hemo') return 'checked'; // Default retrocompatibilidade
+      return '';
+    };
     return '<tr>'+
       '<td style="font-weight:600">'+u.nome+'</td>'+
       '<td>'+(u.setor||'-')+'</td>'+
       '<td style="text-align:center"><input type="checkbox" '+chk('dashboard')+' data-cpf="'+u.cpf+'" data-perm="dashboard" onchange="marcarPermissao(this)"></td>'+
+      '<td style="text-align:center"><input type="checkbox" '+chk('acesso_cc')+' data-cpf="'+u.cpf+'" data-perm="acesso_cc" onchange="marcarPermissao(this)"></td>'+
+      '<td style="text-align:center"><input type="checkbox" '+chk('acesso_hemo')+' data-cpf="'+u.cpf+'" data-perm="acesso_hemo" onchange="marcarPermissao(this)"></td>'+
       '<td style="text-align:center"><input type="checkbox" '+chk('pdf_cc')+' data-cpf="'+u.cpf+'" data-perm="pdf_cc" onchange="marcarPermissao(this)"></td>'+
       '<td style="text-align:center"><input type="checkbox" '+chk('pdf_hemo')+' data-cpf="'+u.cpf+'" data-perm="pdf_hemo" onchange="marcarPermissao(this)"></td>'+
       '<td><button class="btn btn-primary btn-sm" onclick="salvarPermissoes(\''+u.cpf+'\')">Salvar</button></td>'+
@@ -4257,6 +4277,30 @@ function aplicarPermissoes(){
   // PDF Hemo button
   let btnHemo = document.getElementById('btnPdfHemo');
   if(btnHemo) btnHemo.style.display = (ehAdmin || perms.pdf_hemo) ? '' : 'none';
+
+  let hasCC = ehAdmin || perms.acesso_cc !== false;
+  let hasHemo = ehAdmin || perms.acesso_hemo !== false;
+
+  let abasCC = ['form','mapa','disponibilidade','lista','escalaFixa','equipamentos','salas']; // Abas exclusivas de CC
+  abasCC.forEach(tabName => {
+    let tabEl = document.querySelector('.tab[data-tab="'+tabName+'"]');
+    if(tabEl) tabEl.style.display = hasCC ? '' : 'none';
+  });
+
+  let tabHemo = document.querySelector('.tab[data-tab="hemodinamica"]');
+  if(tabHemo) tabHemo.style.display = hasHemo ? '' : 'none';
+
+  // Se nao tem CC, ocultamos o formulario padrao e forçamos hemo
+  if(!hasCC && hasHemo){
+    let pnForm = document.getElementById('panel-form');
+    let pnHemo = document.getElementById('panel-hemodinamica');
+    if(pnForm && pnForm.classList.contains('active')){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      if(tabHemo) tabHemo.classList.add('active');
+      if(pnHemo){ pnHemo.classList.add('active'); renderHemodinamica(); }
+    }
+  }
 
   // Admin-only tabs (always hidden for non-admin)
   if(ehAdmin){
@@ -5529,10 +5573,19 @@ function toggleFlutuante(on){
 }
 
 // ============ RELATÓRIO RESERVAS FLUTUANTES ============
-function abrirRelatorioFlutuantes(){
+window._flutuanteModulo = 'todos';
+
+function abrirRelatorioFlutuantes(modulo){
+  if(modulo !== undefined) window._flutuanteModulo = modulo;
+  let filtroMod = window._flutuanteModulo || 'todos';
   let hoje = hojeLocal();
   // Filtrar apenas flutuantes futuros (>= hoje) por padrao
   let flutuantes = dados.filter(c => c.flutuante && !c.cancelado && !c.suspenso && (c.data||'') >= hoje);
+
+  // Filtrar por módulo
+  if(filtroMod === 'cirurgia') flutuantes = flutuantes.filter(c => c.sala !== 'Hemodinâmica');
+  if(filtroMod === 'hemodinamica') flutuantes = flutuantes.filter(c => c.sala === 'Hemodinâmica');
+
   flutuantes.sort((a,b) => (a.data||'').localeCompare(b.data||'') || (a.horario||'').localeCompare(b.horario||''));
 
   let pendentes = flutuantes.filter(c => {
@@ -5575,9 +5628,23 @@ function abrirRelatorioFlutuantes(){
     '</tr>';
   }).join('');
 
+  // Toggle buttons
+  let btnStyle = function(mod){
+    let active = filtroMod === mod;
+    return 'padding:7px 16px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;'+
+      (active ? 'background:var(--primary);color:#fff;' : 'background:#fff;color:var(--text-primary);');
+  };
+  let toggleHtml =
+    '<div style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px">'+
+      '<button onclick="abrirRelatorioFlutuantes(\'todos\')" style="'+btnStyle('todos')+'">📋 Todos</button>'+
+      '<button onclick="abrirRelatorioFlutuantes(\'cirurgia\')" style="border-left:1px solid var(--border);'+btnStyle('cirurgia')+'">🏥 Cirurgias</button>'+
+      '<button onclick="abrirRelatorioFlutuantes(\'hemodinamica\')" style="border-left:1px solid var(--border);'+btnStyle('hemodinamica')+'">🫀 Hemodinâmica</button>'+
+    '</div>';
+
   let html = '<div style="padding:24px;max-height:80vh;overflow-y:auto">'+
     '<h2 style="margin:0 0 8px;color:var(--primary)">🔄 Relatório de Reservas Flutuantes</h2>'+
     '<p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px">Reservas flutuantes que precisam ser finalizadas com dados completos.</p>'+
+    toggleHtml+
     '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">'+
       '<div style="background:#e8f5e9;padding:10px 16px;border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--primary)">'+totalFlut+'</div><div style="font-size:11px;color:var(--text-secondary)">Total Flutuantes</div></div>'+
       '<div style="background:#fff3e0;padding:10px 16px;border-radius:8px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--warning)">'+totalPend+'</div><div style="font-size:11px;color:var(--text-secondary)">Pendentes</div></div>'+
@@ -6581,6 +6648,27 @@ function desenhar(){
 }
 
 // ============ LISTA ============
+window._listaModulo = window._listaModulo || 'todos';
+
+function setListaModulo(mod){
+  window._listaModulo = mod;
+  ['btnListaTodos','btnListaCC','btnListaHemo'].forEach(id=>{
+    let el = document.getElementById(id);
+    if(!el) return;
+    el.style.background = '#fff';
+    el.style.color = 'var(--text-primary)';
+    el.classList.remove('active');
+  });
+  let activeId = mod==='cirurgia' ? 'btnListaCC' : mod==='hemodinamica' ? 'btnListaHemo' : 'btnListaTodos';
+  let btn = document.getElementById(activeId);
+  if(btn){
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#fff';
+    btn.classList.add('active');
+  }
+  renderLista();
+}
+
 function renderLista(){
   let fDataIni = document.getElementById("filtroListaDataIni").value;
   let fDataFim = document.getElementById("filtroListaDataFim").value;
@@ -6591,6 +6679,12 @@ function renderLista(){
   let fMedicoLower = fMedico.trim().toLowerCase();
 
   let lista = [...dados];
+
+  // Filtrar por módulo (Cirurgia vs Hemodinâmica)
+  let mod = window._listaModulo || 'todos';
+  if(mod === 'cirurgia') lista = lista.filter(c => c.sala !== 'Hemodinâmica');
+  if(mod === 'hemodinamica') lista = lista.filter(c => c.sala === 'Hemodinâmica');
+
   if(fDataIni) lista = lista.filter(c=>c.data>=fDataIni);
   if(fDataFim) lista = lista.filter(c=>c.data<=fDataFim);
   if(fStatus==='agendado') lista = lista.filter(c=>!c.cancelado&&!c.suspenso);
@@ -9351,10 +9445,19 @@ function renderHemodinamica(){
     let recursos = c.recursos ? Object.keys(c.recursos).filter(k=>c.recursos[k]) : [];
     let fimMin = toMin(c.horario) + (parseInt(c.tempo)||60);
     let fimH = minToH(fimMin);
+    
+    let flutuanteBadge = '';
+    let cardClass = 'cirurgia-card';
+    if(c.flutuante){
+      flutuanteBadge = '<span class="badge" style="background:#f59e0b;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;margin-bottom:4px;display:inline-block">⏳ FLUTUANTE</span><br>';
+      cardClass += ' flutuante';
+    }
+
     html += '<div style="position:relative;margin-bottom:12px">'+
       '<div style="position:absolute;left:-27px;top:8px;width:11px;height:11px;border-radius:50%;background:var(--primary);border:2px solid white;box-shadow:0 0 0 2px var(--primary)"></div>'+
-      '<div class="cirurgia-card" style="margin-left:10px">'+
-      '<div class="hora">'+c.horario+' → '+fimH+' <span style="font-size:10px;opacity:0.7">('+c.tempo+'min)</span></div>'+
+      '<div class="'+cardClass+'" style="margin-left:10px">'+
+      flutuanteBadge+
+      (c.flutuante ? '<div class="hora">HORÁRIO A DEFINIR <span style="font-size:10px;opacity:0.7">('+c.tempo+'min)</span></div>' : '<div class="hora">'+c.horario+' → '+fimH+' <span style="font-size:10px;opacity:0.7">('+c.tempo+'min)</span></div>')+
       '<div class="paciente-nome">'+(c.paciente||'Paciente não informado').toUpperCase()+(c.identificacao?' <span class="detalhe">#'+c.identificacao+'</span>':'')+'</div>'+
       '<div class="detalhe">Dr(a). '+(c.medico||'-')+(c.crm||c.codigo_medico?' | CRM/CRO: '+(c.crm||c.codigo_medico):'')+'</div>'+
       '<div class="detalhe" style="word-wrap:break-word;overflow-wrap:break-word;white-space:normal">'+(c.procedimento||'-')+'</div>'+
@@ -9387,9 +9490,31 @@ async function salvarHemodinamica(){
   let uti = document.getElementById('hemoUTI').checked;
   let sangue = document.getElementById('hemoSangue').checked;
 
-  if(!data || !horario){
+  let isFlutuante = document.getElementById('hemoFlutuante').checked;
+
+  if(!isFlutuante && (!data || !horario)){
     await modalAlert('Data e Horário são obrigatórios.', 'Campos Obrigatórios');
     return;
+  }
+  if(isFlutuante && !data){
+    await modalAlert('Data é obrigatória.', 'Campos Obrigatórios');
+    return;
+  }
+  
+  // ====== VALIDAR DATA DO FLUTUANTE (60 DIAS CORRIDOS) ======
+  if(isFlutuante && !window._hemoEditId){
+    let hoje = hojeLocal();
+    if(data <= hoje){
+      await modalAlert('Flutuante nao pode ser agendado para data atual ou passada.\n\nSelecione uma data futura.', 'Data Invalida');
+      return;
+    }
+    let dHoje = new Date(hoje+'T12:00:00');
+    let dData = new Date(data+'T12:00:00');
+    let diasCorridos = Math.round((dData - dHoje) / (1000*60*60*24));
+    if(diasCorridos < 60){
+      await modalAlert('Flutuante so pode ser agendado com no minimo 60 dias de antecedencia.\n\nData selecionada: '+formatDate(data)+' ('+diasCorridos+' dias)\nMinimo necessario: 60 dias corridos', 'Antecedencia Insuficiente');
+      return;
+    }
   }
 
   // 40min interval warning
@@ -9408,8 +9533,9 @@ async function salvarHemodinamica(){
 
   let c = {
     especialidadeCirurgia: 'Hemodinâmica',
-    data: data, horario: horario, tempo: tempo,
+    data: data, horario: isFlutuante ? '' : horario, tempo: tempo,
     sala: 'Hemodinâmica',
+    flutuante: isFlutuante,
     paciente: paciente || 'Paciente Hemo',
     identificacao: identificacao || '',
     data_nasc: dataNasc || null,
@@ -9456,6 +9582,46 @@ async function salvarHemodinamica(){
     });
     document.getElementById('hemoUTI').checked = false;
     document.getElementById('hemoSangue').checked = false;
+    document.getElementById('hemoFlutuante').checked = false;
+    alternarHemoFlutuante();
+  }
+}
+
+function alternarHemoFlutuante(){
+  let isFlutuante = document.getElementById('hemoFlutuante').checked;
+  let gHorario = document.getElementById('hemoGroupHorario');
+  let inpData = document.getElementById('hemoAgData');
+  let inpHorario = document.getElementById('hemoAgHorario');
+  
+  // Highlight fields in orange to indicate waitlist mode
+  let obrigatorios = ['hemoAgData','hemoAgTempo','hemoAgPaciente','hemoAgCRM','hemoAgMedico'];
+  obrigatorios.forEach(id=>{
+    let el = document.getElementById(id);
+    if(el){
+      if(isFlutuante){
+        el.style.background='#fff3e0';
+        el.style.borderColor='#e65100';
+      } else {
+        el.style.background='';
+        el.style.borderColor='';
+      }
+    }
+  });
+
+  if(isFlutuante){
+    gHorario.style.display = 'none';
+    inpHorario.value = '';
+    // Pre-fill 60 days
+    let dt = new Date();
+    dt.setDate(dt.getDate() + 60);
+    let dia = String(dt.getDate()).padStart(2,'0');
+    let mes = String(dt.getMonth()+1).padStart(2,'0');
+    let ano = dt.getFullYear();
+    inpData.value = ano+'-'+mes+'-'+dia;
+    showToast('🔄 Modo flutuante: campos em laranja aguardam confirmação futura');
+  } else {
+    gHorario.style.display = '';
+    inpData.value = hojeLocal();
   }
 }
 
