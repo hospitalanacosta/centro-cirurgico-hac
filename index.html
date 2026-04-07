@@ -5659,8 +5659,27 @@ function toggleFlutuante(on){
 window._flutuanteModulo = 'todos';
 
 function abrirRelatorioFlutuantes(modulo){
-  if(modulo !== undefined) window._flutuanteModulo = modulo;
+  // Verificar permissões do usuário
+  let ehAdmFlut = usuarioLogado && (usuarioLogado.is_admin || usuarioLogado.perfil==='admin' || usuarioLogado.perfil==='admin2');
+  let prmsFlut = {};
+  if(!ehAdmFlut){ try { prmsFlut = JSON.parse(usuarioLogado.permissoes||'{}'); } catch(e){} }
+  let temCCFlut = ehAdmFlut || prmsFlut.acesso_cc !== false;
+  let temHemoFlut = ehAdmFlut || prmsFlut.acesso_hemo !== false;
+
+  // Definir módulo padrão conforme permissão se não explicitado
+  if(modulo !== undefined){
+    window._flutuanteModulo = modulo;
+  } else if(!window._flutuanteModulo){
+    if(temCCFlut && temHemoFlut) window._flutuanteModulo = 'todos';
+    else if(temCCFlut) window._flutuanteModulo = 'cirurgia';
+    else if(temHemoFlut) window._flutuanteModulo = 'hemodinamica';
+  }
   let filtroMod = window._flutuanteModulo || 'todos';
+
+  // Forçar filtro conforme permissão (não pode ver o que não tem acesso)
+  if(!temHemoFlut && filtroMod !== 'cirurgia') { filtroMod = 'cirurgia'; window._flutuanteModulo = 'cirurgia'; }
+  if(!temCCFlut && filtroMod !== 'hemodinamica') { filtroMod = 'hemodinamica'; window._flutuanteModulo = 'hemodinamica'; }
+
   let hoje = hojeLocal();
   // Filtrar apenas flutuantes futuros (>= hoje) por padrao
   let flutuantes = dados.filter(c => c.flutuante && !c.cancelado && !c.suspenso && (c.data||'') >= hoje);
@@ -5711,18 +5730,19 @@ function abrirRelatorioFlutuantes(modulo){
     '</tr>';
   }).join('');
 
-  // Toggle buttons
+  // Toggle buttons (respeitar permissões)
   let btnStyle = function(mod){
     let active = filtroMod === mod;
     return 'padding:7px 16px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;'+
       (active ? 'background:var(--primary);color:#fff;' : 'background:#fff;color:var(--text-primary);');
   };
-  let toggleHtml =
-    '<div style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px">'+
-      '<button onclick="abrirRelatorioFlutuantes(\'todos\')" style="'+btnStyle('todos')+'">📋 Todos</button>'+
-      '<button onclick="abrirRelatorioFlutuantes(\'cirurgia\')" style="border-left:1px solid var(--border);'+btnStyle('cirurgia')+'">🏥 Cirurgias</button>'+
-      '<button onclick="abrirRelatorioFlutuantes(\'hemodinamica\')" style="border-left:1px solid var(--border);'+btnStyle('hemodinamica')+'">🫀 Hemodinâmica</button>'+
-    '</div>';
+  let toggleBtns = '';
+  if(temCCFlut && temHemoFlut) toggleBtns += '<button onclick="abrirRelatorioFlutuantes(\'todos\')" style="'+btnStyle('todos')+'">📋 Todos</button>';
+  if(temCCFlut) toggleBtns += '<button onclick="abrirRelatorioFlutuantes(\'cirurgia\')" style="border-left:1px solid var(--border);'+btnStyle('cirurgia')+'">🏥 Cirurgias</button>';
+  if(temHemoFlut) toggleBtns += '<button onclick="abrirRelatorioFlutuantes(\'hemodinamica\')" style="border-left:1px solid var(--border);'+btnStyle('hemodinamica')+'">🫀 Hemodinâmica</button>';
+  let toggleHtml = (temCCFlut && temHemoFlut) ?
+    '<div style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px">'+toggleBtns+'</div>'
+    : '';
 
   let html = '<div style="padding:24px;max-height:80vh;overflow-y:auto">'+
     '<h2 style="margin:0 0 8px;color:var(--primary)">🔄 Relatório de Reservas Flutuantes</h2>'+
