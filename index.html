@@ -3250,13 +3250,17 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       <div id="hemoMapa" style="margin-top:16px"></div>
     </div>
     <div class="card">
-      <div class="card-title">Agendar Hemodinâmica</div>
-      <div class="form-grid">
-        <div class="form-group" style="display:flex;align-items:flex-end">
-          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
-            <input type="checkbox" id="hemoFlutuante" onchange="alternarHemoFlutuante()"> Reserva Flutuante
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="card-title" style="margin:0">Agendar Hemodinâmica</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 16px;border:1.5px solid var(--warning);border-radius:20px;font-size:12px;font-weight:600;color:var(--warning);user-select:none" title="Reserva sem cadastro completo">
+            <input type="checkbox" id="hemoFlutuante" onchange="alternarHemoFlutuante()" style="accent-color:var(--warning)">
+            Reserva Flutuante
           </label>
+          <button class="btn btn-outline btn-sm" onclick="limparFormHemo()" style="padding:6px 14px;font-size:12px;border-radius:20px;color:var(--text-secondary);border-color:#ccc" title="Limpar formulário">🗑 Limpar</button>
         </div>
+      </div>
+      <div class="form-grid">
         <div class="form-group" id="hemoGroupData"><label>Data</label><input type="date" id="hemoAgData"></div>
         <div class="form-group" id="hemoGroupHorario"><label>Horário</label><input type="time" id="hemoAgHorario"></div>
         <div class="form-group"><label>Tempo (min)</label><input type="number" id="hemoAgTempo" placeholder="60"></div>
@@ -9588,6 +9592,32 @@ function renderHemodinamica(){
   container.innerHTML = html;
 }
 
+function limparFormHemo(){
+  document.getElementById('hemoFlutuante').checked = false;
+  alternarHemoFlutuante(); // reset layout
+  document.getElementById('hemoAgData').value = '';
+  document.getElementById('hemoAgHorario').value = '';
+  document.getElementById('hemoAgTempo').value = '';
+  document.getElementById('hemoAgPaciente').value = '';
+  document.getElementById('hemoAgId').value = '';
+  document.getElementById('hemoAgNasc').value = '';
+  document.getElementById('hemoAgCRM').value = '';
+  document.getElementById('hemoAgMedico').value = '';
+  document.getElementById('hemoAgTuss').value = '';
+  document.getElementById('hemoAgProc').value = '';
+  document.getElementById('hemoAgConv').value = '';
+  document.getElementById('hemoAgConvNome').value = '';
+  if(document.getElementById('hemoUTI')) document.getElementById('hemoUTI').checked = false;
+  if(document.getElementById('hemoSangue')) document.getElementById('hemoSangue').checked = false;
+  if(document.getElementById('hemoAgObs')) document.getElementById('hemoAgObs').value = '';
+  
+  if(hemoEditId){
+    hemoEditId = null;
+    let btn = document.getElementById('btnHemoSalvar');
+    if(btn){ btn.innerText = 'Agendar Hemodinâmica'; btn.style.background=''; }
+  }
+}
+
 async function salvarHemodinamica(){
   let data = document.getElementById('hemoAgData').value;
   let horario = document.getElementById('hemoAgHorario').value;
@@ -9607,13 +9637,21 @@ async function salvarHemodinamica(){
 
   let isFlutuante = document.getElementById('hemoFlutuante').checked;
 
-  if(!isFlutuante && (!data || !horario)){
-    await modalAlert('Data e Horário são obrigatórios.', 'Campos Obrigatórios');
-    return;
-  }
-  if(isFlutuante && !data){
-    await modalAlert('Data é obrigatória.', 'Campos Obrigatórios');
-    return;
+  if(isFlutuante){
+    let faltam = [];
+    if(!data) faltam.push('Data');
+    if(!tempo) faltam.push('Tempo (min)');
+    if(!paciente) faltam.push('Paciente');
+    if(!crm && !medico) faltam.push('Médico / CRM');
+    if(faltam.length > 0){
+      await modalAlert('Para Reserva Flutuante, preencha os campos obrigatórios:\n\n- ' + faltam.join('\n- '), 'Campos Incompletos');
+      return;
+    }
+  } else {
+    if(!data || !horario){
+      await modalAlert('Data e Horário são obrigatórios para agendamento padrão.', 'Campos Obrigatórios');
+      return;
+    }
   }
   
   // ====== VALIDAR DATA DO FLUTUANTE (60 DIAS CORRIDOS) ======
@@ -9648,26 +9686,22 @@ async function salvarHemodinamica(){
 
   let c = {
     especialidadeCirurgia: 'Hemodinâmica',
-    data: data, horario: isFlutuante ? '' : horario, tempo: tempo,
+    data: data, horario: horario || null, tempo: tempo,
     sala: 'Hemodinâmica',
     flutuante: isFlutuante,
     paciente: paciente || 'Paciente Hemo',
     identificacao: identificacao || '',
-    data_nasc: dataNasc || null,
+    dataNasc: dataNasc || null,
     medico: medico || '',
     crm: crm || '',
     convenio: convNome || '',
-    codigo_convenio: convSigla || '',
+    codigoConvenio: convSigla || '',
     convenioGrupo: window._hemoConvGrupo || '',
     procedimento: proc || 'Procedimento Hemodinâmica',
     codigoTuss: tuss || '',
     recursos: recursos,
     observacoes: obs,
-    codigoTuss:'', codigoConvenio:'', convenio:'', convenioGrupo:'',
-    identificacao:'', crm:'', especialidade:'',
-    dataNasc:'', idade:'',
-    procedimento2:'', codigoTuss2:'', lateralidade:'', lateralidade2:'',
-    cancelado:false, suspenso:false,
+    cancelado: false, suspenso: false,
     criadoEm: new Date().toISOString()
   };
 
