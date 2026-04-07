@@ -2681,8 +2681,8 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           <input type="text" id="filtroMedico" placeholder="Todos" oninput="desenhar()">
         </div>
         <div style="margin-left:auto;display:flex;align-items:flex-end;gap:8px">
-          <button class="btn btn-outline" onclick="gerarPDF()" style="white-space:nowrap;border-color:var(--primary);color:var(--primary);min-width:150px;text-align:center">📄 PDF Mapa</button>
-          <button class="btn btn-outline" onclick="pdfOcorrencias()" style="white-space:nowrap;border-color:var(--primary);color:var(--primary);min-width:150px;text-align:center">📋 PDF Ocorrências</button>
+          <button id="btnPdfCC" class="btn btn-outline" onclick="gerarPDF()" style="white-space:nowrap;border-color:var(--primary);color:var(--primary);min-width:150px;text-align:center">📄 PDF Mapa</button>
+          <button id="btnPdfOcorrencias" class="btn btn-outline" onclick="pdfOcorrencias()" style="white-space:nowrap;border-color:var(--primary);color:var(--primary);min-width:150px;text-align:center">📋 PDF Ocorrências</button>
         </div>
       </div>
     </div>
@@ -4333,6 +4333,9 @@ function aplicarPermissoes(){
   // PDF CC button
   let btnPdf = document.getElementById('btnPdfCC');
   if(btnPdf) btnPdf.style.display = (ehAdmin || perms.pdf_cc) ? '' : 'none';
+  
+  let btnPdfOc = document.getElementById('btnPdfOcorrencias');
+  if(btnPdfOc) btnPdfOc.style.display = (ehAdmin || perms.pdf_cc) ? '' : 'none';
 
   // PDF Hemo button
   let btnHemo = document.getElementById('btnPdfHemo');
