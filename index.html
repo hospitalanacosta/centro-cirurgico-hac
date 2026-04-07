@@ -2650,8 +2650,6 @@ tr.suspenso td { color: #e65100; font-style: italic; }
       <button class="btn btn-success" id="btnConfirmar" onclick="salvar()">✓ Confirmar Agendamento</button>
       <button class="btn btn-danger" id="btnCancelarEdicao" onclick="cancelarEdicaoCirurgia()" style="display:none">✕ Cancelar Edição</button>
       <button class="btn btn-outline" onclick="limparForm()">Limpar</button>
-      <button class="btn btn-outline" onclick="gerarPDF()" id="btnPdfCC">📄 PDF Mapa</button>
-      <button class="btn btn-outline" onclick="pdfOcorrencias()">📋 PDF Ocorrências</button>
     </div>
 
   </div>
@@ -2681,6 +2679,10 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         <div class="form-group">
           <label>Cirurgião</label>
           <input type="text" id="filtroMedico" placeholder="Todos" oninput="desenhar()">
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:flex-end;gap:8px">
+          <button class="btn btn-outline" onclick="gerarPDF()" style="white-space:nowrap;border-color:var(--primary);color:var(--primary);min-width:150px;text-align:center">📄 PDF Mapa</button>
+          <button class="btn btn-outline" onclick="pdfOcorrencias()" style="white-space:nowrap;border-color:var(--primary);color:var(--primary);min-width:150px;text-align:center">📋 PDF Ocorrências</button>
         </div>
       </div>
     </div>
