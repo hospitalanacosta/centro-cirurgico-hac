@@ -1266,9 +1266,14 @@ body {
 }
 
 /* LISTA */
-.tabela-wrapper table td { max-width: 180px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.4; }
-.tabela-wrapper table td:nth-child(9),.tabela-wrapper table td:nth-child(11) { max-width: 140px; font-size: 10px; }
+.tabela-wrapper table td { max-width: 120px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.4; }
+.tabela-wrapper table td:nth-child(5) { max-width: 140px; } /* Paciente */
+.tabela-wrapper table td:nth-child(7) { max-width: 110px; font-size: 11px; } /* Cirurgião */
+.tabela-wrapper table td:nth-child(9) { max-width: 130px; font-size: 10px; } /* Procedimento */
+.tabela-wrapper table td:nth-child(11) { max-width: 110px; font-size: 10px; } /* Proc Sec. */
+.tabela-wrapper table td:nth-child(12) { max-width: 110px; font-size: 11px; } /* Convênio */
 .tabela-wrapper { overflow-x: auto; }
+.tabela-wrapper table { width: 100%; min-width: 1200px; }
 table {
   width: 100%;
   border-collapse: collapse;
@@ -1464,7 +1469,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 .dash-rank-n { background: #e8f5e9; color: var(--primary); }
 
 @media (max-width: 1024px) {
-  .dash-row { flex-direction: column; }
+  .dash-row, .dash-row.dash-row-wide, .dash-row.dash-row-3 { grid-template-columns: 1fr; }
   .dash-kpis { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 600px) {
@@ -2724,9 +2729,16 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           </select>
         </div>
         <div class="form-group" style="position:relative">
+          <label>Paciente / Prontuário</label>
+          <input type="text" id="filtroListaPaciente" placeholder="Buscar paciente..." oninput="renderLista()" autocomplete="off" style="min-width:180px">
+        </div>
+        <div class="form-group" style="position:relative">
           <label>Médico / CRM</label>
           <input type="text" id="filtroListaMedico" placeholder="Digite nome ou CRM..." oninput="autocompleteMedicoFiltro(this)" onchange="renderLista()" autocomplete="off" style="min-width:180px">
           <div id="filtroMedicoSugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.12)"></div>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn btn-outline" onclick="document.getElementById('filtroListaPaciente').value=''; document.getElementById('filtroListaMedico').value=''; renderLista()" style="white-space:nowrap;border-color:#9ca3af;color:#4b5563" title="Limpar Paciente e Médico">❌ Limpar</button>
         </div>
         <div class="form-group" style="display:flex;align-items:flex-end">
           <button class="btn btn-outline" onclick="abrirRelatorioFlutuantes()" style="white-space:nowrap;border-color:var(--warning);color:var(--warning)">🔄 Reservas Flutuantes</button>
@@ -6793,6 +6805,9 @@ function renderLista(){
   let fStatus = document.getElementById("filtroListaStatus").value;
   let fGrupo = document.getElementById("filtroListaGrupo").value;
 
+  let fPaciente = (document.getElementById("filtroListaPaciente")||{}).value||'';
+  let fPacienteLower = fPaciente.trim().toLowerCase();
+
   let fMedico = (document.getElementById("filtroListaMedico")||{}).value||'';
   let fMedicoLower = fMedico.trim().toLowerCase();
 
@@ -6810,8 +6825,17 @@ function renderLista(){
   else if(mod === 'hemodinamica' || (temHemo && !temCC)) lista = lista.filter(c => c.sala === 'Hemodinâmica');
   // mod === 'todos' e tem ambos: mostra tudo
 
-  if(fDataIni) lista = lista.filter(c=>c.data>=fDataIni);
-  if(fDataFim) lista = lista.filter(c=>c.data<=fDataFim);
+  let isGlobalSearch = fPacienteLower !== '' || fMedicoLower !== '';
+
+  if (!isGlobalSearch) {
+    if(fDataIni) lista = lista.filter(c=>c.data>=fDataIni);
+    if(fDataFim) lista = lista.filter(c=>c.data<=fDataFim);
+  }
+
+  if (fPacienteLower) {
+    lista = lista.filter(c=>(c.paciente||'').toLowerCase().indexOf(fPacienteLower)>=0 || (c.identificacao||'').toLowerCase().indexOf(fPacienteLower)>=0);
+  }
+
   if(fStatus==='agendado') lista = lista.filter(c=>!c.cancelado&&!c.suspenso);
   if(fStatus==='cancelado') lista = lista.filter(c=>c.cancelado);
   if(fStatus==='suspenso') lista = lista.filter(c=>c.suspenso);
