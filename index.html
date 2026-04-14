@@ -6016,7 +6016,7 @@ async function coletarEmailsFlutuante(cir){
   var emails = [];
   if(cir.registrado_por_email) emails.push(cir.registrado_por_email);
   try {
-    var {data:admins} = await sb.from('usuarios').select('email').or('perfil.eq.admin,perfil.eq.admin2,is_admin.eq.true').eq('status','aprovado');
+    var {data:admins} = await sb.from('usuarios').select('email').or('perfil.eq.admin,perfil.eq.admin2').eq('status','aprovado');
     if(admins){
       for(var a=0; a<admins.length; a++){
         if(admins[a].email && emails.indexOf(admins[a].email)<0) emails.push(admins[a].email);
