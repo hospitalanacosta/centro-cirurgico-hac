@@ -7400,7 +7400,7 @@ async function gerarPDF(){
   let respProc2 = await modalPrompt("Incluir Procedimento Secundário no mapa? (S/N):", "S", 'Procedimento Secundário');
   let mostrarProc2 = respProc2 && respProc2.toUpperCase().startsWith("S");
 
-  let lista = dados.filter(c=>!c.cancelado&&!c.suspenso&&c.data===fData);
+  let lista = dados.filter(c=>!c.cancelado&&!c.suspenso&&c.data===fData&&c.sala!=='Hemodinâmica');
   if(lista.length===0){ await modalAlert("Nenhuma cirurgia agendada para "+formatDate(fData), 'Sem Cirurgias'); return; }
 
   const {jsPDF} = window.jspdf;
