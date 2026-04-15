@@ -1266,14 +1266,12 @@ body {
 }
 
 /* LISTA */
-.tabela-wrapper table td { max-width: 120px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.4; }
-.tabela-wrapper table td:nth-child(5) { max-width: 140px; } /* Paciente */
-.tabela-wrapper table td:nth-child(7) { max-width: 110px; font-size: 11px; } /* Cirurgião */
-.tabela-wrapper table td:nth-child(9) { max-width: 130px; font-size: 10px; } /* Procedimento */
-.tabela-wrapper table td:nth-child(11) { max-width: 110px; font-size: 10px; } /* Proc Sec. */
-.tabela-wrapper table td:nth-child(12) { max-width: 110px; font-size: 11px; } /* Convênio */
+.tabela-wrapper table td { word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.4; }
 .tabela-wrapper { overflow-x: auto; }
-.tabela-wrapper table { width: 100%; min-width: 1200px; }
+.tabela-wrapper table { width: 100%; }
+#tabelaLista { table-layout: fixed; }
+#tabelaLista th { white-space: normal; word-break: break-word; font-size: 10px; padding: 6px 4px; }
+#tabelaLista td { white-space: normal; word-break: break-word; font-size: 11px; padding: 5px 4px; overflow: hidden; text-overflow: ellipsis; }
 table {
   width: 100%;
   border-collapse: collapse;
@@ -2708,7 +2706,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 
     <div class="card">
       <div class="card-title">Filtros da Lista</div>
-      <div class="filtro-row">
+      <div class="filtro-row" style="flex-wrap:wrap;row-gap:10px">
         <div class="form-group">
           <label>Data Início</label>
           <input type="date" id="filtroListaDataIni" onchange="renderLista()">
@@ -2743,18 +2741,17 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           <input type="text" id="filtroListaMedico" placeholder="Digite nome ou CRM..." oninput="autocompleteMedicoFiltro(this)" onchange="renderLista()" autocomplete="off" style="min-width:180px">
           <div id="filtroMedicoSugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.12)"></div>
         </div>
-        <div class="form-group" style="display:flex;align-items:flex-end">
-          <button class="btn btn-outline" onclick="document.getElementById('filtroListaPaciente').value=''; document.getElementById('filtroListaMedico').value=''; renderLista()" style="white-space:nowrap;border-color:#9ca3af;color:#4b5563" title="Limpar Paciente e Médico">❌ Limpar</button>
+        <div class="form-group">
+          <label style="visibility:hidden">.</label>
+          <button class="btn btn-outline" onclick="document.getElementById('filtroListaPaciente').value=''; document.getElementById('filtroListaMedico').value=''; renderLista()" style="white-space:nowrap;border-color:#9ca3af;color:#4b5563;height:34px;display:flex;align-items:center;gap:4px;font-size:12px" title="Limpar Paciente e Médico">❌ Limpar</button>
         </div>
-        <div class="form-group" style="display:flex;align-items:flex-end">
-          <button class="btn btn-outline" onclick="abrirRelatorioFlutuantes()" style="white-space:nowrap;border-color:var(--warning);color:var(--warning)">🔄 Reservas Flutuantes</button>
-        </div>
-        <div class="form-group" style="display:flex;align-items:flex-end">
-          <div id="listaModuloToggle" style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);font-size:12px;font-weight:600">
-            <button class="btn-toggle-modulo active" onclick="setListaModulo('todos')" id="btnListaTodos" style="padding:6px 14px;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all .2s">📋 Todos</button>
-            <button class="btn-toggle-modulo" onclick="setListaModulo('cirurgia')" id="btnListaCC" style="padding:6px 14px;border:none;border-left:1px solid var(--border);cursor:pointer;background:#fff;color:var(--text-primary);transition:all .2s">🏥 Cirurgias</button>
-            <button class="btn-toggle-modulo" onclick="setListaModulo('hemodinamica')" id="btnListaHemo" style="padding:6px 14px;border:none;border-left:1px solid var(--border);cursor:pointer;background:#fff;color:var(--text-primary);transition:all .2s">🫀 Hemodinâmica</button>
-          </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-outline" onclick="abrirRelatorioFlutuantes()" style="white-space:nowrap;border-color:var(--warning);color:var(--warning);padding:6px 14px;font-size:12px;border-radius:8px">🔄 Reservas Flutuantes</button>
+        <div id="listaModuloToggle" style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);font-size:12px;font-weight:600">
+          <button class="btn-toggle-modulo active" onclick="setListaModulo('todos')" id="btnListaTodos" style="padding:6px 14px;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all .2s">📋 Todos</button>
+          <button class="btn-toggle-modulo" onclick="setListaModulo('cirurgia')" id="btnListaCC" style="padding:6px 14px;border:none;border-left:1px solid var(--border);cursor:pointer;background:#fff;color:var(--text-primary);transition:all .2s">🏥 Cirurgias</button>
+          <button class="btn-toggle-modulo" onclick="setListaModulo('hemodinamica')" id="btnListaHemo" style="padding:6px 14px;border:none;border-left:1px solid var(--border);cursor:pointer;background:#fff;color:var(--text-primary);transition:all .2s">🫀 Hemodinâmica</button>
         </div>
       </div>
     </div>
@@ -2762,11 +2759,29 @@ tr.suspenso td { color: #e65100; font-style: italic; }
     <div class="card">
       <div class="tabela-wrapper">
         <table id="tabelaLista">
+          <colgroup>
+            <col style="width:6%">   <!-- Data -->
+            <col style="width:4%">   <!-- Hora -->
+            <col style="width:4.5%"> <!-- Sala -->
+            <col style="width:5.5%"> <!-- Pront -->
+            <col style="width:10%">  <!-- Paciente -->
+            <col style="width:3.5%"> <!-- Idade -->
+            <col style="width:9%">   <!-- Cirurgião -->
+            <col style="width:5%">   <!-- CRM/CRO -->
+            <col style="width:12%">  <!-- Procedimento -->
+            <col style="width:5%">   <!-- TUSS -->
+            <col style="width:8%">   <!-- Proc. Secundário -->
+            <col style="width:7%">   <!-- Convênio -->
+            <col style="width:4%">   <!-- Grupo -->
+            <col style="width:4%">   <!-- Tempo -->
+            <col style="width:6.5%"> <!-- Status -->
+            <col style="width:6%">   <!-- Ações -->
+          </colgroup>
           <thead>
             <tr>
               <th>Data</th>
               <th>Hora</th>
-              <th style="width:70px;max-width:70px">Sala</th>
+              <th>Sala</th>
               <th>Pront.</th>
               <th>Paciente</th>
               <th>Idade</th>
