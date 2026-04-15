@@ -5941,10 +5941,13 @@ async function enviarLembreteFlutuante(cir, numAviso, diasRestantes){
     '</div></body></html>';
 
   if(todosEmails.length > 0){
-    await sb.from('email_notifications').insert({
-      to_email: todosEmails.join(','), to_name: '', subject: assunto,
-      body: corpo, crm: 'FLUT_LEMBRETE_'+numAviso+'_'+cir.id, status: 'pending'
+    let inserts = todosEmails.map(function(email){
+      return {
+        to_email: email, to_name: '', subject: assunto,
+        body: corpo, crm: 'FLUT_LEMBRETE_'+numAviso+'_'+cir.id, status: 'pending'
+      };
     });
+    await sb.from('email_notifications').insert(inserts);
   }
   try {
     await sb.from('notificacoes_medicos').insert({
@@ -5996,10 +5999,13 @@ async function autoCancelarFlutuante(cir){
     '</div></body></html>';
 
   if(todosEmails.length > 0){
-    await sb.from('email_notifications').insert({
-      to_email: todosEmails.join(','), to_name: '', subject: assunto,
-      body: corpo, crm: 'FLUT_AUTOCANCEL_'+cir.id, status: 'pending'
+    let inserts = todosEmails.map(function(email){
+      return {
+        to_email: email, to_name: '', subject: assunto,
+        body: corpo, crm: 'FLUT_AUTOCANCEL_'+cir.id, status: 'pending'
+      };
     });
+    await sb.from('email_notifications').insert(inserts);
   }
   try {
     await sb.from('notificacoes_medicos').insert({
