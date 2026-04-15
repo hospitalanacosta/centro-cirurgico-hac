@@ -2766,7 +2766,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
             <tr>
               <th>Data</th>
               <th>Hora</th>
-              <th>Sala</th>
+              <th style="width:70px;max-width:70px">Sala</th>
               <th>Pront.</th>
               <th>Paciente</th>
               <th>Idade</th>
@@ -3371,7 +3371,14 @@ tr.suspenso td { color: #e65100; font-style: italic; }
   <!-- ========== PAINEL DASHBOARD ========== -->
   <div class="panel" id="panel-dashboard">
     <div class="card" style="border-radius:14px">
-      <div class="card-title" style="margin-bottom:16px">📊 Dashboard de Produção Cirúrgica</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div class="card-title" style="margin-bottom:0">📊 Dashboard de Produção Cirúrgica</div>
+        <div id="dashboardModuloToggle" style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);font-size:12px;font-weight:600">
+          <button class="btn-toggle-dash active" onclick="setDashboardModulo('todos')" id="btnDashTodos" style="padding:6px 14px;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all .2s">📋 Todos</button>
+          <button class="btn-toggle-dash" onclick="setDashboardModulo('cirurgia')" id="btnDashCC" style="padding:6px 14px;border:none;border-left:1px solid var(--border);cursor:pointer;background:#fff;color:var(--text-primary);transition:all .2s">🏥 Cirurgias</button>
+          <button class="btn-toggle-dash" onclick="setDashboardModulo('hemodinamica')" id="btnDashHemo" style="padding:6px 14px;border:none;border-left:1px solid var(--border);cursor:pointer;background:#fff;color:var(--text-primary);transition:all .2s">🫀 Hemodinâmica</button>
+        </div>
+      </div>
       <div class="dash-filters">
         <div class="form-group">
           <label>Ano</label>
@@ -6863,10 +6870,11 @@ function renderLista(){
     let status = c.cancelado?'cancelado':c.suspenso?'suspenso':'agendado';
     let statusLabel = status==='agendado'?'Agendado':status==='cancelado'?'Cancelado':'Suspenso';
     let motivo = c.motivoCancelamento || c.motivoSuspensao || '';
+    let displaySala = c.sala === 'Hemodinâmica' ? 'Hemod.' : c.sala;
     return '<tr class="'+status+'">'+
       '<td>'+formatDate(c.data)+'</td>'+
       '<td>'+c.horario+'</td>'+
-      '<td>'+c.sala+'</td>'+
+      '<td>'+displaySala+'</td>'+
       '<td>'+(c.identificacao||'-')+'</td>'+
       '<td>'+c.paciente+'</td>'+
       '<td>'+(c.idade||'-')+'</td>'+
@@ -7081,6 +7089,25 @@ function selecionarDashMedico(crm, label){
   renderDashboard();
 }
 
+function setDashboardModulo(mod) {
+  window._dashModulo = mod;
+  ['btnDashTodos','btnDashCC','btnDashHemo'].forEach(id=>{
+    let el = document.getElementById(id);
+    if(!el) return;
+    el.style.background = '#fff';
+    el.style.color = 'var(--text-primary)';
+    el.classList.remove('active');
+  });
+  let selId = mod==='todos'?'btnDashTodos':mod==='cirurgia'?'btnDashCC':'btnDashHemo';
+  let selEl = document.getElementById(selId);
+  if(selEl) {
+    selEl.style.background = 'var(--primary)';
+    selEl.style.color = '#fff';
+    selEl.classList.add('active');
+  }
+  renderDashboard();
+}
+
 function getDashData(){
   let ano = document.getElementById('dashAno')?.value||'';
   let mes = document.getElementById('dashMes')?.value||'';
@@ -7089,6 +7116,17 @@ function getDashData(){
   let espec = document.getElementById('dashEspec')?.value||'';
   let medico = document.getElementById('dashMedico')?.value||'';
   let lista = dados.filter(c=>c.data);
+  
+  let mod = window._dashModulo || 'todos';
+  let ehAdm = typeof usuarioLogado !== 'undefined' && usuarioLogado && (usuarioLogado.is_admin || usuarioLogado.perfil==='admin' || usuarioLogado.perfil==='admin2');
+  let prms = {};
+  if(!ehAdm && typeof usuarioLogado !== 'undefined' && usuarioLogado){ try { prms = JSON.parse(usuarioLogado.permissoes||'{}'); } catch(e){} }
+  let temCC = ehAdm || prms.acesso_cc !== false;
+  let temHemo = ehAdm || prms.acesso_hemo !== false;
+
+  if(mod === 'cirurgia' || (!temHemo && temCC)) lista = lista.filter(c => c.sala !== 'Hemodinâmica');
+  else if(mod === 'hemodinamica' || (temHemo && !temCC)) lista = lista.filter(c => c.sala === 'Hemodinâmica');
+
   if(ano) lista = lista.filter(c=>c.data.substring(0,4)===ano);
   if(mes) lista = lista.filter(c=>c.data.substring(5,7)===mes);
   if(grupo) lista = lista.filter(c=>(c.convenioGrupo||c.convenio_grupo||'')===grupo);
@@ -7271,9 +7309,10 @@ function renderDashboard(){
 async function renderRankColaboradores(ativos){
   let container = document.getElementById('rankColaboradores');
 
-  // Count registrations from all dados (not filtered)
+  // Count registrations using filtered data (respects module + all dashboard filters)
+  let listaFiltrada = getDashData();
   let porUser = {};
-  dados.forEach(c=>{
+  listaFiltrada.forEach(c=>{
     let reg = c.registrado_por;
     if(reg){ porUser[reg] = (porUser[reg]||0)+1; }
   });
