@@ -5965,7 +5965,7 @@ async function enviarLembreteFlutuante(cir, numAviso, diasRestantes){
   if(todosEmails.length > 0){
     let inserts = todosEmails.map(function(email){
       return {
-        to_email: email, to_name: '', subject: assunto,
+        to_email: email, to_name: 'Usuário', subject: assunto,
         body: corpo, crm: 'FLUT_LEMBRETE_'+numAviso+'_'+cir.id, status: 'pending'
       };
     });
@@ -6023,7 +6023,7 @@ async function autoCancelarFlutuante(cir){
   if(todosEmails.length > 0){
     let inserts = todosEmails.map(function(email){
       return {
-        to_email: email, to_name: '', subject: assunto,
+        to_email: email, to_name: 'Usuário', subject: assunto,
         body: corpo, crm: 'FLUT_AUTOCANCEL_'+cir.id, status: 'pending'
       };
     });
