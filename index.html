@@ -7165,12 +7165,16 @@ function renderDashboard(){
   let taxaCanc = lista.length > 0 ? ((cancelados.length / lista.length)*100).toFixed(1) : '0';
   let totalConv = new Set(ativos.map(c=>c.convenio||c.codigoConvenio).filter(Boolean)).size;
 
+  let hoje = hojeLocal();
+  let realizadas = ativos.filter(c => c.data < hoje);
+  let agendadas = ativos.filter(c => c.data >= hoje);
+
   document.getElementById('dashKpis').innerHTML =
-    '<div class="dash-kpi"><div class="kpi-val">'+ativos.length+'</div><div class="kpi-lbl">Cirurgias Agendadas</div></div>'+
+    '<div class="dash-kpi"><div class="kpi-val">'+realizadas.length+'</div><div class="kpi-lbl">Cirurgias Realizadas</div></div>'+
+    '<div class="dash-kpi"><div class="kpi-val">'+agendadas.length+'</div><div class="kpi-lbl">Cirurgias Agendadas</div></div>'+
     '<div class="dash-kpi accent"><div class="kpi-val">'+medicos.size+'</div><div class="kpi-lbl">Cirurgiões Ativos</div></div>'+
     '<div class="dash-kpi purple"><div class="kpi-val">'+totalConv+'</div><div class="kpi-lbl">Convênios Ativos</div></div>'+
     '<div class="dash-kpi"><div class="kpi-val">'+mediaDia+'</div><div class="kpi-lbl">Média / Dia</div></div>'+
-    '<div class="dash-kpi"><div class="kpi-val">'+diasUnicos.size+'</div><div class="kpi-lbl">Dias Operados</div></div>'+
     '<div class="dash-kpi warning"><div class="kpi-val">'+cancelados.length+'</div><div class="kpi-lbl">Cancelamentos</div></div>'+
     '<div class="dash-kpi danger"><div class="kpi-val">'+taxaCanc+'%</div><div class="kpi-lbl">Taxa Cancelamento</div></div>'+
     '<div class="dash-kpi"><div class="kpi-val">'+suspensos.length+'</div><div class="kpi-lbl">Suspensões</div></div>';
