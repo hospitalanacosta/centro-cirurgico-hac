@@ -4211,33 +4211,27 @@ async function aprovarUsuario(cpf){
   // Enviar email de aprovação
   if(usr && usr.email){
     try {
-      let corpoAprovacao =
-        '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f3f4f6;font-family:Segoe UI,Arial,sans-serif">'+
-        '<div style="max-width:520px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08)">'+
-        '<div style="background:linear-gradient(135deg,#166534,#22c55e);padding:24px 30px;text-align:center">'+
-        '<h1 style="color:#fff;margin:0;font-size:20px">&#9989; Acesso Aprovado!</h1>'+
-        '<p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:13px">Sistema de Agendamento Cirurgico</p>'+
-        '</div>'+
-        '<div style="padding:28px 30px">'+
-        '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a) <strong>'+usr.nome+'</strong>,</p>'+
-        '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">Seu cadastro no sistema de Agendamento Cirurgico do <strong>Hospital Ana Costa</strong> foi <strong style="color:#16a34a">APROVADO</strong> com sucesso!</p>'+
-        '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin-bottom:20px">'+
-        '<p style="margin:0;color:#166534;font-size:14px;font-weight:600">&#128273; Voce ja pode acessar o sistema</p>'+
-        '<p style="margin:6px 0 0;color:#15803d;font-size:13px">Utilize seu CPF e senha cadastrados para fazer login.</p>'+
-        '</div>'+
-        '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">'+
-        '<table style="width:100%;border-collapse:collapse">'+
-        '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:120px">Nome</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+usr.nome+'</td></tr>'+
-        '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:120px">CPF</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+usr.cpf+'</td></tr>'+
-        (usr.setor ? '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:120px">Setor</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+usr.setor+'</td></tr>' : '')+
-        '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:120px">Status</td><td style="padding:8px 12px;color:#16a34a;font-weight:600;border-bottom:1px solid #f3f4f6">Aprovado &#9989;</td></tr>'+
-        '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;width:120px">Aprovado por</td><td style="padding:8px 12px;color:#1f2937">'+usuarioLogado.nome+'</td></tr>'+
-        '</table></div>'+
-        '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">'+
-        '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>'+
-        '</div></div>'+
-        '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0">Este e-mail foi enviado automaticamente pelo sistema.</p>'+
-        '</div></body></html>';
+      let rowsAprov = _hacRow('Nome', usr.nome) +
+        _hacRow('CPF', usr.cpf) +
+        (usr.setor ? _hacRow('Setor', usr.setor) : '') +
+        _hacRow('Status', 'Aprovado', '#16a34a', true) +
+        _hacRow('Aprovado por', usuarioLogado.nome);
+      let alertAprov = '<div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:0 0 22px">' +
+        '<p style="margin:0;color:#14532d;font-size:13px;font-weight:700;line-height:1.55">Voce ja pode acessar o sistema</p>' +
+        '<p style="margin:6px 0 0;color:#15803d;font-size:13px;line-height:1.55">Utilize seu CPF e senha cadastrados para fazer login.</p>' +
+        '</div>';
+      let corpoAprovacao = emailTemplate({
+        accentColor: '#16a34a',
+        badge: 'Acesso liberado',
+        title: 'Cadastro Aprovado',
+        subtitle: 'Sistema de Agendamento Cirurgico',
+        greeting: 'Prezado(a) <strong>'+usr.nome+'</strong>,',
+        intro: 'Seu cadastro no sistema de Agendamento Cirurgico do <strong>Hospital Ana Costa</strong> foi <strong style="color:#16a34a">APROVADO</strong> com sucesso.',
+        alertHTML: alertAprov,
+        cardTitle: 'Dados da Conta',
+        rowsHTML: rowsAprov,
+        cta: 'Em caso de duvidas, entre em contato com a equipe de agendamento.'
+      });
       await sb.from('email_notifications').insert({
         to_email: usr.email,
         to_name: usr.nome,
@@ -5902,6 +5896,70 @@ function diffDiasUteis(dataStr1, dataStr2){
   return count;
 }
 
+// ============ EMAIL TEMPLATE HOSPITAL ANA COSTA ============
+var HAC_LOGO_EMAIL = 'data:image/png;base64,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';
+var HAC_BRAND_GREEN = '#16a34a';
+
+function _hacRow(label, value, valueColor, bold){
+  var vc = valueColor || '#111827';
+  var fw = bold ? '700' : '500';
+  return '<tr>' +
+    '<td style="padding:13px 18px;border-bottom:1px solid #eef0f2;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;width:38%;vertical-align:top">'+label+'</td>' +
+    '<td style="padding:13px 18px;border-bottom:1px solid #eef0f2;font-size:14px;color:'+vc+';font-weight:'+fw+'">'+value+'</td>' +
+    '</tr>';
+}
+
+function emailTemplate(opts){
+  var accent = opts.accentColor || HAC_BRAND_GREEN;
+  var badge = opts.badge || '';
+  var title = opts.title || '';
+  var subtitle = opts.subtitle || '';
+  var greeting = opts.greeting || 'Prezado(a),';
+  var intro = opts.intro || '';
+  var alertHTML = opts.alertHTML || '';
+  var cardTitle = opts.cardTitle || 'Detalhes';
+  var rowsHTML = opts.rowsHTML || '';
+  var cta = opts.cta || '';
+  var closing = opts.closing || 'Atenciosamente,<br><strong style="color:#111827;font-size:14px">Equipe de Agendamento</strong><br>Centro Cirurgico &mdash; Hospital Ana Costa';
+
+  return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hospital Ana Costa</title></head>' +
+    '<body style="margin:0;padding:0;background:#eef2f5;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2937">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f5"><tr><td align="center" style="padding:28px 14px">' +
+    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 30px rgba(15,23,42,0.10)">' +
+    // Logo header
+    '<tr><td align="center" style="padding:26px 20px 22px;background:#ffffff;border-bottom:3px solid '+HAC_BRAND_GREEN+'">' +
+    '<img src="'+HAC_LOGO_EMAIL+'" alt="Hospital Ana Costa" width="220" style="display:block;max-width:220px;width:220px;height:auto;margin:0 auto;border:0;outline:none;text-decoration:none">' +
+    '</td></tr>' +
+    // Accent banner
+    '<tr><td style="background:'+accent+';padding:22px 30px;text-align:center">' +
+    (badge ? '<div style="color:#fff;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;opacity:0.92">'+badge+'</div>' : '') +
+    '<div style="color:#fff;font-size:22px;font-weight:700;margin-top:6px;line-height:1.25">'+title+'</div>' +
+    (subtitle ? '<div style="color:rgba(255,255,255,0.92);font-size:13px;margin-top:6px">'+subtitle+'</div>' : '') +
+    '</td></tr>' +
+    // Body
+    '<tr><td style="padding:30px 34px 24px">' +
+    '<p style="color:#111827;font-size:15px;margin:0 0 14px;line-height:1.55">'+greeting+'</p>' +
+    (intro ? '<p style="color:#4b5563;font-size:14px;margin:0 0 20px;line-height:1.6">'+intro+'</p>' : '') +
+    (alertHTML || '') +
+    (rowsHTML ?
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin:2px 0 22px">' +
+      '<tr><td style="padding:11px 18px;font-size:11px;font-weight:700;color:#6b7280;letter-spacing:0.8px;text-transform:uppercase;background:#f3f4f6;border-bottom:1px solid #e5e7eb">'+cardTitle+'</td></tr>' +
+      '<tr><td style="padding:0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + rowsHTML + '</table></td></tr>' +
+      '</table>'
+    : '') +
+    (cta ? '<p style="color:#4b5563;font-size:13px;margin:0 0 22px;line-height:1.55">'+cta+'</p>' : '') +
+    // Signature
+    '<div style="border-top:1px solid #e5e7eb;padding-top:18px;margin-top:6px">' +
+    '<p style="margin:0;font-size:13px;color:#6b7280;line-height:1.65">'+closing+'</p>' +
+    '</div>' +
+    '</td></tr>' +
+    // Footer
+    '<tr><td style="background:#f9fafb;padding:16px 30px;border-top:1px solid #e5e7eb;text-align:center">' +
+    '<p style="margin:0;color:#9ca3af;font-size:11px;line-height:1.65">E-mail automatico do sistema de gestao cirurgica.<br>Hospital Ana Costa &mdash; Sua saude em boas maos</p>' +
+    '</td></tr>' +
+    '</table></td></tr></table></body></html>';
+}
+
 async function verificarLembretesFlutuantes(){
   var hoje = hojeLocal();
   var flutuantes = dados.filter(function(c){
@@ -5930,37 +5988,34 @@ async function enviarLembreteFlutuante(cir, numAviso, diasRestantes){
   if(todosEmails.length === 0) return;
 
   var nomeCriador = cir.registrado_por || 'Operador';
-  var cor = diasRestantes <= 3 ? '#dc2626' : '#d97706';
-  var urgencia = diasRestantes <= 3 ? 'URGENTE' : 'AVISO';
+  var urgente = diasRestantes <= 3;
+  var corAccent = urgente ? '#dc2626' : '#ea580c';
+  var badge = urgente ? 'URGENTE &middot; Acao imediata' : 'Aviso &middot; Lembrete automatico';
   var assunto = 'Lembrete '+numAviso+' - Flutuante Pendente ('+diasRestantes+' dias) - Hospital Ana Costa';
 
-  var corpo = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">'+
-    '<div style="max-width:600px;margin:0 auto;padding:20px">'+
-    '<div style="background:'+cor+';border-radius:12px 12px 0 0;padding:24px 30px;text-align:center">'+
-    '<div style="font-size:28px;margin-bottom:6px">&#9888;&#65039;</div>'+
-    '<h1 style="color:#fff;margin:0;font-size:20px;font-weight:700">'+urgencia+': Flutuante Pendente</h1>'+
-    '<p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">Lembrete '+numAviso+' - Faltam '+diasRestantes+' dias</p>'+
-    '</div>'+
-    '<div style="background:#fff;padding:28px 30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">'+
-    '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a),</p>'+
-    '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">A reserva flutuante abaixo precisa ser finalizada com dados completos. <strong>Faltam '+diasRestantes+' dias</strong> para a data da cirurgia.</p>'+
-    '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:16px">'+
-    '<p style="margin:0;color:#92400e;font-size:13px;font-weight:600">Se nao for finalizada ate 2 dias antes, a reserva sera cancelada automaticamente e a grade liberada.</p>'+
-    '</div>'+
-    '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">'+
-    '<table style="width:100%;border-collapse:collapse">'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Sala</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.sala||'-')+'</td></tr>'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Data</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+formatDate(cir.data)+'</td></tr>'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Horario</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.horario||'-')+'</td></tr>'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Medico</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.medico||'-')+'</td></tr>'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Agendado por</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+nomeCriador+'</td></tr>'+
-    '</table></div>'+
-    '<p style="color:#6b7280;font-size:13px;margin:0 0 20px;line-height:1.5">Acesse o sistema para completar os dados da cirurgia.</p>'+
-    '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">'+
-    '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>'+
-    '</div></div>'+
-    '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">E-mail automatico do sistema de gestao cirurgica.</p>'+
-    '</div></body></html>';
+  var alertBox = '<div style="background:#fff7ed;border-left:4px solid #f59e0b;border-radius:8px;padding:14px 16px;margin:0 0 22px">' +
+    '<p style="margin:0;color:#92400e;font-size:13px;font-weight:600;line-height:1.55">Se nao for finalizada ate 2 dias antes, a reserva sera <strong>cancelada automaticamente</strong> e a grade sera liberada para novos agendamentos.</p>' +
+    '</div>';
+
+  var rows = _hacRow('Sala', cir.sala || '-') +
+    _hacRow('Data', formatDate(cir.data)) +
+    _hacRow('Horario', cir.horario || '-') +
+    _hacRow('Medico', cir.medico || '-') +
+    _hacRow('Agendado por', nomeCriador) +
+    _hacRow('Dias restantes', diasRestantes + ' dia' + (diasRestantes === 1 ? '' : 's'), corAccent, true);
+
+  var corpo = emailTemplate({
+    accentColor: corAccent,
+    badge: badge,
+    title: 'Flutuante Pendente',
+    subtitle: 'Lembrete ' + numAviso + ' &middot; Faltam ' + diasRestantes + ' dias para a cirurgia',
+    greeting: 'Prezado(a),',
+    intro: 'A reserva flutuante abaixo precisa ser finalizada com dados completos. Faltam <strong>' + diasRestantes + ' dias</strong> para a data da cirurgia.',
+    alertHTML: alertBox,
+    cardTitle: 'Dados da Reserva',
+    rowsHTML: rows,
+    cta: 'Acesse o sistema de Agendamento Cirurgico para completar os dados da cirurgia.'
+  });
 
   if(todosEmails.length > 0){
     let inserts = todosEmails.map(function(email){
@@ -5995,30 +6050,31 @@ async function autoCancelarFlutuante(cir){
   var todosEmails = await coletarEmailsFlutuante(cir);
 
   var assunto = 'Flutuante Cancelado - Grade Liberada - Hospital Ana Costa';
-  var corpo = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">'+
-    '<div style="max-width:600px;margin:0 auto;padding:20px">'+
-    '<div style="background:#dc2626;border-radius:12px 12px 0 0;padding:24px 30px;text-align:center">'+
-    '<div style="font-size:28px;margin-bottom:6px">&#10060;</div>'+
-    '<h1 style="color:#fff;margin:0;font-size:20px;font-weight:700">Flutuante Cancelado Automaticamente</h1>'+
-    '<p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">Grade liberada para novo agendamento</p>'+
-    '</div>'+
-    '<div style="background:#fff;padding:28px 30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">'+
-    '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a),</p>'+
-    '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">A reserva flutuante abaixo foi <strong>cancelada automaticamente</strong> por nao ter sido finalizada a tempo. A grade esta liberada para novo agendamento.</p>'+
-    '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">'+
-    '<table style="width:100%;border-collapse:collapse">'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Sala</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.sala||'-')+'</td></tr>'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Data</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+formatDate(cir.data)+'</td></tr>'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Horario</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.horario||'-')+'</td></tr>'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Medico</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.medico||'-')+'</td></tr>'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Agendado por</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+(cir.registrado_por||'N/I')+'</td></tr>'+
-    '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Motivo</td><td style="padding:8px 12px;color:#dc2626;border-bottom:1px solid #f3f4f6;font-weight:600">Nao finalizado ate 2 dias antes</td></tr>'+
-    '</table></div>'+
-    '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">'+
-    '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>'+
-    '</div></div>'+
-    '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">E-mail automatico do sistema de gestao cirurgica.</p>'+
-    '</div></body></html>';
+
+  var rowsCanc = _hacRow('Sala', cir.sala || '-') +
+    _hacRow('Data', formatDate(cir.data)) +
+    _hacRow('Horario', cir.horario || '-') +
+    _hacRow('Medico', cir.medico || '-') +
+    _hacRow('Agendado por', cir.registrado_por || 'N/I') +
+    _hacRow('Motivo', 'Nao finalizada ate 2 dias antes da cirurgia', '#dc2626', true) +
+    _hacRow('Status', 'Cancelada &mdash; Grade liberada', '#dc2626', true);
+
+  var alertCanc = '<div style="background:#fef2f2;border-left:4px solid #dc2626;border-radius:8px;padding:14px 16px;margin:0 0 22px">' +
+    '<p style="margin:0;color:#991b1b;font-size:13px;font-weight:600;line-height:1.55">A reserva foi cancelada automaticamente e o horario esta disponivel para novos agendamentos.</p>' +
+    '</div>';
+
+  var corpo = emailTemplate({
+    accentColor: '#dc2626',
+    badge: 'Reserva cancelada automaticamente',
+    title: 'Flutuante Cancelado',
+    subtitle: 'Grade liberada para novo agendamento',
+    greeting: 'Prezado(a),',
+    intro: 'A reserva flutuante abaixo foi <strong>cancelada automaticamente</strong> por nao ter sido finalizada a tempo. A grade esta liberada para novo agendamento.',
+    alertHTML: alertCanc,
+    cardTitle: 'Reserva Cancelada',
+    rowsHTML: rowsCanc,
+    cta: 'Caso queira reagendar, acesse o sistema de Agendamento Cirurgico e crie uma nova reserva.'
+  });
 
   if(todosEmails.length > 0){
     let inserts = todosEmails.map(function(email){
@@ -10297,29 +10353,21 @@ async function fazerCadastroMedico(){
 
   // Enviar email de boas-vindas
   try {
-    let corpoBoasVindas = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">' +
-      '<div style="max-width:600px;margin:0 auto;padding:20px">' +
-      '<div style="background:linear-gradient(135deg,#0d9488,#14b8a6);border-radius:12px 12px 0 0;padding:24px 30px;text-align:center">' +
-      '<div style="font-size:28px;margin-bottom:6px">&#128075;</div>' +
-      '<h1 style="color:#fff;margin:0;font-size:20px;font-weight:700">Bem-vindo(a) ao Portal Medico!</h1>' +
-      '<p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">Hospital Ana Costa - Centro Cirurgico</p>' +
-      '</div>' +
-      '<div style="background:#fff;padding:28px 30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
-      '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a) Dr(a). '+nome+',</p>' +
-      '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">Seu cadastro no Portal Medico do Hospital Ana Costa foi recebido com sucesso!</p>' +
-      '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">' +
-      '<table style="width:100%;border-collapse:collapse">' +
-      '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Nome</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+nome+'</td></tr>' +
-      '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">CRM/CRO</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+crm+'</td></tr>' +
-      (espec ? '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Especialidade</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+espec+'</td></tr>' : '') +
-      '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">Status</td><td style="padding:8px 12px;color:#d97706;font-weight:600;border-bottom:1px solid #f3f4f6">Aguardando Aprovacao</td></tr>' +
-      '</table></div>' +
-      '<p style="color:#6b7280;font-size:13px;margin:0 0 20px;line-height:1.5">Seu cadastro sera analisado pela equipe administrativa. Voce recebera um e-mail de confirmacao quando for aprovado.</p>' +
-      '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">' +
-      '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>' +
-      '</div></div>' +
-      '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">Este e-mail foi enviado automaticamente pelo sistema.</p>' +
-      '</div></body></html>';
+    let rowsBV = _hacRow('Nome', nome) +
+      _hacRow('CRM/CRO', crm) +
+      (espec ? _hacRow('Especialidade', espec) : '') +
+      _hacRow('Status', 'Aguardando aprovacao', '#d97706', true);
+    let corpoBoasVindas = emailTemplate({
+      accentColor: '#0d9488',
+      badge: 'Cadastro recebido',
+      title: 'Bem-vindo(a) ao Portal Medico',
+      subtitle: 'Hospital Ana Costa &middot; Centro Cirurgico',
+      greeting: 'Prezado(a) Dr(a). '+nome+',',
+      intro: 'Seu cadastro no Portal Medico do <strong>Hospital Ana Costa</strong> foi recebido com sucesso.',
+      cardTitle: 'Dados do Cadastro',
+      rowsHTML: rowsBV,
+      cta: 'Seu cadastro sera analisado pela equipe administrativa. Voce recebera um e-mail de confirmacao assim que for aprovado.'
+    });
     await sb.from('email_notifications').insert({
       to_email: email, to_name: nome,
       subject: 'Bem-vindo ao Portal Medico - Hospital Ana Costa',
@@ -11266,8 +11314,6 @@ async function notificarMedicoMovimentacao(crm, tipo, detalhes){
   let icone = icones[tipo] || '&#128276;';
   let titulo = titulos[tipo] || 'Atualizacao';
 
-  // Formatar detalhes em linhas HTML
-  let detalhesHTML = detalhes.replace(/\n/g, '<br>');
   // Extrair linhas para cards individuais
   let linhas = detalhes.split('\n').filter(function(l){return l.trim();});
   let linhasHTML = '';
@@ -11276,37 +11322,34 @@ async function notificarMedicoMovimentacao(crm, tipo, detalhes){
     if(partes.length >= 2){
       let label = partes[0].trim();
       let valor = partes.slice(1).join(':').trim();
-      linhasHTML += '<tr><td style="padding:8px 12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6;width:130px">'+label+'</td><td style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+valor+'</td></tr>';
+      linhasHTML += _hacRow(label, valor);
     } else {
-      linhasHTML += '<tr><td colspan="2" style="padding:8px 12px;color:#1f2937;border-bottom:1px solid #f3f4f6">'+linhas[li]+'</td></tr>';
+      linhasHTML += '<tr><td colspan="2" style="padding:13px 18px;color:#111827;font-size:14px;border-bottom:1px solid #eef0f2">'+linhas[li]+'</td></tr>';
     }
   }
 
-  let corpo = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">' +
-    '<div style="max-width:600px;margin:0 auto;padding:20px">' +
-    // Header
-    '<div style="background:'+cor+';border-radius:12px 12px 0 0;padding:24px 30px;text-align:center">' +
-    '<div style="font-size:28px;margin-bottom:6px">'+icone+'</div>' +
-    '<h1 style="color:#fff;margin:0;font-size:20px;font-weight:700">'+titulo+'</h1>' +
-    '<p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">Hospital Ana Costa - Centro Cirurgico</p>' +
-    '</div>' +
-    // Body
-    '<div style="background:#fff;padding:28px 30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
-    '<p style="color:#374151;font-size:15px;margin:0 0 18px;line-height:1.5">Prezado(a) Dr(a),</p>' +
-    '<p style="color:#374151;font-size:14px;margin:0 0 16px;line-height:1.5">Informamos que houve uma atualizacao no sistema de agendamento cirurgico:</p>' +
-    // Detalhes em tabela
-    '<div style="background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">' +
-    '<table style="width:100%;border-collapse:collapse">' + linhasHTML + '</table>' +
-    '</div>' +
-    '<p style="color:#6b7280;font-size:13px;margin:0 0 20px;line-height:1.5">Acesse o Portal Medico para mais detalhes sobre esta movimentacao.</p>' +
-    // Assinatura
-    '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">' +
-    '<p style="color:#9ca3af;font-size:12px;margin:0;line-height:1.6">Atenciosamente,<br><strong style="color:#374151">Equipe de Agendamento</strong><br>Centro Cirurgico - Hospital Ana Costa</p>' +
-    '</div>' +
-    '</div>' +
-    // Footer
-    '<p style="text-align:center;color:#9ca3af;font-size:11px;margin:16px 0 0">Este e-mail foi enviado automaticamente pelo sistema de gestao cirurgica.<br>Favor nao responder.</p>' +
-    '</div></body></html>';
+  let badgesMov = {
+    'novo_agendamento': 'Novo agendamento',
+    'cancelamento': 'Cirurgia cancelada',
+    'suspensao': 'Cirurgia suspensa',
+    'alteracao': 'Agendamento atualizado',
+    'troca_sala': 'Troca de sala',
+    'aprovacao': 'Cadastro aprovado',
+    'reativacao': 'Cirurgia reativada',
+    'boas_vindas': 'Bem-vindo ao Portal Medico'
+  };
+
+  let corpo = emailTemplate({
+    accentColor: cor,
+    badge: badgesMov[tipo] || 'Atualizacao',
+    title: titulo,
+    subtitle: 'Hospital Ana Costa &middot; Centro Cirurgico',
+    greeting: 'Prezado(a) Dr(a),',
+    intro: 'Informamos que houve uma atualizacao no sistema de agendamento cirurgico.',
+    cardTitle: 'Detalhes da Movimentacao',
+    rowsHTML: linhasHTML,
+    cta: 'Acesse o Portal Medico para mais detalhes sobre esta movimentacao.'
+  });
 
   await notificarMedicoPorEmail(crm, assunto, corpo);
 
