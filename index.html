@@ -2486,6 +2486,10 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           <input type="checkbox" id="flutuante" onchange="toggleFlutuante(this.checked)" style="accent-color:var(--warning)">
           Reserva Flutuante
         </label>
+        <label id="novaDataWrap" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:6px 16px;border:1.5px solid #2563eb;border-radius:20px;font-size:12px;font-weight:600;color:#2563eb;user-select:none" title="Avisar Internação Eletiva sobre nova data — e-mail enviado ao confirmar">
+          <input type="checkbox" id="novaData" style="accent-color:#2563eb">
+          📧 Nova Data
+        </label>
         <button class="btn btn-outline btn-sm" onclick="limparForm()" style="padding:6px 14px;font-size:12px;border-radius:20px;color:var(--text-secondary);border-color:#ccc" title="Limpar todos os campos do formulário">🗑 Limpar</button>
       </div>
     </div>
@@ -3289,6 +3293,10 @@ tr.suspenso td { color: #e65100; font-style: italic; }
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 16px;border:1.5px solid var(--warning);border-radius:20px;font-size:12px;font-weight:600;color:var(--warning);user-select:none" title="Reserva sem cadastro completo">
             <input type="checkbox" id="hemoFlutuante" onchange="alternarHemoFlutuante()" style="accent-color:var(--warning)">
             Reserva Flutuante
+          </label>
+          <label id="hemoNovaDataWrap" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:6px 16px;border:1.5px solid #2563eb;border-radius:20px;font-size:12px;font-weight:600;color:#2563eb;user-select:none" title="Avisar Internação Eletiva sobre nova data — e-mail enviado ao confirmar">
+            <input type="checkbox" id="hemoNovaData" style="accent-color:#2563eb">
+            📧 Nova Data
           </label>
           <button class="btn btn-outline btn-sm" onclick="limparFormHemo()" style="padding:6px 14px;font-size:12px;border-radius:20px;color:var(--text-secondary);border-color:#ccc" title="Limpar formulário">🗑 Limpar</button>
         </div>
@@ -5338,6 +5346,25 @@ function _validarLive(){
     }
   }
 
+  // 9. Verificar conflito com Escala Fixa (aviso, não erro)
+  let especVal = (document.getElementById('especialidadeCirurgia')||{}).value || '';
+  if(data && horario && sala && especVal){
+    let cTempoE = parseInt(document.getElementById("tempo").value)||60;
+    try {
+      let confEscLive = verificarConflitoEscalaFixa(data, horario, cTempoE, sala, especVal);
+      if(confEscLive && confEscLive.escalas && confEscLive.escalas.length){
+        let primeira = confEscLive.escalas[0];
+        let h = (primeira.horario_inicio||'').substring(0,5)+'-'+(primeira.horario_fim||'').substring(0,5);
+        let medTxt = primeira.medico ? ' • Dr(a). '+primeira.medico : '';
+        if(confEscLive.tipo === 'especialidade_diferente'){
+          alertas.push({tipo:'aviso', msg:'📅 <b>Escala Fixa diferente</b> — Sala '+sala+' está escalada para <b>'+(primeira.especialidade||'-')+'</b> ('+h+')'+medTxt});
+        } else if(confEscLive.tipo === 'fora_janela'){
+          alertas.push({tipo:'aviso', msg:'📅 <b>Fora da janela da Escala Fixa</b> — escala '+(primeira.especialidade||'-')+' '+h+medTxt+'. Cirúrgia: '+horario+' ('+cTempoE+'min)'});
+        }
+      }
+    } catch(e){ console.warn('[live escala-fixa]', e); }
+  }
+
   // Render
   let temErro = alertas.some(a => a.tipo==='erro');
 
@@ -5701,7 +5728,20 @@ function toggleFlutuante(on){
       el.style.borderColor='';
     }
   });
-  if(on) showToast('🔄 Modo flutuante: campos em laranja são obrigatórios');
+  // Aplica/remove limites de data (janela 10-60 dias)
+  let inpDataCC = document.getElementById('data');
+  if(inpDataCC){
+    if(on){
+      let dMin = new Date(); dMin.setDate(dMin.getDate()+10);
+      let dMax = new Date(); dMax.setDate(dMax.getDate()+60);
+      inpDataCC.min = dMin.toISOString().slice(0,10);
+      inpDataCC.max = dMax.toISOString().slice(0,10);
+    } else {
+      inpDataCC.removeAttribute('min');
+      inpDataCC.removeAttribute('max');
+    }
+  }
+  if(on) showToast('🔄 Modo flutuante: agendar entre 10 e 60 dias');
 }
 
 // ============ RELATÓRIO RESERVAS FLUTUANTES ============
@@ -5852,6 +5892,75 @@ function verificarConflitoFlutuante(data, horario, tempo, sala, excluirId){
   return null;
 }
 
+// ============ CONFLITO COM ESCALA FIXA ============
+// Retorna { tipo, escalasConflito, escalasMesmaEsp, mensagem } ou null se tudo certo.
+// Tipos:
+//   'especialidade_diferente' -> a especialidade agendada conflita com escala de OUTRA especialidade
+//   'fora_janela'              -> mesma especialidade tem escala, mas cirurgia começa antes ou termina depois
+//   'sem_cobertura'            -> não há ESCALA da especialidade da cirurgia para essa sala/dia naquele horário
+function verificarConflitoEscalaFixa(data, horario, tempo, sala, especialidadeCir){
+  if(!data || !horario || !sala || !especialidadeCir) return null;
+  if(!Array.isArray(ESCALAS_CACHE) || ESCALAS_CACHE.length === 0) return null;
+  var d = new Date(data+'T12:00:00');
+  var diaSemana = d.getDay(); // 0=Dom ... 6=Sab
+  var iniMin = toMin(horario);
+  var fimMin = iniMin + (parseInt(tempo)||60);
+  var espNorm = (especialidadeCir||'').trim().toUpperCase();
+
+  // 1) Todas as escalas ativas para esta sala/dia
+  var escalasSalaDia = ESCALAS_CACHE.filter(function(e){
+    if(e.ativo === false) return false;
+    if(parseInt(e.dia_semana) !== diaSemana) return false;
+    if((e.sala||'') !== sala) return false;
+    return true;
+  });
+  if(escalasSalaDia.length === 0) return null; // sem escala -> não avisa
+
+  // 2) Escalas que SE SOBREPÕEM à janela da cirurgia
+  var sobrepostas = escalasSalaDia.filter(function(e){
+    var eIni = toMin((e.horario_inicio||'00:00').substring(0,5));
+    var eFim = toMin((e.horario_fim||'23:59').substring(0,5));
+    return iniMin < eFim && fimMin > eIni;
+  });
+
+  // 3) Escalas sobrepostas com especialidade DIFERENTE
+  var diferentes = sobrepostas.filter(function(e){
+    var ee = (e.especialidade||'').trim().toUpperCase();
+    return ee && ee !== espNorm;
+  });
+  // 4) Escalas sobrepostas com a MESMA especialidade
+  var mesmas = sobrepostas.filter(function(e){
+    var ee = (e.especialidade||'').trim().toUpperCase();
+    return ee === espNorm;
+  });
+
+  // CASO A: existe escala de OUTRA especialidade no horário -> aviso de conflito
+  if(diferentes.length > 0){
+    return { tipo:'especialidade_diferente', escalas:diferentes };
+  }
+
+  // CASO B: existe escala da mesma especialidade -> verifica se cobre TODA a janela
+  if(mesmas.length > 0){
+    // união das janelas das escalas mesmas-especialidade -> verifica se cirurgia cabe dentro
+    var coberto = false;
+    for(var i=0;i<mesmas.length;i++){
+      var e = mesmas[i];
+      var eIni = toMin((e.horario_inicio||'00:00').substring(0,5));
+      var eFim = toMin((e.horario_fim||'23:59').substring(0,5));
+      if(iniMin >= eIni && fimMin <= eFim){ coberto = true; break; }
+    }
+    if(!coberto){
+      return { tipo:'fora_janela', escalas:mesmas };
+    }
+    return null; // tudo certo, dentro da janela da escala
+  }
+
+  // CASO C: há escala na sala/dia mas NENHUMA na hora da cirurgia (nem mesma nem outra)
+  // Acontece quando a cirurgia cai numa "janela LIVRE" (sem escala fixa específica naquele horário)
+  // Não vamos avisar nesse caso (sala está livre conforme escala)
+  return null;
+}
+
 function sugerirHorariosAlternativos(data, sala, tempo, horarioAtual){
   var dur = parseInt(tempo)||60;
   var ocupados = dados.filter(function(c){
@@ -5897,7 +6006,7 @@ function diffDiasUteis(dataStr1, dataStr2){
 }
 
 // ============ EMAIL TEMPLATE HOSPITAL ANA COSTA ============
-var HAC_LOGO_EMAIL = 'https://raw.githubusercontent.com/hospitalanacosta/centro-cirurgico-hac/main/logo_email.png';
+var HAC_LOGO_EMAIL = 'data:image/png;base64,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';
 var HAC_BRAND_GREEN = '#16a34a';
 
 function _hacRow(label, value, valueColor, bold){
@@ -6110,6 +6219,107 @@ async function coletarEmailsFlutuante(cir){
   return emails;
 }
 
+// ============ ENVIO DE EMAIL "NOVA DATA" (INTERNAÇÃO ELETIVA) ============
+async function enviarEmailNovaData(cir){
+  if(!cir) return;
+  var destinoPrincipal = 'internacao.eletiva@anacosta.com.br';
+  var emailAgendamento = 'agendamento.cirurgias@anacosta.com.br';
+
+  // Coleta CC: admin2 + agendamento.cirurgias@anacosta.com.br
+  var copias = [];
+  if(emailAgendamento !== destinoPrincipal) copias.push(emailAgendamento);
+  try {
+    var {data:admins} = await sb.from('usuarios').select('email').eq('perfil','admin2').eq('status','aprovado');
+    if(admins){
+      for(var a=0; a<admins.length; a++){
+        if(admins[a].email && admins[a].email !== destinoPrincipal && copias.indexOf(admins[a].email)<0){
+          copias.push(admins[a].email);
+        }
+      }
+    }
+  } catch(e){}
+
+  // Monta linhas com TODOS os campos preenchidos
+  var rows = '';
+  function add(label, value){
+    if(value === undefined || value === null || value === '' || value === false) return;
+    rows += _hacRow(label, String(value));
+  }
+  add('Paciente', cir.paciente);
+  add('Nº Identificação / Prontuário', cir.identificacao);
+  add('Data Nascimento', cir.dataNasc ? formatDate(cir.dataNasc) : '');
+  add('Idade', cir.idade);
+  add('Data da Cirurgia', cir.data ? formatDate(cir.data) : '');
+  add('Horário', cir.horario);
+  add('Tempo Cirúrgico (min)', cir.tempo);
+  add('Sala', cir.sala);
+  add('Especialidade', cir.especialidadeCirurgia || cir.especialidade);
+  add('CRM/CRO', cir.crm);
+  add('Médico', cir.medico);
+  add('Procedimento', cir.procedimento);
+  add('Código TUSS', cir.codigoTuss);
+  add('Procedimento 2', cir.procedimento2);
+  add('Código TUSS 2', cir.codigoTuss2);
+  add('Convênio', cir.convenio);
+  add('Código Convênio', cir.codigoConvenio);
+  add('Grupo Convênio', cir.convenioGrupo);
+  add('Observações', cir.observacoes);
+  add('Reserva Flutuante', cir.flutuante ? 'Sim' : '');
+  add('Agendado por', cir.registrado_por || (usuarioLogado && usuarioLogado.nome) || '');
+
+  // Recursos (se existir)
+  try {
+    if(cir.recursos && typeof cir.recursos === 'object'){
+      var recList = [];
+      if(cir.recursos.uti) recList.push('Reserva UTI');
+      if(cir.recursos.sangue) recList.push('Transfusão');
+      Object.keys(cir.recursos).forEach(function(k){
+        if(['uti','sangue'].indexOf(k)<0 && cir.recursos[k]) recList.push(k);
+      });
+      if(recList.length) add('Recursos', recList.join(', '));
+    }
+  } catch(e){}
+
+  var assunto = 'Nova data - ' + (cir.paciente || 'Paciente');
+
+  var alertBox = '<div style="background:#eff6ff;border-left:4px solid #2563eb;border-radius:8px;padding:14px 16px;margin:0 0 22px">' +
+    '<p style="margin:0;color:#1e40af;font-size:13px;font-weight:600;line-height:1.55">Aviso de nova data agendada. Por favor, providenciar a internação eletiva conforme dados abaixo.</p>' +
+    '</div>';
+
+  var corpo = emailTemplate({
+    accentColor: '#2563eb',
+    badge: 'Nova Data &middot; Internação Eletiva',
+    title: 'Nova Data Agendada',
+    subtitle: 'Cirurgia ' + (cir.flutuante ? 'flutuante ' : '') + 'agendada — ' + (cir.data ? formatDate(cir.data) : ''),
+    greeting: 'Prezados,',
+    intro: 'Foi agendada uma <strong>nova data</strong> de cirurgia. Seguem abaixo os dados completos do agendamento.',
+    alertHTML: alertBox,
+    cardTitle: 'Dados da Cirurgia',
+    rowsHTML: rows,
+    cta: 'Por favor, dar continuidade ao processo de internação eletiva.'
+  });
+
+  // Envia para o destino principal + cópias (cada um como uma notificação)
+  var listaTodos = [destinoPrincipal].concat(copias);
+  var inserts = listaTodos.map(function(email){
+    return {
+      to_email: email,
+      to_name: email === destinoPrincipal ? 'Internação Eletiva' : 'Usuário',
+      subject: assunto,
+      body: corpo,
+      crm: 'NOVA_DATA_' + (cir.id || Date.now()),
+      status: 'pending'
+    };
+  });
+  try {
+    await sb.from('email_notifications').insert(inserts);
+    showToast('📧 E-mail "Nova Data" enviado para Internação Eletiva');
+  } catch(e){
+    console.error('Erro ao enviar e-mail Nova Data:', e);
+    showToast('⚠️ Falha ao enviar e-mail Nova Data');
+  }
+}
+
 // ============ VALIDAÇÃO ID DUPLICADO ============
 function verificarIdDuplicado(identificacao, data, excluirId){
   if(!identificacao) return null;
@@ -6262,6 +6472,8 @@ function carregarCirurgiaPorID(cir){
   document.getElementById('convenioGrupo').value = cir.convenioGrupo || cir.convenio_grupo || '';
   document.getElementById('observacoes').value = cir.observacoes || '';
   document.getElementById('flutuante').checked = cir.flutuante || false;
+  // Aplica/atualiza visual de flutuante (mostra checkbox Nova Data se aplicável)
+  if(typeof toggleFlutuante === 'function') toggleFlutuante(!!cir.flutuante);
 
   // Recursos
   if(typeof recursosAtivos !== 'undefined'){
@@ -6362,6 +6574,20 @@ async function empurrarCirurgias(data, sala, horarioOriginal, tempoOriginal, tem
 
 // ============ SALVAR ============
 async function salvar(){
+  // Resetador do botão — garante que NUNCA fique travado em "Salvando..." / "Atualizando..."
+  let _btnConf = document.getElementById("btnConfirmar");
+  function _resetBtnConfirmar(){
+    if(!_btnConf) return;
+    _btnConf.disabled = false;
+    if(editandoId){
+      _btnConf.innerText = '✏️ Atualizar Agendamento';
+      _btnConf.style.background = '#e65100';
+    } else {
+      _btnConf.innerText = '✓ Confirmar Agendamento';
+      _btnConf.style.background = '';
+    }
+  }
+  try {
   let c = coletarForm();
 
   // Se está editando, fazer UPDATE
@@ -6388,12 +6614,19 @@ async function salvar(){
     if(cirOriginal && c.tempo > (cirOriginal.tempo||60)){
       await empurrarCirurgias(c.data, c.sala, cirOriginal.horario, cirOriginal.tempo||60, c.tempo, editandoId);
     }
+    // Captura flag "Nova Data" antes do reset
+    let _enviarNovaDataEdit = false;
+    try { _enviarNovaDataEdit = !!(document.getElementById('novaData') && document.getElementById('novaData').checked); } catch(e){}
     await DB.updateCirurgia(editandoId, updates);
     await DB.loadCirurgias();
+    if(_enviarNovaDataEdit){
+      try {
+        let cirComId = Object.assign({}, c, {id: editandoId});
+        await enviarEmailNovaData(cirComId);
+      } catch(e){ console.error('Falha enviarEmailNovaData (CC edit):', e); }
+    }
     limparForm();
     editandoId = null;
-    btn.style.background = '';
-    btn.disabled = false; btn.innerText = '✓ Confirmar Agendamento';
     document.getElementById("btnCancelarEdicao").style.display = 'none';
     showToast('✅ Cirurgia atualizada com sucesso!');
     registrarLog('edicao', c.paciente, 'Atualização: '+c.procedimento+' | '+c.sala+' '+c.horario);
@@ -6442,6 +6675,33 @@ async function salvar(){
     await modalAlert(msgInt, 'Intervalo Insuficiente');
     return;
   }
+  // ====== AVISO DE CONFLITO COM ESCALA FIXA (apenas informativo, não bloqueia) ======
+  try {
+    let confEsc = verificarConflitoEscalaFixa(c.data, c.horario, c.tempo, c.sala, c.especialidadeCirurgia);
+    if(confEsc){
+      let linhas = (confEsc.escalas||[]).map(function(e){
+        let h = (e.horario_inicio||'').substring(0,5) + ' - ' + (e.horario_fim||'').substring(0,5);
+        let med = e.medico ? ' | Dr(a). '+e.medico : '';
+        return '\u2022 '+e.especialidade+med+' ('+h+')';
+      }).join('\n');
+      let cabecalho = '';
+      if(confEsc.tipo === 'especialidade_diferente'){
+        cabecalho = 'AVISO: A sala "'+c.sala+'" possui escala fixa com OUTRA especialidade neste horário.';
+      } else if(confEsc.tipo === 'fora_janela'){
+        cabecalho = 'AVISO: A cirurgia está FORA da janela horária da escala fixa para esta especialidade.';
+      } else {
+        cabecalho = 'AVISO: Conflito com escala fixa detectado.';
+      }
+      await modalAlert(
+        cabecalho+'\n\n'+
+        'Especialidade da cirurgia: '+c.especialidadeCirurgia+'\n'+
+        'Horário: '+c.horario+' ('+(c.tempo||60)+' min)\n\n'+
+        'Escala(s) fixa(s) na sala/dia:\n'+linhas+'\n\n'+
+        'O agendamento prosseguirá normalmente — este aviso é apenas informativo.',
+        '\u26a0\ufe0f Conflito com Escala Fixa'
+      );
+    }
+  } catch(e){ console.warn('[escala-fixa] Falha ao verificar conflito:', e); }
   // ====== VERIFICAR CONFLITO COM FLUTUANTES ======
   if(!editandoId){
     let conflitoFlut = verificarConflitoFlutuante(c.data, c.horario, c.tempo, c.sala, null);
@@ -6460,7 +6720,7 @@ async function salvar(){
       return;
     }
   }
-  // ====== VALIDAR DATA DO FLUTUANTE (45 DIAS CORRIDOS) ======
+  // ====== VALIDAR DATA DO FLUTUANTE (JANELA 10 A 60 DIAS CORRIDOS) ======
   if(c.flutuante && !editandoId){
     let hoje = hojeLocal();
     if(c.data <= hoje){
@@ -6470,8 +6730,12 @@ async function salvar(){
     let dHoje = new Date(hoje+'T12:00:00');
     let dData = new Date(c.data+'T12:00:00');
     let diasCorridos = Math.round((dData - dHoje) / (1000*60*60*24));
-    if(diasCorridos < 60){
-      await modalAlert('Flutuante so pode ser agendado com no minimo 60 dias de antecedencia.\n\nData selecionada: '+formatDate(c.data)+' ('+diasCorridos+' dias)\nMinimo necessario: 60 dias corridos', 'Antecedencia Insuficiente');
+    if(diasCorridos < 10 || diasCorridos > 60){
+      let dMin = new Date(dHoje); dMin.setDate(dMin.getDate()+10);
+      let dMax = new Date(dHoje); dMax.setDate(dMax.getDate()+60);
+      let strMin = dMin.toISOString().slice(0,10);
+      let strMax = dMax.toISOString().slice(0,10);
+      await modalAlert('Flutuante deve ser agendado entre 10 e 60 dias corridos a partir de hoje.\n\nData selecionada: '+formatDate(c.data)+' ('+diasCorridos+' dias)\nJanela permitida: '+formatDate(strMin)+' a '+formatDate(strMax), 'Data Fora da Janela');
       return;
     }
   }
@@ -6482,6 +6746,9 @@ async function salvar(){
     return;
   }
   btn.disabled = true; btn.innerText = 'Salvando...';
+  // Captura flag "Nova Data" ANTES de limpar o form
+  let _enviarNovaData = false;
+  try { _enviarNovaData = !!(document.getElementById('novaData') && document.getElementById('novaData').checked); } catch(e){}
   let saved = await DB.salvarCirurgia(c);
   if(saved){
     await DB.loadCirurgias();
@@ -6491,6 +6758,13 @@ async function salvar(){
         await DB.upsertMedico({crm:c.crm, nome:c.medico, uf:'SP', especialidade:c.especialidade||'', origem:'auto'});
         await DB.loadMedicos();
       }
+    }
+    // Envia e-mail "Nova Data" para Internação Eletiva (se ticado e flutuante)
+    if(_enviarNovaData){
+      try {
+        let cirComId = Object.assign({}, c, {id: (saved && saved.id) || c.id});
+        await enviarEmailNovaData(cirComId);
+      } catch(e){ console.error('Falha enviarEmailNovaData (CC):', e); }
     }
     limparForm();
     showToast('✓ Cirurgia agendada com sucesso!');
@@ -6507,7 +6781,12 @@ async function salvar(){
     // Verificar se médico tem bloqueio nessa data
     await verificarBloqueioNaDataCirurgia(c.crm, c.medico, c.data, c.paciente, c.procedimento);
   }
-  btn.disabled = false; btn.innerText = '✓ Confirmar Agendamento';
+  } catch(err){
+    console.error('[salvar] Erro inesperado:', err);
+    try { showToast('⚠️ Erro ao salvar — tente novamente. ' + (err && err.message ? err.message : '')); } catch(e){}
+  } finally {
+    _resetBtnConfirmar();
+  }
 }
 
 // ============ CANCELAR / SUSPENDER (COM MOTIVO) ============
@@ -9177,6 +9456,11 @@ function editarHemo(idx){
   document.getElementById('hemoAgObs').value = c.observacoes||'';
   document.getElementById('hemoUTI').checked = c.recursos && c.recursos.uti;
   document.getElementById('hemoSangue').checked = c.recursos && c.recursos.sangue;
+  // Aplica modo flutuante se for o caso (mostra checkbox Nova Data)
+  document.getElementById('hemoFlutuante').checked = !!c.flutuante;
+  if(typeof alternarHemoFlutuante === 'function') alternarHemoFlutuante();
+  // Reaplica data após alternar (porque alternar pode pré-preencher)
+  document.getElementById('hemoAgData').value = c.data||'';
   // Set edit mode
   window._hemoEditId = c.id;
   let btn = document.getElementById('btnHemoSalvar');
@@ -9775,6 +10059,20 @@ function limparFormHemo(){
 }
 
 async function salvarHemodinamica(){
+  // Resetador do botão Hemo — garante que NUNCA fique travado
+  let _btnHemo = document.getElementById('btnHemoSalvar');
+  function _resetBtnHemo(){
+    if(!_btnHemo) return;
+    _btnHemo.disabled = false;
+    if(window._hemoEditId){
+      _btnHemo.innerText = '✏️ Atualizar Hemodinâmica';
+      _btnHemo.style.background = '#e65100';
+    } else {
+      _btnHemo.innerText = 'Agendar Hemodinâmica';
+      _btnHemo.style.background = '';
+    }
+  }
+  try {
   let data = document.getElementById('hemoAgData').value;
   let horario = document.getElementById('hemoAgHorario').value;
   let tempo = parseInt(document.getElementById('hemoAgTempo').value)||60;
@@ -9810,7 +10108,7 @@ async function salvarHemodinamica(){
     }
   }
   
-  // ====== VALIDAR DATA DO FLUTUANTE (60 DIAS CORRIDOS) ======
+  // ====== VALIDAR DATA DO FLUTUANTE (JANELA 10 A 60 DIAS CORRIDOS) ======
   if(isFlutuante && !window._hemoEditId){
     let hoje = hojeLocal();
     if(data <= hoje){
@@ -9820,8 +10118,12 @@ async function salvarHemodinamica(){
     let dHoje = new Date(hoje+'T12:00:00');
     let dData = new Date(data+'T12:00:00');
     let diasCorridos = Math.round((dData - dHoje) / (1000*60*60*24));
-    if(diasCorridos < 60){
-      await modalAlert('Flutuante so pode ser agendado com no minimo 60 dias de antecedencia.\n\nData selecionada: '+formatDate(data)+' ('+diasCorridos+' dias)\nMinimo necessario: 60 dias corridos', 'Antecedencia Insuficiente');
+    if(diasCorridos < 10 || diasCorridos > 60){
+      let dMin = new Date(dHoje); dMin.setDate(dMin.getDate()+10);
+      let dMax = new Date(dHoje); dMax.setDate(dMax.getDate()+60);
+      let strMin = dMin.toISOString().slice(0,10);
+      let strMax = dMax.toISOString().slice(0,10);
+      await modalAlert('Flutuante deve ser agendado entre 10 e 60 dias corridos a partir de hoje.\n\nData selecionada: '+formatDate(data)+' ('+diasCorridos+' dias)\nJanela permitida: '+formatDate(strMin)+' a '+formatDate(strMax), 'Data Fora da Janela');
       return;
     }
   }
@@ -9863,24 +10165,43 @@ async function salvarHemodinamica(){
 
   // Edit mode
   if(window._hemoEditId){
+    // Captura flag "Nova Data" antes do reset
+    let _enviarNovaDataHemoEdit = false;
+    try { _enviarNovaDataHemoEdit = !!(document.getElementById('hemoNovaData') && document.getElementById('hemoNovaData').checked); } catch(e){}
+    if(_btnHemo){ _btnHemo.disabled = true; _btnHemo.innerText = 'Atualizando...'; }
     await DB.updateCirurgia(window._hemoEditId, c);
     await DB.loadCirurgias();
     registrarLog('edicao', paciente, 'Hemodinâmica editada: '+proc+' às '+horario);
     showToast('✅ Hemodinâmica atualizada!');
+    if(_enviarNovaDataHemoEdit){
+      try {
+        let cirComId = Object.assign({}, c, {id: window._hemoEditId});
+        await enviarEmailNovaData(cirComId);
+      } catch(e){ console.error('Falha enviarEmailNovaData (Hemo edit):', e); }
+    }
     window._hemoEditId = null;
-    let btn = document.getElementById('btnHemoSalvar');
-    if(btn){ btn.innerText = 'Agendar Hemodinâmica'; btn.style.background=''; }
     document.getElementById('btnHemoCancelarEdicao').style.display='none';
     renderHemodinamica();
     ['hemoAgData','hemoAgHorario','hemoAgTempo','hemoAgPaciente','hemoAgId','hemoAgNasc','hemoAgCRM','hemoAgMedico','hemoAgTuss','hemoAgProc','hemoAgConv','hemoAgConvNome','hemoAgObs'].forEach(id=>{ let el=document.getElementById(id); if(el) el.value=''; });
     document.getElementById('hemoUTI').checked=false; document.getElementById('hemoSangue').checked=false;
     return;
   }
+  // Captura flag "Nova Data" ANTES de limpar o form
+  let _enviarNovaDataHemo = false;
+  try { _enviarNovaDataHemo = !!(document.getElementById('hemoNovaData') && document.getElementById('hemoNovaData').checked); } catch(e){}
+  if(_btnHemo){ _btnHemo.disabled = true; _btnHemo.innerText = 'Salvando...'; }
   let saved = await DB.salvarCirurgia(c);
   if(saved){
     await DB.loadCirurgias();
     registrarLog('criacao', paciente, 'Hemodinâmica: '+proc+' às '+horario);
     showToast('✓ Hemodinâmica agendada!');
+    // Envia e-mail "Nova Data" para Internação Eletiva (se ticado e flutuante)
+    if(_enviarNovaDataHemo){
+      try {
+        let cirComId = Object.assign({}, c, {id: (saved && saved.id) || c.id});
+        await enviarEmailNovaData(cirComId);
+      } catch(e){ console.error('Falha enviarEmailNovaData (Hemo):', e); }
+    }
     renderHemodinamica();
     ['hemoAgData','hemoAgHorario','hemoAgTempo','hemoAgPaciente','hemoAgId','hemoAgNasc','hemoAgCRM','hemoAgMedico','hemoAgTuss','hemoAgProc','hemoAgConv','hemoAgConvNome','hemoAgObs'].forEach(id=>{
       let el=document.getElementById(id); if(el) el.value='';
@@ -9889,6 +10210,12 @@ async function salvarHemodinamica(){
     document.getElementById('hemoSangue').checked = false;
     document.getElementById('hemoFlutuante').checked = false;
     alternarHemoFlutuante();
+  }
+  } catch(err){
+    console.error('[salvarHemodinamica] Erro inesperado:', err);
+    try { showToast('⚠️ Erro ao salvar Hemodinâmica — tente novamente. ' + (err && err.message ? err.message : '')); } catch(e){}
+  } finally {
+    _resetBtnHemo();
   }
 }
 
@@ -9916,17 +10243,24 @@ function alternarHemoFlutuante(){
   if(isFlutuante){
     gHorario.style.display = 'none';
     inpHorario.value = '';
-    // Pre-fill 60 days
+    // Pre-fill 30 dias (meio da janela 10-60)
     let dt = new Date();
-    dt.setDate(dt.getDate() + 60);
+    dt.setDate(dt.getDate() + 30);
     let dia = String(dt.getDate()).padStart(2,'0');
     let mes = String(dt.getMonth()+1).padStart(2,'0');
     let ano = dt.getFullYear();
     inpData.value = ano+'-'+mes+'-'+dia;
-    showToast('🔄 Modo flutuante: campos em laranja aguardam confirmação futura');
+    // Aplica limites min/max no campo de data
+    let dMin = new Date(); dMin.setDate(dMin.getDate()+10);
+    let dMax = new Date(); dMax.setDate(dMax.getDate()+60);
+    inpData.min = dMin.toISOString().slice(0,10);
+    inpData.max = dMax.toISOString().slice(0,10);
+    showToast('🔄 Modo flutuante: agendar entre 10 e 60 dias');
   } else {
     gHorario.style.display = '';
     inpData.value = hojeLocal();
+    inpData.removeAttribute('min');
+    inpData.removeAttribute('max');
   }
 }
 
