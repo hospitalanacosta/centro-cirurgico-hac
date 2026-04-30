@@ -6334,6 +6334,116 @@ async function enviarEmailNovaData(cir){
   }
 }
 
+// ============ ENVIO DE EMAIL "CIRURGIA SUSPENSA" ============
+async function enviarEmailSuspensao(cir, motivoSuspensao){
+  if(!cir) return;
+  // Mesma lista fixa do "Nova Data"
+  var destinoPrincipal = 'internacao.eletiva@anacosta.com.br';
+  var copias = [
+    'shirley.oliveira@anacosta.com.br',
+    'sara.barreto@anacosta.com.br',
+    'eduardo.marques@anacosta.com.br'
+  ];
+
+  // Anti-duplicação: se já enviou suspensão para esta cirurgia, não envia de novo
+  if(cir.id){
+    try {
+      var crmKeyChk = 'SUSPENSAO_' + cir.id;
+      var {data:existentes} = await sb.from('email_notifications').select('id').eq('crm', crmKeyChk).limit(1);
+      if(existentes && existentes.length > 0){
+        console.log('[Suspensao] Já enviado para cirurgia '+cir.id+' — ignorando duplicação');
+        return;
+      }
+    } catch(e){ console.warn('[Suspensao] Falha check duplicação:', e); }
+  }
+
+  // Monta linhas com os dados da cirurgia suspensa
+  var rows = '';
+  function add(label, value){
+    if(value === undefined || value === null || value === '' || value === false) return;
+    rows += _hacRow(label, String(value));
+  }
+  add('Paciente', cir.paciente);
+  add('Nº Identificação / Prontuário', cir.identificacao);
+  add('Data Nascimento', cir.dataNasc ? formatDate(cir.dataNasc) : '');
+  add('Idade', cir.idade);
+  add('Data da Cirurgia', cir.data ? formatDate(cir.data) : '');
+  add('Horário', cir.horario);
+  add('Tempo Cirúrgico (min)', cir.tempo);
+  add('Sala', cir.sala);
+  add('Especialidade', cir.especialidadeCirurgia || cir.especialidade);
+  add('CRM/CRO', cir.crm);
+  add('Médico', cir.medico);
+  add('Procedimento', cir.procedimento);
+  add('Código TUSS', cir.codigoTuss);
+  add('Convênio', cir.convenio);
+  add('Código Convênio', cir.codigoConvenio);
+  add('Observações', cir.observacoes);
+  add('Agendado por', cir.registrado_por || (usuarioLogado && usuarioLogado.nome) || '');
+  // Destaque do motivo
+  rows += _hacRow('Motivo da Suspensão', motivoSuspensao || '-', '#dc2626', true);
+
+  // Recursos (se existir)
+  try {
+    if(cir.recursos && typeof cir.recursos === 'object'){
+      var recList = [];
+      if(cir.recursos.uti) recList.push('Reserva UTI');
+      if(cir.recursos.sangue) recList.push('Transfusão');
+      Object.keys(cir.recursos).forEach(function(k){
+        if(['uti','sangue'].indexOf(k)<0 && cir.recursos[k]) recList.push(k);
+      });
+      if(recList.length) add('Recursos', recList.join(', '));
+    }
+  } catch(e){}
+
+  var assunto = 'Cirurgia Suspensa - ' + (cir.paciente || 'Paciente');
+
+  var alertBox = '<div style="background:#fef2f2;border-left:4px solid #dc2626;border-radius:8px;padding:14px 16px;margin:0 0 22px">' +
+    '<p style="margin:0;color:#991b1b;font-size:13px;font-weight:600;line-height:1.55">A cirurgia abaixo foi <strong>suspensa</strong>. Motivo: <strong>' + (motivoSuspensao || '-') + '</strong>.</p>' +
+    '</div>';
+
+  var corpo = emailTemplate({
+    accentColor: '#dc2626',
+    badge: 'Suspensão de Cirurgia',
+    title: 'Cirurgia Suspensa',
+    subtitle: 'Suspensão registrada — ' + (cir.data ? formatDate(cir.data) : ''),
+    greeting: 'Prezados,',
+    intro: 'A cirurgia abaixo foi suspensa. Seguem os dados completos para conhecimento.',
+    alertHTML: alertBox,
+    cardTitle: 'Dados da Cirurgia Suspensa',
+    rowsHTML: rows,
+    cta: 'Caso necessário, providenciar reagendamento ou demais providências cabíveis.'
+  });
+
+  var crmKey = 'SUSPENSAO_' + (cir.id || Date.now());
+  var listaFinal = [destinoPrincipal].concat(copias);
+  // Dedup
+  var vistos = {};
+  listaFinal = listaFinal.filter(function(em){
+    var k = (em||'').toLowerCase().trim();
+    if(!k || vistos[k]) return false;
+    vistos[k] = true;
+    return true;
+  });
+  var inserts = listaFinal.map(function(email){
+    return {
+      to_email: email,
+      to_name: email === destinoPrincipal ? 'Internação Eletiva' : 'Cópia',
+      subject: assunto,
+      body: corpo,
+      crm: crmKey,
+      status: 'pending'
+    };
+  });
+  try {
+    await sb.from('email_notifications').insert(inserts);
+    showToast('📧 E-mail de suspensão enviado para ' + listaFinal.length + ' destinatário(s)');
+  } catch(e){
+    console.error('Erro ao enviar e-mail Suspensão:', e);
+    showToast('⚠️ Falha ao enviar e-mail Suspensão');
+  }
+}
+
 // ============ VALIDAÇÃO ID DUPLICADO ============
 function verificarIdDuplicado(identificacao, data, excluirId){
   if(!identificacao) return null;
@@ -6827,6 +6937,8 @@ const MOTIVOS_SUSPENSAO = [
   'Falta de hemoderivados',
   'Alteração de quadro clínico',
   'Sem leito disponível',
+  'A pedido do médico',
+  'A pedido do paciente',
   'Outro'
 ];
 
@@ -6855,6 +6967,7 @@ async function cancelar(i){
 async function suspender(i){
   let motivo = await promptMotivo('Suspender cirurgia de '+dados[i].paciente, MOTIVOS_SUSPENSAO);
   if(motivo !== null){
+    let cirSnap = Object.assign({}, dados[i]); // snapshot antes do update (para usar no e-mail)
     await DB.updateCirurgia(dados[i].id, {suspenso:true, motivo_suspensao:motivo});
     await DB.loadCirurgias();
     registrarLog('suspensao', dados[i].paciente, 'Motivo: '+motivo+' | '+dados[i].sala+' '+dados[i].horario);
@@ -6863,6 +6976,11 @@ async function suspender(i){
       'Paciente: '+(dados[i].paciente||'')+' | Motivo: '+motivo+' | Data: '+(dados[i].data||'')+' '+(dados[i].horario||''), dados[i].id);
     if(dados[i].crm) notificarMedicoMovimentacao(dados[i].crm, 'suspensao',
       'Cirurgia suspensa:\nPaciente: '+(dados[i].paciente||'-')+'\nData: '+formatDate(dados[i].data||'')+'\nMotivo: '+motivo);
+    // Envia e-mail somente se motivo for "A pedido do médico" ou "A pedido do paciente"
+    if(motivo === 'A pedido do médico' || motivo === 'A pedido do paciente'){
+      try { await enviarEmailSuspensao(cirSnap, motivo); }
+      catch(e){ console.error('Falha enviarEmailSuspensao:', e); }
+    }
     desenhar(); renderLista();
   }
 }
