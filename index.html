@@ -5225,6 +5225,20 @@ function _validarLive(){
   let fim = ini + (tempo||60);
   let periodo = getPeriodo(ini);
 
+  // 0. Bloqueio de data retroativa (modo flutuante tem regra própria de janela 10-60d)
+  let _isFlutLive = document.getElementById('flutuante') && document.getElementById('flutuante').checked;
+  if(data && !_isFlutLive){
+    let _hojeLive = hojeLocal();
+    let _dataOrigEdit = '';
+    if(editandoId){
+      let _cirOrig = dados.find(x=>x.id===editandoId);
+      if(_cirOrig) _dataOrigEdit = _cirOrig.data || '';
+    }
+    if(data < _hojeLive && data !== _dataOrigEdit){
+      alertas.push({tipo:'erro', msg:'📅 <b>Data retroativa não permitida</b> — selecionada '+formatDate(data)+', mínimo permitido: '+formatDate(_hojeLive)});
+    }
+  }
+
   // 1. Conflito de horário
   let mesmaSala = diaList.filter(x => x.sala === sala);
   mesmaSala.forEach(x => {
@@ -6719,6 +6733,19 @@ async function salvar(){
 
   // Se está editando, fazer UPDATE
   if(editandoId){
+    // ====== BLOQUEIO DATA RETROATIVA AO EDITAR ======
+    // Permite manter data passada se a cirurgia já era do passado.
+    // Mas bloqueia se está MUDANDO a data para um novo dia anterior a hoje.
+    if(c.data && !c.flutuante){
+      let hojeStr2 = hojeLocal();
+      let cirOriginalEdit = dados.find(x=>x.id===editandoId);
+      let dataOriginal = cirOriginalEdit ? (cirOriginalEdit.data||'') : '';
+      // Bloqueia se: data nova é anterior a hoje E é diferente da data original
+      if(c.data < hojeStr2 && c.data !== dataOriginal){
+        await modalAlert('Não é permitido alterar a data para uma data retroativa.\n\nData selecionada: '+formatDate(c.data)+'\nData mínima permitida: '+formatDate(hojeStr2)+'\n\nMantenha a data original ou selecione hoje/futuro.', 'Data Inválida');
+        return;
+      }
+    }
     let btn = document.getElementById("btnConfirmar");
     btn.disabled = true; btn.innerText = 'Atualizando...';
 
@@ -6765,6 +6792,16 @@ async function salvar(){
     return;
   }
 
+  // ====== BLOQUEIO: NÃO PERMITIR DATA RETROATIVA EM NOVO AGENDAMENTO ======
+  // Apenas para criação (sem editandoId). Edição é tratada separadamente.
+  // Modo flutuante tem sua própria validação de janela 10-60 dias.
+  if(c.data && !c.flutuante){
+    let hojeStr = hojeLocal();
+    if(c.data < hojeStr){
+      await modalAlert('Não é permitido agendar cirurgia em data retroativa.\n\nData selecionada: '+formatDate(c.data)+'\nData mínima permitida: '+formatDate(hojeStr)+'\n\nSelecione hoje ou uma data futura.', 'Data Inválida');
+      return;
+    }
+  }
   let isFlutuante = c.flutuante;
   let camposFaltando = [];
   if(!c.especialidadeCirurgia) camposFaltando.push('Especialidade da Cirurgia');
@@ -10261,6 +10298,27 @@ async function salvarHemodinamica(){
       let strMax = dMax.toISOString().slice(0,10);
       await modalAlert('Flutuante deve ser agendado entre 10 e 60 dias corridos a partir de hoje.\n\nData selecionada: '+formatDate(data)+' ('+diasCorridos+' dias)\nJanela permitida: '+formatDate(strMin)+' a '+formatDate(strMax), 'Data Fora da Janela');
       return;
+    }
+  }
+
+  // ====== BLOQUEIO: NÃO PERMITIR DATA RETROATIVA NA HEMODINÂMICA ======
+  // Modo flutuante já tem validação própria. Aqui é só para agendamento padrão.
+  if(data && !isFlutuante){
+    let hojeStrH = hojeLocal();
+    if(window._hemoEditId){
+      // Edição: permite manter data original passada, bloqueia se mudar para outra data passada
+      let cirHemoOrig = dados.find(x=>x.id===window._hemoEditId);
+      let dataOrigH = cirHemoOrig ? (cirHemoOrig.data||'') : '';
+      if(data < hojeStrH && data !== dataOrigH){
+        await modalAlert('Não é permitido alterar a data para uma data retroativa.\n\nData selecionada: '+formatDate(data)+'\nData mínima permitida: '+formatDate(hojeStrH)+'\n\nMantenha a data original ou selecione hoje/futuro.', 'Data Inválida');
+        return;
+      }
+    } else {
+      // Criação nova
+      if(data < hojeStrH){
+        await modalAlert('Não é permitido agendar cirurgia em data retroativa.\n\nData selecionada: '+formatDate(data)+'\nData mínima permitida: '+formatDate(hojeStrH)+'\n\nSelecione hoje ou uma data futura.', 'Data Inválida');
+        return;
+      }
     }
   }
 
