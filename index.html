@@ -6031,7 +6031,7 @@ function emailTemplate(opts){
   var cta = opts.cta || '';
   var closing = opts.closing || 'Atenciosamente,<br><strong style="color:#111827;font-size:14px">Equipe de Agendamento</strong><br>Centro Cirurgico &mdash; Hospital Ana Costa';
 
-  return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hospital Ana Costa</title></head>' +
+  return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"><title>Hospital Ana Costa</title></head>' +
     '<body style="margin:0;padding:0;background:#eef2f5;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2937">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f5"><tr><td align="center" style="padding:28px 14px">' +
     '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 30px rgba(15,23,42,0.10)">' +
@@ -6041,9 +6041,9 @@ function emailTemplate(opts){
     '</td></tr>' +
     // Accent banner
     '<tr><td style="background:'+accent+';padding:22px 30px;text-align:center">' +
-    (badge ? '<div style="color:#fff;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;opacity:0.92">'+badge+'</div>' : '') +
-    '<div style="color:#fff;font-size:22px;font-weight:700;margin-top:6px;line-height:1.25">'+title+'</div>' +
-    (subtitle ? '<div style="color:rgba(255,255,255,0.92);font-size:13px;margin-top:6px">'+subtitle+'</div>' : '') +
+    (badge ? '<div style="color:#ffffff !important;mso-color-alt:white;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;opacity:1">'+badge+'</div>' : '') +
+    '<div style="color:#ffffff !important;mso-color-alt:white;font-size:22px;font-weight:700;margin-top:6px;line-height:1.25">'+title+'</div>' +
+    (subtitle ? '<div style="color:#ffffff !important;mso-color-alt:white;font-size:13px;margin-top:6px;opacity:1">'+subtitle+'</div>' : '') +
     '</td></tr>' +
     // Body
     '<tr><td style="padding:30px 34px 24px">' +
