@@ -2503,7 +2503,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 
         <div class="form-group">
           <label>Data</label>
-          <input type="date" id="data" onchange="validarLive()">
+          <input type="date" id="data" onchange="validarLive(); renderRecursosGrid();">
         </div>
         <div class="form-group">
           <label>Horário</label>
@@ -2515,7 +2515,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         </div>
         <div class="form-group">
           <label>Sala</label>
-          <select id="sala" onchange="validarLive()"></select>
+          <select id="sala" onchange="validarLive(); renderRecursosGrid();"></select>
         </div>
 
       </div>
@@ -6476,6 +6476,9 @@ function carregarCirurgiaPorID(cir){
   if(typeof toggleFlutuante === 'function') toggleFlutuante(!!cir.flutuante);
 
   // Recursos
+  // Limpa rascunho antigo antes de carregar dados da cirurgia em edição
+  // (evita que recursosAtivos antigo seja restaurado em cima na próxima carga)
+  try { clearFormDraft(); } catch(e){}
   if(typeof recursosAtivos !== 'undefined'){
     recursosAtivos = cir.recursos ? {...cir.recursos} : {};
     renderRecursosGrid();
@@ -6767,6 +6770,7 @@ async function salvar(){
       } catch(e){ console.error('Falha enviarEmailNovaData (CC):', e); }
     }
     limparForm();
+    renderRecursosGrid(); // garante que a contagem reflete o estado atual
     showToast('✓ Cirurgia agendada com sucesso!');
     registrarLog('criacao', c.paciente, c.procedimento+' | '+c.sala+' '+c.horario+' | '+c.convenio);
     clearFormDraft();
