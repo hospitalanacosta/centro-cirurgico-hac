@@ -6222,22 +6222,25 @@ async function coletarEmailsFlutuante(cir){
 // ============ ENVIO DE EMAIL "NOVA DATA" (INTERNAÇÃO ELETIVA) ============
 async function enviarEmailNovaData(cir){
   if(!cir) return;
+  // Lista FIXA de destinatários para o aviso "Nova Data" (sem busca no banco, sem duplicação)
   var destinoPrincipal = 'internacao.eletiva@anacosta.com.br';
-  var emailAgendamento = 'agendamento.cirurgias@anacosta.com.br';
+  var copias = [
+    'shirley.oliveira@anacosta.com.br',
+    'sara.barreto@anacosta.com.br',
+    'eduardo.marques@anacosta.com.br'
+  ];
 
-  // Coleta CC: admin2 + agendamento.cirurgias@anacosta.com.br
-  var copias = [];
-  if(emailAgendamento !== destinoPrincipal) copias.push(emailAgendamento);
-  try {
-    var {data:admins} = await sb.from('usuarios').select('email').eq('perfil','admin2').eq('status','aprovado');
-    if(admins){
-      for(var a=0; a<admins.length; a++){
-        if(admins[a].email && admins[a].email !== destinoPrincipal && copias.indexOf(admins[a].email)<0){
-          copias.push(admins[a].email);
-        }
+  // Proteção anti-duplicação: se já existe registro para esta cirurgia, NÃO envia de novo
+  if(cir.id){
+    try {
+      var crmKey = 'NOVA_DATA_' + cir.id;
+      var {data:existentes} = await sb.from('email_notifications').select('id').eq('crm', crmKey).limit(1);
+      if(existentes && existentes.length > 0){
+        console.log('[NovaData] Já enviado para cirurgia '+cir.id+' — ignorando duplicação');
+        return;
       }
-    }
-  } catch(e){}
+    } catch(e){ console.warn('[NovaData] Falha check duplicação:', e); }
+  }
 
   // Monta linhas com TODOS os campos preenchidos
   var rows = '';
@@ -6299,21 +6302,32 @@ async function enviarEmailNovaData(cir){
     cta: 'Por favor, dar continuidade ao processo de internação eletiva.'
   });
 
-  // Envia para o destino principal + cópias (cada um como uma notificação)
-  var listaTodos = [destinoPrincipal].concat(copias);
-  var inserts = listaTodos.map(function(email){
+  // Worker SMTP exige to_email com 1 endereço apenas, então criamos 1 linha por destinatário.
+  // A proteção anti-duplicação acima já evita reenvio em caso de re-entrada na mesma cirurgia.
+  // Para reforçar, deduplicamos a lista local antes de inserir.
+  var crmKey2 = 'NOVA_DATA_' + (cir.id || Date.now());
+  var listaFinal = [destinoPrincipal].concat(copias);
+  // Dedup case-insensitive
+  var vistos = {};
+  listaFinal = listaFinal.filter(function(em){
+    var k = (em||'').toLowerCase().trim();
+    if(!k || vistos[k]) return false;
+    vistos[k] = true;
+    return true;
+  });
+  var inserts = listaFinal.map(function(email){
     return {
       to_email: email,
-      to_name: email === destinoPrincipal ? 'Internação Eletiva' : 'Usuário',
+      to_name: email === destinoPrincipal ? 'Internação Eletiva' : 'Cópia',
       subject: assunto,
       body: corpo,
-      crm: 'NOVA_DATA_' + (cir.id || Date.now()),
+      crm: crmKey2,
       status: 'pending'
     };
   });
   try {
     await sb.from('email_notifications').insert(inserts);
-    showToast('📧 E-mail "Nova Data" enviado para Internação Eletiva');
+    showToast('📧 E-mail "Nova Data" enviado para ' + listaFinal.length + ' destinatário(s)');
   } catch(e){
     console.error('Erro ao enviar e-mail Nova Data:', e);
     showToast('⚠️ Falha ao enviar e-mail Nova Data');
@@ -11285,7 +11299,21 @@ async function salvarDisponibilidadeMedico(){
   if(error){ showToast('\u274C Erro: '+error.message); return; }
   medicoLogado.disponibilidade=JSON.stringify(_medDisponibilidade);
   showToast('\u2705 Disponibilidade salva!');
-  // Verificar se médico tem bloqueio na data de uma cirurgia
+  // Notificar equipe de agendamento sobre disponibilidade atualizada
+  let diasAtivos = [];
+  let diasNomes = ['Dom','Seg','Ter','Qua','Qui','Sex','S\u00e1b'];
+  for(let d in _medDisponibilidade){
+    if(_medDisponibilidade[d] && _medDisponibilidade[d].ativo){
+      diasAtivos.push(diasNomes[d]+' '+(_medDisponibilidade[d].inicio||'07:00')+'-'+(_medDisponibilidade[d].fim||'19:00'));
+    }
+  }
+  let msgDisp = 'Dr(a). '+medicoLogado.nome+' (CRM: '+medicoLogado.crm+') atualizou disponibilidade: '+(diasAtivos.length?diasAtivos.join(', '):'Nenhum dia selecionado');
+  if(typeof notificarEquipeAgendamento === 'function'){
+    try { await notificarEquipeAgendamento('disponibilidade', '\uD83D\uDCC5 Disponibilidade Atualizada', msgDisp, medicoLogado.crm); } catch(e){ console.log('Erro notificarEquipe:', e); }
+  }
+}
+
+// ============ Verificar se médico tem bloqueio na data de uma cirurgia ============
 async function verificarBloqueioNaDataCirurgia(crm, nomeMedico, dataCirurgia, paciente, procedimento){
   if(!crm || !dataCirurgia) return;
   try {
@@ -11300,24 +11328,16 @@ async function verificarBloqueioNaDataCirurgia(crm, nomeMedico, dataCirurgia, pa
     if(conflitos.length > 0){
       let motivos = conflitos.map(function(b){ return b.inicio+' a '+b.fim+(b.motivo?' ('+b.motivo+')':''); }).join(', ');
       showToast('\u26A0\uFE0F ATEN\u00C7\u00C3O: Dr(a). '+(nomeMedico||crm)+' tem bloqueio nesta data: '+motivos, 8000);
-      await notificarEquipeAgendamento('conflito_agendamento',
-        '\u26A0\uFE0F Cirurgia agendada em data bloqueada',
-        'Cirurgia agendada para Dr(a). '+(nomeMedico||crm)+' (CRM: '+crm+') em '+dataCirurgia+' - Paciente: '+(paciente||'N/I')+' | '+(procedimento||'N/I')+' | BLOQUEIO: '+motivos,
-        crm);
+      try {
+        if(typeof notificarEquipeAgendamento === 'function'){
+          await notificarEquipeAgendamento('conflito_agendamento',
+            '\u26A0\uFE0F Cirurgia agendada em data bloqueada',
+            'Cirurgia agendada para Dr(a). '+(nomeMedico||crm)+' (CRM: '+crm+') em '+dataCirurgia+' - Paciente: '+(paciente||'N/I')+' | '+(procedimento||'N/I')+' | BLOQUEIO: '+motivos,
+            crm);
+        }
+      } catch(e){ console.log('Erro notificarEquipeAgendamento:', e); }
     }
   } catch(e){ console.log('Erro check bloqueio:', e); }
-}
-
-// Notificar equipe de agendamento
-  let diasAtivos = [];
-  let diasNomes = ['Dom','Seg','Ter','Qua','Qui','Sex','S\u00e1b'];
-  for(let d in _medDisponibilidade){
-    if(_medDisponibilidade[d] && _medDisponibilidade[d].ativo){
-      diasAtivos.push(diasNomes[d]+' '+(_medDisponibilidade[d].inicio||'07:00')+'-'+(_medDisponibilidade[d].fim||'19:00'));
-    }
-  }
-  let msgDisp = 'Dr(a). '+medicoLogado.nome+' (CRM: '+medicoLogado.crm+') atualizou disponibilidade: '+(diasAtivos.length?diasAtivos.join(', '):'Nenhum dia selecionado');
-  await notificarEquipeAgendamento('disponibilidade', '\uD83D\uDCC5 Disponibilidade Atualizada', msgDisp, medicoLogado.crm);
 }
 
 function renderBloqueiosMedico(){
