@@ -2423,7 +2423,8 @@ tr.suspenso td { color: #e65100; font-style: italic; }
 
   <!-- NAVIGATION BAR -->
   <nav class="header-nav">
-    <div class="tab" data-tab="dashboard" id="tabDashboard" style="display:none">📊 Dashboard</div>
+    <div class="tab" data-tab="dashboard-old" id="tabDashboardOld" style="display:none">📊 Dashboard (legado)</div>
+    <div class="tab" data-tab="dashboard2" id="tabDashboard" style="display:none">📊 Dashboard</div>
     <div class="tab active" data-tab="form">Agendamento</div>
     <div class="tab" data-tab="grade">Mapa Cirúrgico</div>
     <div class="tab" data-tab="disponibilidade">Disponibilidade</div>
@@ -3392,7 +3393,7 @@ tr.suspenso td { color: #e65100; font-style: italic; }
   </div>
 
   <!-- ========== PAINEL DASHBOARD ========== -->
-  <div class="panel" id="panel-dashboard">
+  <div class="panel" id="panel-dashboard-old">
     <div class="card" style="border-radius:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
         <div class="card-title" style="margin-bottom:0">📊 Dashboard de Produção Cirúrgica</div>
@@ -3508,6 +3509,179 @@ tr.suspenso td { color: #e65100; font-style: italic; }
         <div class="card-title">🏆 Ranking de Colaboradores</div>
         <div id="rankColaboradores"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ========== PAINEL DASHBOARD 2 — PILOTO (BENTO GRID) ========== -->
+  <div class="panel" id="panel-dashboard2">
+    <div style="background:#fafbfc;border-radius:18px;padding:18px;font-family:'DM Sans',-apple-system,sans-serif;letter-spacing:-0.01em">
+
+      <!-- Header com saudação + tabs -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:11px;color:#0F6E56;font-weight:600;text-transform:uppercase;letter-spacing:1.5px" id="dash2Periodo">— · 2026</div>
+          <div style="font-size:22px;font-weight:600;color:#0a3d2e;letter-spacing:-0.02em;margin-top:2px">Dashboard de Produção Cirúrgica</div>
+          <div style="font-size:13px;color:#64748b;margin-top:1px">Hospital Ana Costa · Centro Cirúrgico</div>
+        </div>
+        <div id="dashboard2ModuloToggle" style="display:inline-flex;background:rgba(255,255,255,0.7);border-radius:50px;padding:4px;border:1px solid #e5e7eb;font-size:12px;font-weight:600">
+          <button class="btn-toggle-dash2" onclick="setDashboardModulo2('todos')" id="btnDashTodos2" style="padding:7px 16px;background:transparent;color:#475569;border:none;border-radius:50px;cursor:pointer;transition:all .2s">📋 Todos</button>
+          <button class="btn-toggle-dash2 active" onclick="setDashboardModulo2('cirurgia')" id="btnDashCC2" style="padding:7px 16px;background:#0F6E56;color:#fff;border:none;border-radius:50px;cursor:pointer;transition:all .2s">🏥 Cirurgias</button>
+          <button class="btn-toggle-dash2" onclick="setDashboardModulo2('hemodinamica')" id="btnDashHemo2" style="padding:7px 16px;background:transparent;color:#475569;border:none;border-radius:50px;cursor:pointer;transition:all .2s">🫀 Hemodinâmica</button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px 16px;margin-bottom:12px;display:flex;gap:14px;flex-wrap:wrap;align-items:end">
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.6px;font-weight:500">Ano</span><select id="dashAno2" onchange="renderDashboard2()" style="min-width:90px;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;background:#fff"></select></div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.6px;font-weight:500">Mês</span>
+          <select id="dashMes2" onchange="renderDashboard2()" style="min-width:100px;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;background:#fff">
+            <option value="">Todos</option>
+            <option value="01">Janeiro</option><option value="02">Fevereiro</option>
+            <option value="03">Março</option><option value="04">Abril</option>
+            <option value="05">Maio</option><option value="06">Junho</option>
+            <option value="07">Julho</option><option value="08">Agosto</option>
+            <option value="09">Setembro</option><option value="10">Outubro</option>
+            <option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.6px;font-weight:500">Grupo Convênio</span>
+          <select id="dashGrupo2" onchange="renderDashboard2()" style="min-width:130px;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;background:#fff">
+            <option value="">Todos</option>
+            <option value="Ana Costa">Ana Costa</option>
+            <option value="Amil">Amil</option>
+            <option value="Mercado">Mercado</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.6px;font-weight:500">Convênio</span>
+          <select id="dashConvenio2" onchange="renderDashboard2()" style="min-width:130px;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;background:#fff"><option value="">Todos</option></select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.6px;font-weight:500">Especialidade</span>
+          <select id="dashEspec2" onchange="renderDashboard2()" style="min-width:130px;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;background:#fff"><option value="">Todas</option></select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px;position:relative"><span style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.6px;font-weight:500">Médico</span>
+          <input type="text" id="dashMedicoInput2" placeholder="Todos" autocomplete="off" oninput="filtrarDashMedico2()" onfocus="filtrarDashMedico2()" onblur="setTimeout(()=>{var d=document.getElementById('dashMedicoDrop2'); if(d) d.style.display='none'},200)" style="padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;background:#fff">
+          <input type="hidden" id="dashMedico2" value="">
+          <div id="dashMedicoDrop2" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:70;background:#fff;border:1.5px solid #0F6E56;border-radius:0 0 8px 8px;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.15)"></div>
+        </div>
+      </div>
+
+      <!-- BENTO GRID -->
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:auto;gap:10px;margin-bottom:12px">
+
+        <!-- HERO CARD: Cirurgias do mês -->
+        <div id="dash2HeroCard" style="grid-column:span 3;grid-row:span 2;background:linear-gradient(135deg,#0F6E56 0%,#10b981 100%);border-radius:16px;padding:22px;color:#fff;position:relative;overflow:hidden;min-height:180px">
+          <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.08)"></div>
+          <div style="position:absolute;bottom:-30px;right:30px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,0.05)"></div>
+          <div id="dash2HeroContent" style="position:relative"></div>
+        </div>
+
+        <!-- Distribuição por convênio -->
+        <div style="grid-column:span 3;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#64748b">Distribuição por grupo</div>
+            <span id="dash2GrupoTotal" style="font-size:11px;color:#94a3b8"></span>
+          </div>
+          <div id="dash2GrupoBar" style="display:flex;height:36px;border-radius:8px;overflow:hidden;margin:8px 0"></div>
+          <div id="dash2GrupoLeg" style="display:flex;justify-content:space-between;font-size:11px;color:#475569;margin-top:8px;flex-wrap:wrap;gap:8px"></div>
+        </div>
+
+        <!-- KPI compacto: Cirurgiões -->
+        <div style="grid-column:span 1;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px">
+          <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.8px">Cirurgiões</div>
+          <div id="dash2KpiMedicos" class="kpi-num" style="font-size:24px;font-weight:600;color:#0f172a;margin-top:4px;letter-spacing:-0.03em">—</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:1px">ativos no mês</div>
+        </div>
+        <!-- KPI compacto: Convênios -->
+        <div style="grid-column:span 1;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px">
+          <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.8px">Convênios</div>
+          <div id="dash2KpiConvenios" class="kpi-num" style="font-size:24px;font-weight:600;color:#0f172a;margin-top:4px;letter-spacing:-0.03em">—</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:1px">com agendamentos</div>
+        </div>
+        <!-- KPI compacto: Tx cancelamento -->
+        <div style="grid-column:span 1;background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #fecaca;border-radius:16px;padding:14px">
+          <div style="font-size:10px;font-weight:600;color:#991b1b;text-transform:uppercase;letter-spacing:0.8px">Tx cancel.</div>
+          <div id="dash2KpiTxCanc" class="kpi-num" style="font-size:24px;font-weight:600;color:#991b1b;margin-top:4px;letter-spacing:-0.03em">—</div>
+          <div id="dash2KpiTxCancVar" style="font-size:10px;color:#dc2626;margin-top:1px">—</div>
+        </div>
+
+      </div>
+
+      <!-- Linha: cirurgias por dia (esquerda 80%) + status (direita 20%) -->
+      <div style="display:grid;grid-template-columns:4fr 1fr;gap:10px;margin-bottom:10px">
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div>
+              <div style="font-size:14px;font-weight:600;color:#0a3d2e;letter-spacing:-0.01em">Cirurgias por dia</div>
+              <div id="dash2PorDiaSub" style="font-size:11px;color:#64748b;margin-top:1px">—</div>
+            </div>
+          </div>
+          <canvas id="chartPorDia2" style="max-height:240px"></canvas>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:4px">
+            <div style="font-size:13px;font-weight:600;color:#0a3d2e;letter-spacing:-0.01em">Status do mês</div>
+            <span id="dash2StatusTotal" style="font-size:10px;color:#94a3b8">—</span>
+          </div>
+          <div id="dash2StatusBars" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
+      <!-- Linha: Top cirurgiões + Top procedimentos (interativo) -->
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px">
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;min-width:0;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px">Top cirurgiões</div>
+            <span style="font-size:10px;color:#94a3b8;font-style:italic">clique para filtrar</span>
+          </div>
+          <div id="dash2TopMedicos" style="display:flex;flex-direction:column;gap:7px;overflow:hidden;min-width:0"></div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;min-width:0;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">
+            <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px">Top procedimentos</div>
+            <div id="dash2ProcFiltroLabel" style="display:none;align-items:center;gap:6px;font-size:11px;color:#0F6E56;font-weight:500;background:#dcfce7;padding:3px 10px;border-radius:50px">
+              <span id="dash2ProcFiltroNome"></span>
+              <button onclick="limparFiltroMedicoDash2()" style="background:none;border:none;color:#0F6E56;cursor:pointer;font-size:14px;line-height:1;padding:0;font-weight:600" title="Limpar filtro">×</button>
+            </div>
+          </div>
+          <div id="dash2TopProcedimentos" style="display:flex;flex-direction:column;gap:7px;overflow:hidden;min-width:0"></div>
+        </div>
+      </div>
+
+      <!-- Linha gráficos: por sala + por convênio -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div style="font-size:14px;font-weight:600;color:#0a3d2e;letter-spacing:-0.01em">Cirurgias por sala</div>
+            <div style="display:flex;gap:8px;font-size:9px;color:#64748b;align-items:center;flex-wrap:wrap">
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:7px;border-radius:2px;background:#dcfce7"></span>Baixo</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:7px;border-radius:2px;background:#22c55e"></span>Médio</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:7px;border-radius:2px;background:#0F6E56"></span>Alto</span>
+            </div>
+          </div>
+          <div id="dash2PlantaCC" style="background:#f8fafc;border-radius:12px;padding:14px;min-width:0;overflow:hidden"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;min-width:0;overflow:hidden">
+          <div style="font-size:14px;font-weight:600;color:#0a3d2e;letter-spacing:-0.01em;margin-bottom:14px">Top convênios</div>
+          <div id="dash2TopConvenios" style="display:flex;flex-direction:column;gap:11px;min-width:0;overflow:hidden"></div>
+        </div>
+      </div>
+
+      <!-- Linha: recursos + ranking (50/50) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;min-width:0;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div style="font-size:14px;font-weight:600;color:#0a3d2e;letter-spacing:-0.01em">Uso de recursos</div>
+            <div id="dash2RecursosTotal" style="font-size:11px;color:#94a3b8">—</div>
+          </div>
+          <div id="dash2Recursos" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;min-width:0;overflow:hidden">
+          <div style="font-size:14px;font-weight:600;color:#0a3d2e;letter-spacing:-0.01em;margin-bottom:10px">🏆 Ranking de Colaboradores</div>
+          <div id="rankColaboradores2"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -4372,9 +4546,12 @@ function aplicarPermissoes(){
     try { perms = JSON.parse(usuarioLogado.permissoes||'{}'); } catch(e){}
   }
 
-  // Dashboard
+  // Dashboard (oficial — agora é o que era dashboard2)
   let tabDash = document.getElementById('tabDashboard');
   if(tabDash) tabDash.style.display = (ehAdmin || perms.dashboard) ? '' : 'none';
+  // Dashboard antigo (legado) — mantido oculto sempre, só para referência no código
+  let tabDashOld = document.getElementById('tabDashboardOld');
+  if(tabDashOld) tabDashOld.style.display = 'none';
 
   // PDF CC button
   let btnPdf = document.getElementById('btnPdfCC');
@@ -4489,7 +4666,8 @@ document.querySelectorAll('.tab').forEach(tab => {
         if(fd) fd.value = hojeLocal();
         desenhar();
       }
-      if(tab.dataset.tab==='dashboard'){ initDashFilters(); renderDashboard(); }
+      if(tab.dataset.tab==='dashboard-old'){ initDashFilters(); renderDashboard(); }
+      if(tab.dataset.tab==='dashboard2'){ if(typeof window._dashModulo2==='undefined') window._dashModulo2='cirurgia'; initDashFilters2(); renderDashboard2(); }
       if(tab.dataset.tab==='lista') renderLista();
       if(tab.dataset.tab==='medicos'){ renderMedicos(); renderListaEspecialidades(); }
       if(tab.dataset.tab==='convenios') renderConvenios();
@@ -7689,6 +7867,878 @@ function getDashData(){
 }
 
 function destroyChart(id){ if(dashCharts[id]){ dashCharts[id].destroy(); delete dashCharts[id]; } }
+
+// ============ DASHBOARD 2 — PILOTO ============
+function initDashFilters2(){
+  let anos = new Set();
+  dados.forEach(c=>{ if(c.data) anos.add(c.data.substring(0,4)); });
+  let sel = document.getElementById('dashAno2');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Todos</option>';
+  [...anos].sort().reverse().forEach(a=> sel.innerHTML += '<option value="'+a+'">'+a+'</option>');
+  let cy = new Date().getFullYear().toString();
+  if(anos.has(cy)) sel.value = cy;
+  let cm = String(new Date().getMonth()+1).padStart(2,'0');
+  let mesEl = document.getElementById('dashMes2');
+  if(mesEl) mesEl.value = cm;
+  let selConv = document.getElementById('dashConvenio2');
+  if(selConv){
+    selConv.innerHTML = '<option value="">Todos</option>';
+    let convs = [...new Set(dados.map(c=>c.convenio).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    convs.forEach(c=> selConv.innerHTML += '<option value="'+c+'">'+c+'</option>');
+  }
+  let selEsp = document.getElementById('dashEspec2');
+  if(selEsp){
+    selEsp.innerHTML = '<option value="">Todas</option>';
+    let especs = [...new Set(dados.map(c=>c.especialidade_cirurgia||c.especialidadeCirurgia).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    especs.forEach(e=> selEsp.innerHTML += '<option value="'+e+'">'+e+'</option>');
+  }
+}
+
+function filtrarDashMedico2(){
+  let q = (document.getElementById('dashMedicoInput2').value||'').trim().toLowerCase();
+  let drop = document.getElementById('dashMedicoDrop2');
+  if(!drop) return;
+  let medsMap = {};
+  dados.forEach(c=>{ if(c.crm && c.medico) medsMap[c.crm] = c.medico.toUpperCase(); });
+  let lista = Object.entries(medsMap).map(([crm,nome])=>({crm,nome}));
+  if(q) lista = lista.filter(m=> m.nome.toLowerCase().includes(q) || m.crm.toLowerCase().includes(q));
+  lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  if(lista.length===0){ drop.innerHTML='<div style="padding:10px;font-size:11px;color:#888">Nenhum médico</div>'; drop.style.display='block'; return; }
+  drop.innerHTML = lista.slice(0,30).map(m=>'<div style="padding:7px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid #f0f0f0" onmousedown="selecionarDashMedico2(\''+m.crm+'\',\''+m.nome.replace(/\\/g,"\\\\").replace(/\'/g,"\\'")+'\')">'+m.nome+' <span style="color:#888;font-size:10px">('+m.crm+')</span></div>').join('');
+  drop.style.display='block';
+}
+
+function selecionarDashMedico2(crm, label){
+  document.getElementById('dashMedico2').value = crm || '';
+  document.getElementById('dashMedicoInput2').value = label || '';
+  let drop = document.getElementById('dashMedicoDrop2');
+  if(drop) drop.style.display='none';
+  renderDashboard2();
+}
+
+function setDashboardModulo2(mod) {
+  window._dashModulo2 = mod;
+  ['btnDashTodos2','btnDashCC2','btnDashHemo2'].forEach(id=>{
+    let b = document.getElementById(id);
+    if(b){ b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#444'; }
+  });
+  let activeBtn = mod==='todos'?'btnDashTodos2':mod==='cirurgia'?'btnDashCC2':'btnDashHemo2';
+  let ab = document.getElementById(activeBtn);
+  if(ab){ ab.classList.add('active'); ab.style.background='#1D9E75'; ab.style.color='#fff'; }
+  renderDashboard2();
+}
+
+function getDashData2(){
+  let ano = document.getElementById('dashAno2')?.value||'';
+  let mes = document.getElementById('dashMes2')?.value||'';
+  let grupo = document.getElementById('dashGrupo2')?.value||'';
+  let convenio = document.getElementById('dashConvenio2')?.value||'';
+  let espec = document.getElementById('dashEspec2')?.value||'';
+  let medico = document.getElementById('dashMedico2')?.value||'';
+  let lista = dados.filter(c=>c.data);
+  let mod = window._dashModulo2 || 'cirurgia';
+  let ehAdm = typeof usuarioLogado !== 'undefined' && usuarioLogado && (usuarioLogado.is_admin || usuarioLogado.perfil==='admin' || usuarioLogado.perfil==='admin2');
+  let prms = {};
+  if(!ehAdm && typeof usuarioLogado !== 'undefined' && usuarioLogado){ try { prms = JSON.parse(usuarioLogado.permissoes||'{}'); } catch(e){} }
+  let temCC = ehAdm || prms.acesso_cc !== false;
+  let temHemo = ehAdm || prms.acesso_hemo !== false;
+  if(mod === 'cirurgia' || (!temHemo && temCC)) lista = lista.filter(c => c.sala !== 'Hemodinâmica');
+  else if(mod === 'hemodinamica' || (temHemo && !temCC)) lista = lista.filter(c => c.sala === 'Hemodinâmica');
+  if(ano) lista = lista.filter(c=>c.data.substring(0,4)===ano);
+  if(mes) lista = lista.filter(c=>c.data.substring(5,7)===mes);
+  if(grupo) lista = lista.filter(c=>(c.convenioGrupo||c.convenio_grupo||'')===grupo);
+  if(convenio) lista = lista.filter(c=>(c.convenio||'')===convenio);
+  if(espec) lista = lista.filter(c=>(c.especialidade_cirurgia||c.especialidadeCirurgia||'')===espec);
+  if(medico) lista = lista.filter(c=>(c.crm||'')===medico);
+  return lista;
+}
+
+function _kpiCardSpark(label, valor, cor, fundo, varTexto, varCor, sparkPath, sparkArea){
+  return '<div style="background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:8px;padding:12px 14px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:start">'+
+      '<div><div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;font-weight:500">'+label+'</div>'+
+      '<div style="font-size:24px;font-weight:600;margin-top:2px;color:'+cor+'">'+valor+'</div></div>'+
+      (varTexto?'<span style="font-size:11px;color:'+varCor+';background:'+fundo+';padding:2px 7px;border-radius:4px;font-weight:500">'+varTexto+'</span>':'')+
+    '</div>'+
+    (sparkPath?'<svg width="100%" height="32" viewBox="0 0 100 32" preserveAspectRatio="none" style="margin-top:6px;display:block">'+
+      (sparkArea?'<polyline fill="'+fundo+'" stroke="none" points="'+sparkArea+'"/>':'')+
+      '<polyline fill="none" stroke="'+cor+'" stroke-width="1.5" points="'+sparkPath+'"/>'+
+    '</svg>':'')+
+  '</div>';
+}
+
+function _kpiCompact(label, valor){
+  return '<div style="background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:8px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center">'+
+    '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px">'+label+'</div>'+
+    '<div style="font-size:15px;font-weight:600">'+valor+'</div></div>';
+}
+
+function _calcSparkline(arr, max){
+  if(!arr.length) return {path:'', area:''};
+  let M = max || Math.max(...arr,1);
+  let pts = arr.map((v,i)=>{
+    let x = arr.length===1 ? 50 : (i/(arr.length-1))*100;
+    let y = 28 - (v/M)*22; // 28 base, 22 alt
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  let area = pts + ' 100,32 0,32';
+  return {path:pts, area:area};
+}
+
+function selecionarMedicoTopDash2(nome){
+  if(window._dash2MedicoSel === nome){
+    window._dash2MedicoSel = '';
+  } else {
+    window._dash2MedicoSel = nome;
+  }
+  renderDashboard2();
+}
+
+function limparFiltroMedicoDash2(){
+  window._dash2MedicoSel = '';
+  renderDashboard2();
+}
+
+function renderTopProcedimentos2(ativos){
+  let medSel = window._dash2MedicoSel || '';
+  let listaFiltrada = medSel ? ativos.filter(c => (c.medico||'').toUpperCase() === medSel) : ativos;
+  let porProc = {};
+  listaFiltrada.forEach(c=>{ if(c.procedimento) porProc[c.procedimento.toUpperCase()]=(porProc[c.procedimento.toUpperCase()]||0)+1; });
+  let topProc = Object.entries(porProc).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  let elTP = document.getElementById('dash2TopProcedimentos');
+  let elLbl = document.getElementById('dash2ProcFiltroLabel');
+  let elNome = document.getElementById('dash2ProcFiltroNome');
+  if(elLbl){
+    if(medSel){
+      elLbl.style.display = 'inline-flex';
+      if(elNome) elNome.textContent = medSel;
+    } else {
+      elLbl.style.display = 'none';
+    }
+  }
+  if(!elTP) return;
+  if(topProc.length===0){
+    elTP.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">'+(medSel?'Sem procedimentos para este médico':'Sem dados')+'</div>';
+    return;
+  }
+  let max = topProc[0][1];
+  elTP.innerHTML = '';
+  topProc.forEach((p,i)=>{
+    let pct = (p[1]/max)*100;
+    let cor = i===0 ? 'linear-gradient(90deg,#0F6E56,#10b981)' : (i<3 ? '#10b981' : '#86efac');
+    let badgeBg = i===0 ? 'background:linear-gradient(135deg,#0F6E56,#10b981);color:#fff' : (i===1 ? 'background:#cbd5e1;color:#475569' : (i===2 ? 'background:#fde68a;color:#92400e' : 'background:#f1f5f9;color:#64748b'));
+    let row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:8px;min-width:0;width:100%;box-sizing:border-box';
+    row.innerHTML = '<div style="width:26px;height:26px;border-radius:50%;'+badgeBg+';font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(i+1)+'</div>'+
+      '<div class="dash2-proc-nome" style="flex:1;min-width:0;font-size:12px;color:#0f172a;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>'+
+      '<div style="width:70px;background:#f1f5f9;height:6px;border-radius:3px;overflow:hidden;flex-shrink:0"><div style="width:'+pct.toFixed(0)+'%;height:100%;background:'+cor+'"></div></div>'+
+      '<div class="kpi-num" style="font-size:14px;font-weight:600;color:#0f172a;width:24px;text-align:right">'+p[1]+'</div>';
+    let nomeEl = row.querySelector('.dash2-proc-nome');
+    if(nomeEl){ nomeEl.textContent = p[0]; nomeEl.title = p[0]; }
+    elTP.appendChild(row);
+  });
+}
+
+// Top convênios — Opção A: lista com badge colorido por marca + barra
+// Cores oficiais das marcas. Ana Costa=laranja, Prevent Senior=azul (correção)
+const CONVENIO_CORES_MARCA = {
+  'PLANO DE SAUDE ANA COSTA': '#FF6B35',
+  'ANA COSTA': '#FF6B35',
+  'PSAC': '#FF6B35',
+  'PREVENT SENIOR': '#0066B2',
+  'PREVENT': '#0066B2',
+  'AMIL': '#7b1fa2',
+  'SUL AMERICA': '#003DA5',
+  'SULAMERICA': '#003DA5',
+  'SULAMÉRICA': '#003DA5',
+  'BRADESCO': '#CC092F',
+  'BRADESCO SAUDE': '#CC092F',
+  'UNIMED': '#00995D',
+  'UNIMED SANTOS': '#00995D',
+  'PETROBRAS': '#FFCC00',
+  'CAPEP': '#7B2CBF',
+  'GAMA SAUDE': '#E8B400',
+  'GEAP': '#005EAC',
+  'NOTRE DAME': '#005EAC',
+  'NOTREDAME': '#005EAC',
+  'PARTICULAR': '#475569',
+  'MERCADO': '#475569'
+};
+const CONVENIO_CORES_FALLBACK = ['#0F6E56','#1D9E75','#534AB7','#993556','#854F0B','#2563eb','#A32D2D','#0d9488'];
+
+function _siglaConvenio(nome){
+  if(!nome) return '?';
+  let n = nome.trim();
+  // Remove "PLANO DE SAUDE" do início
+  n = n.replace(/^PLANO DE SAUDE\s+/i,'');
+  // Pega iniciais (primeiras 2 palavras significativas)
+  let palavras = n.split(/\s+/).filter(p => p.length > 1 && !['DE','DA','DO','DOS','DAS','E','A','O'].includes(p.toUpperCase()));
+  if(palavras.length >= 2) return (palavras[0][0]+palavras[1][0]).toUpperCase();
+  if(palavras.length === 1) return palavras[0].substring(0,2).toUpperCase();
+  return n.substring(0,2).toUpperCase();
+}
+
+function _corConvenio(nome, idx){
+  if(!nome) return CONVENIO_CORES_FALLBACK[idx % CONVENIO_CORES_FALLBACK.length];
+  let key = nome.trim().toUpperCase();
+  if(CONVENIO_CORES_MARCA[key]) return CONVENIO_CORES_MARCA[key];
+  // Match parcial (contém substring)
+  for(let k in CONVENIO_CORES_MARCA){
+    if(key.indexOf(k) >= 0 || k.indexOf(key) >= 0) return CONVENIO_CORES_MARCA[k];
+  }
+  return CONVENIO_CORES_FALLBACK[idx % CONVENIO_CORES_FALLBACK.length];
+}
+
+function renderTopConvenios2(ativos){
+  let porConv = {};
+  ativos.forEach(c=>{ let cv=c.convenio||'-'; porConv[cv]=(porConv[cv]||0)+1; });
+  let topConv = Object.entries(porConv).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  let total = ativos.length;
+  let max = topConv[0]?topConv[0][1]:1;
+  let el = document.getElementById('dash2TopConvenios');
+  if(!el) return;
+  if(topConv.length===0){
+    el.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Sem dados</div>';
+    return;
+  }
+  el.innerHTML = '';
+  topConv.forEach((c,i)=>{
+    let nome = c[0];
+    let qtd = c[1];
+    let pct = total>0 ? (qtd/total)*100 : 0;
+    let pctBar = (qtd/max)*100;
+    let cor = _corConvenio(nome, i);
+    let sigla = _siglaConvenio(nome);
+    // Decide cor do texto do badge (branco padrão; preto se cor for muito clara como amarelo)
+    let claraBadges = ['#FFCC00','#E8B400','#FFFF00'];
+    let txtBadge = claraBadges.indexOf(cor) >= 0 ? '#003F2D' : '#fff';
+
+    let row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;min-width:0;width:100%;box-sizing:border-box';
+
+    // Badge colorido
+    let badge = document.createElement('div');
+    badge.style.cssText = 'width:30px;height:30px;border-radius:8px;background:'+cor+';color:'+txtBadge+';font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-0.02em';
+    badge.textContent = sigla;
+    row.appendChild(badge);
+
+    // Container do nome+barra
+    let info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0';
+
+    // Linha do nome + valor
+    let topLine = document.createElement('div');
+    topLine.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-bottom:5px;gap:8px';
+    let nomeEl = document.createElement('span');
+    nomeEl.style.cssText = 'color:#0f172a;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1';
+    nomeEl.title = nome;
+    nomeEl.textContent = nome;
+    let valEl = document.createElement('span');
+    valEl.className = 'kpi-num';
+    valEl.style.cssText = 'font-weight:600;color:#0f172a;flex-shrink:0;font-feature-settings:"tnum";font-variant-numeric:tabular-nums';
+    valEl.textContent = qtd + ' · ' + pct.toFixed(0) + '%';
+    topLine.appendChild(nomeEl);
+    topLine.appendChild(valEl);
+    info.appendChild(topLine);
+
+    // Barra horizontal
+    let barBg = document.createElement('div');
+    barBg.style.cssText = 'background:#f1f5f9;height:7px;border-radius:4px;overflow:hidden';
+    let barFill = document.createElement('div');
+    barFill.style.cssText = 'width:'+pctBar.toFixed(1)+'%;height:100%;background:'+cor+';border-radius:4px;transition:width .3s';
+    barBg.appendChild(barFill);
+    info.appendChild(barBg);
+
+    row.appendChild(info);
+    el.appendChild(row);
+  });
+}
+
+// Uso de recursos — cards individuais (Opção A)
+const RECURSOS_DASH2 = [
+  {id:'uti',         lbl:'UTI',         limiteDiario:3, cor:'#dc2626', corBg:'#fef2f2', corBorda:'#fecaca', corTxt:'#7f1d1d', corTxt2:'#991b1b',
+   svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>'},
+  {id:'video',       lbl:'Vídeo',       limiteDiario:5, cor:'#2563eb', corBg:'#eff6ff', corBorda:'#bfdbfe', corTxt:'#1e3a8a', corTxt2:'#1e40af',
+   svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'},
+  {id:'escopia',     lbl:'Escopia',     limiteDiario:6, cor:'#16a34a', corBg:'#f0fdf4', corBorda:'#bbf7d0', corTxt:'#14532d', corTxt2:'#166534',
+   svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>'},
+  {id:'microscopio', lbl:'Microscópio', limiteDiario:2, cor:'#a855f7', corBg:'#fdf4ff', corBorda:'#f5d0fe', corTxt:'#581c87', corTxt2:'#6b21a8',
+   svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'},
+  {id:'ultracision', lbl:'Ultracision', limiteDiario:2, cor:'#ea580c', corBg:'#fff7ed', corBorda:'#fed7aa', corTxt:'#7c2d12', corTxt2:'#9a3412',
+   svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>'},
+  {id:'sangue',      lbl:'Sangue',      limiteDiario:null, cor:'#991b1b', corBg:'#fef2f2', corBorda:'#fca5a5', corTxt:'#7f1d1d', corTxt2:'#991b1b',
+   svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>'},
+  {id:'congelacao',  lbl:'Congelação',  limiteDiario:null, cor:'#0891b2', corBg:'#ecfeff', corBorda:'#a5f3fc', corTxt:'#164e63', corTxt2:'#155e75',
+   svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2v20M5 5l14 14M19 5L5 19M2 12h20"/></svg>'}
+];
+
+// Conta dias úteis (seg a sex) num intervalo
+function _diasUteisIntervalo(dataInicio, dataFim){
+  let count = 0;
+  let d = new Date(dataInicio.getTime());
+  while(d <= dataFim){
+    let dow = d.getDay();
+    if(dow !== 0 && dow !== 6) count++;
+    d.setDate(d.getDate()+1);
+  }
+  return count;
+}
+
+// Calcula dias úteis do período filtrado no Dashboard 2
+// Sempre considera o mês INTEIRO como capacidade total (denominador estável)
+// Mesmo se o mês ainda está em andamento, mostra 35/90 por exemplo (não 35/6)
+function _diasUteisPeriodoDash2(){
+  let anoSel = parseInt(document.getElementById('dashAno2')?.value || '0');
+  let mesSel = parseInt(document.getElementById('dashMes2')?.value || '0');
+  let hoje = new Date();
+  let anoBase = anoSel || hoje.getFullYear();
+  if(mesSel){
+    // Mês específico — sempre usa o mês INTEIRO (1º ao último dia)
+    let inicio = new Date(anoBase, mesSel-1, 1);
+    let fim = new Date(anoBase, mesSel, 0); // último dia do mês
+    return _diasUteisIntervalo(inicio, fim);
+  }
+  // Sem mês: ano inteiro
+  let inicio = new Date(anoBase, 0, 1);
+  let fim = new Date(anoBase, 11, 31);
+  return _diasUteisIntervalo(inicio, fim);
+}
+
+function renderRecursos2(ativos){
+  let counts = {uti:0, video:0, escopia:0, microscopio:0, ultracision:0, sangue:0, congelacao:0};
+  ativos.forEach(c=>{ if(c.recursos) Object.keys(counts).forEach(k=>{ if(c.recursos[k]) counts[k]++; }); });
+  let totalUso = Object.values(counts).reduce((s,v)=>s+v,0);
+  let elTot = document.getElementById('dash2RecursosTotal');
+  let diasUteis = _diasUteisPeriodoDash2();
+  if(elTot) elTot.textContent = totalUso + ' utilizações · ' + diasUteis + ' dias úteis';
+  let el = document.getElementById('dash2Recursos');
+  if(!el) return;
+  el.innerHTML = RECURSOS_DASH2.map(r=>{
+    let qtd = counts[r.id] || 0;
+    // Limite mensal = limite diário × dias úteis do período
+    let max = (r.limiteDiario && diasUteis) ? r.limiteDiario * diasUteis : null;
+    let pct = (max && max > 0) ? Math.min(100, (qtd/max)*100) : 0;
+    let opacityCard = qtd === 0 ? '0.55' : '1';
+    let barFundo = 'rgba(0,0,0,0.08)';
+    let textoBarra;
+    if(qtd === 0){
+      textoBarra = 'não usado';
+    } else if(max){
+      textoBarra = qtd+'/'+max+' · '+pct.toFixed(0)+'% (cap. mensal)';
+    } else {
+      textoBarra = qtd + ' utilizações';
+    }
+    let barraHtml = max
+      ? '<div style="background:'+barFundo+';height:5px;border-radius:3px"><div style="width:'+pct.toFixed(0)+'%;height:100%;background:'+r.cor+';border-radius:3px;transition:width .3s"></div></div>'
+      : '<div style="height:5px"></div>'; // sem barra quando não há limite definido
+    return '<div title="'+(r.limiteDiario ? 'Limite: '+r.limiteDiario+'/dia × '+diasUteis+' dias úteis = '+max+' / mês' : 'Sem limite definido')+'" style="background:'+r.corBg+';border:1px solid '+r.corBorda+';border-radius:12px;padding:13px;opacity:'+opacityCard+';min-width:0;overflow:hidden">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+        '<div style="width:30px;height:30px;border-radius:8px;background:'+r.cor+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+r.svg+'</div>'+
+        '<span class="kpi-num" style="font-size:22px;font-weight:600;color:'+r.corTxt+';letter-spacing:-0.02em;line-height:1">'+qtd+'</span>'+
+      '</div>'+
+      '<div style="font-size:11px;color:'+r.corTxt+';font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.lbl+'</div>'+
+      barraHtml+
+      '<div style="font-size:10px;color:'+r.corTxt2+';margin-top:4px">'+textoBarra+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+// Cirurgias por sala — planta baixa do Centro Cirúrgico (Opção A)
+function renderPlantaSala2(ativos){
+  let porSala = {};
+  ativos.forEach(c=>{
+    let s = c.sala||'Hemod.';
+    if(s==='?') s='Hemod.';
+    if(s.toLowerCase().includes('hemodin')) s='Hemod.';
+    porSala[s]=(porSala[s]||0)+1;
+  });
+  // Ordena por número da sala (Sala 1, 2, ..., Hemod no fim)
+  let salasOrd = Object.keys(porSala).sort((a,b)=>{
+    let na = parseInt((a.match(/\d+/)||[0])[0]) || 999;
+    let nb = parseInt((b.match(/\d+/)||[0])[0]) || 999;
+    return na - nb;
+  });
+  let total = Object.values(porSala).reduce((s,v)=>s+v,0);
+  let max = Math.max(...Object.values(porSala), 1);
+  let ativasArr = salasOrd.map(s=>porSala[s]);
+  // Limites de classificação:
+  // - subutilizada: <= 5% do max  (ou < 5 cirurgias absolutas)
+  // - alto: top 1 ou >= 90% do max
+  // - médio: entre 50% e 90%
+  // - baixo: o resto
+  let topSala = salasOrd.reduce((a,b)=> porSala[a] >= porSala[b] ? a : b);
+
+  let el = document.getElementById('dash2PlantaCC');
+  if(!el) return;
+  if(salasOrd.length === 0){
+    el.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Sem dados</div>';
+    return;
+  }
+
+  let cards = salasOrd.map(s=>{
+    let qtd = porSala[s];
+    let pctMax = max > 0 ? (qtd/max)*100 : 0;
+    let isTop = (s === topSala);
+    let isSub = qtd <= 5 || pctMax < 8;
+    let nivel; // 'sub' | 'baixo' | 'medio' | 'alto'
+    if(isSub) nivel = 'sub';
+    else if(isTop || pctMax >= 90) nivel = 'alto';
+    else if(pctMax >= 60) nivel = 'medio';
+    else nivel = 'baixo';
+
+    let estilos = {
+      sub: {
+        bg: '#fee2e2', border: '2px dashed #ef4444', txtLbl: '#7f1d1d', txtNum: '#7f1d1d', txtSub: '#991b1b', subTxt: 'subutilizada'
+      },
+      baixo: {
+        bg: '#bbf7d0', border: '2px solid #16a34a', txtLbl: '#14532d', txtNum: '#14532d', txtSub: '#166534', subTxt: 'cirurgias'
+      },
+      medio: {
+        bg: '#22c55e', border: '2px solid #16a34a', txtLbl: '#fff', txtNum: '#fff', txtSub: '#fff', subTxt: 'cirurgias'
+      },
+      alto: {
+        bg: '#0F6E56', border: '2px solid #064e3b', txtLbl: '#fff', txtNum: '#fff', txtSub: '#fff', subTxt: 'cirurgias'
+      }
+    };
+    let st = estilos[nivel];
+    let badgeTop = isTop ? '<span style="position:absolute;top:6px;right:6px;background:#fbbf24;color:#78350f;font-size:9px;font-weight:700;padding:2px 7px;border-radius:50px;letter-spacing:0.3px">★ TOP</span>' : '';
+
+    return '<div style="background:'+st.bg+';border:'+st.border+';border-radius:10px;padding:14px 10px;text-align:center;color:'+st.txtNum+';position:relative;min-width:0;overflow:hidden">'+
+      badgeTop+
+      '<div style="font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;opacity:0.85;color:'+st.txtLbl+'">'+s+'</div>'+
+      '<div class="kpi-num" style="font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1;margin-top:4px">'+qtd+'</div>'+
+      '<div style="font-size:10px;margin-top:2px;opacity:0.85;color:'+st.txtSub+'">'+st.subTxt+'</div>'+
+    '</div>';
+  }).join('');
+
+  // Conta quantas linhas precisamos (4 por linha)
+  let cols = Math.min(salasOrd.length, 4);
+  el.innerHTML =
+    '<div style="font-size:9px;color:#94a3b8;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase">Centro Cirúrgico — Hospital Ana Costa</div>'+
+    '<div style="display:grid;grid-template-columns:repeat('+cols+',minmax(0,1fr));gap:10px">'+cards+'</div>'+
+    '<div style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1;display:flex;justify-content:space-between;font-size:11px;color:#64748b;flex-wrap:wrap;gap:6px">'+
+      '<span><strong style="color:#0F6E56">'+total+' cirurgias</strong> · '+salasOrd.length+' salas ativas</span>'+
+      '<span>'+(topSala ? topSala+' lidera' : '')+(ativasArr.some(v=>v<=5) ? ' · há salas subutilizadas' : '')+'</span>'+
+    '</div>';
+}
+
+function renderDashboard2(){
+  let lista = getDashData2();
+  let ativos = lista.filter(c=>!c.cancelado&&!c.suspenso);
+  let cancelados = lista.filter(c=>c.cancelado);
+  let suspensos = lista.filter(c=>c.suspenso);
+
+  let medicos = new Set(ativos.map(c=>c.crm).filter(Boolean));
+  let diasUnicos = new Set(ativos.map(c=>c.data));
+  let mediaDia = diasUnicos.size > 0 ? (ativos.length / diasUnicos.size).toFixed(1) : '0';
+  let taxaCanc = lista.length > 0 ? ((cancelados.length / lista.length)*100).toFixed(1) : '0';
+  let totalConv = new Set(ativos.map(c=>c.convenio||c.codigoConvenio).filter(Boolean)).size;
+
+  let hoje = hojeLocal();
+  let realizadas = ativos.filter(c => c.data < hoje);
+  let agendadas = ativos.filter(c => c.data >= hoje);
+
+  // Período exibido no header
+  let mesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  let anoSel = document.getElementById('dashAno2')?.value||'';
+  let mesSel = document.getElementById('dashMes2')?.value||'';
+  let periodoTxt = (mesSel?mesNome[parseInt(mesSel)-1]:'Todos os meses') + ' · ' + (anoSel||'Todos os anos');
+  let elPer = document.getElementById('dash2Periodo');
+  if(elPer) elPer.textContent = periodoTxt.toUpperCase();
+
+  // Variação vs mesmo intervalo do mês anterior (comparação justa)
+  // - Se o filtro é o mês corrente e ainda não acabou: compara dias 1..hoje deste mês vs dias 1..hoje do mês anterior
+  // - Se é um mês passado: compara mês completo vs mês anterior completo
+  // - Se é um mês futuro ou sem filtro de mês: usa últimos 2 meses fechados
+  let hojeDt = new Date(hoje+'T12:00:00');
+  let hojeAno = hojeDt.getFullYear();
+  let hojeMes = hojeDt.getMonth()+1; // 1-12
+  let hojeDia = hojeDt.getDate();
+
+  let anoFiltro = parseInt(anoSel) || hojeAno;
+  let mesFiltro = parseInt(mesSel) || 0; // 0 = sem filtro
+  let isMesAtual = (anoFiltro === hojeAno && mesFiltro === hojeMes);
+  let isMesPassado = mesFiltro && (anoFiltro < hojeAno || (anoFiltro === hojeAno && mesFiltro < hojeMes));
+
+  // Define mês "alvo" (o que está sendo analisado) e mês "anterior" para comparação
+  let mesAlvoAno, mesAlvoMes, diaCorte, mesAntAno, mesAntMes;
+  let sampleMuitoPequeno = false; // quando o mês mal começou, comparação fica enganosa
+  if(isMesAtual){
+    mesAlvoAno = hojeAno; mesAlvoMes = hojeMes; diaCorte = hojeDia;
+    let prev = new Date(hojeAno, hojeMes-2, 1); // mês anterior
+    mesAntAno = prev.getFullYear(); mesAntMes = prev.getMonth()+1;
+    if(hojeDia < 7) sampleMuitoPequeno = true;
+  } else if(isMesPassado){
+    mesAlvoAno = anoFiltro; mesAlvoMes = mesFiltro; diaCorte = 31;
+    let prev = new Date(anoFiltro, mesFiltro-2, 1);
+    mesAntAno = prev.getFullYear(); mesAntMes = prev.getMonth()+1;
+  } else {
+    // Mês futuro ou "Todos os meses": usa últimos 2 meses fechados
+    let prev1 = new Date(hojeAno, hojeMes-2, 1);
+    let prev2 = new Date(hojeAno, hojeMes-3, 1);
+    mesAlvoAno = prev1.getFullYear(); mesAlvoMes = prev1.getMonth()+1; diaCorte = 31;
+    mesAntAno = prev2.getFullYear(); mesAntMes = prev2.getMonth()+1;
+  }
+
+  function ymKey(a,m){ return a+'-'+String(m).padStart(2,'0'); }
+  function contarPeriodo(filtroFn, ano, mes, ate){
+    let prefix = ymKey(ano,mes);
+    return dados.filter(c=>{
+      if(!c.data || !c.data.startsWith(prefix)) return false;
+      let dia = parseInt(c.data.substring(8,10),10);
+      if(dia > ate) return false;
+      return filtroFn(c);
+    }).length;
+  }
+  let fnAtivo = c => !c.cancelado && !c.suspenso;
+  let agendAtual = contarPeriodo(fnAtivo, mesAlvoAno, mesAlvoMes, diaCorte);
+  let agendAnt = contarPeriodo(fnAtivo, mesAntAno, mesAntMes, diaCorte);
+
+  let totAtual = contarPeriodo(()=>true, mesAlvoAno, mesAlvoMes, diaCorte);
+  let cancAtual = contarPeriodo(c=>c.cancelado, mesAlvoAno, mesAlvoMes, diaCorte);
+  let txCancAtual = totAtual>0 ? (cancAtual/totAtual)*100 : 0;
+  let totAnt = contarPeriodo(()=>true, mesAntAno, mesAntMes, diaCorte);
+  let cancAnt = contarPeriodo(c=>c.cancelado, mesAntAno, mesAntMes, diaCorte);
+  let txCancAnt = totAnt>0 ? (cancAnt/totAnt)*100 : 0;
+
+  function fmtVar(curr, prev, isPct){
+    if(prev===0 && curr===0) return '';
+    if(prev===0) return '+ novo';
+    let p = ((curr-prev)/prev)*100;
+    if(Math.abs(p)<0.5) return '± 0%';
+    let s = p>=0 ? '↑ ' : '↓ ';
+    return s + Math.abs(p).toFixed(0) + '%';
+  }
+  // Se o mês corrente está nos primeiros dias, esconde variação (amostra insuficiente)
+  let vAgend = sampleMuitoPequeno ? '' : fmtVar(agendAtual, agendAnt);
+  let vTxCanc = sampleMuitoPequeno ? '' : fmtVar(txCancAtual, txCancAnt, true);
+
+  // Sparkline mantém os últimos 8 meses fechados (visualização de tendência)
+  let mesesArr = [];
+  for(let i=7;i>=0;i--){
+    let d = new Date(hojeAno, hojeMes-1-i, 1);
+    mesesArr.push(ymKey(d.getFullYear(), d.getMonth()+1));
+  }
+  let agendCount = mesesArr.map(ym => dados.filter(c=>!c.cancelado&&!c.suspenso&&(c.data||'').substring(0,7)===ym).length);
+
+  // Texto explicativo da comparação (para tooltip do hero)
+  let mesNomeCurto = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  let labelComp = '';
+  if(isMesAtual){
+    if(sampleMuitoPequeno){
+      labelComp = 'mês ainda está iniciando';
+    } else {
+      labelComp = 'vs ' + mesNomeCurto[mesAntMes-1] + '/' + String(mesAntAno).slice(-2) + ' (1-'+diaCorte+')';
+    }
+  } else if(isMesPassado){
+    labelComp = 'vs ' + mesNomeCurto[mesAntMes-1] + '/' + String(mesAntAno).slice(-2);
+  } else {
+    labelComp = mesNomeCurto[mesAlvoMes-1] + ' vs ' + mesNomeCurto[mesAntMes-1];
+  }
+
+  // HERO CARD
+  let elHero = document.getElementById('dash2HeroContent');
+  if(elHero){
+    // Sparkline para o hero
+    let sparkPts = '';
+    if(agendCount.length){
+      let M = Math.max(...agendCount, 1);
+      sparkPts = agendCount.map((v,i)=>{
+        let x = agendCount.length===1 ? 280 : (i/(agendCount.length-1))*280;
+        let y = 50 - (v/M)*42;
+        return x.toFixed(1)+','+y.toFixed(1);
+      }).join(' ');
+    }
+    let areaPts = sparkPts + ' 280,60 0,60';
+    let varHtml = vAgend ? '<span title="'+labelComp+'" style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:50px;font-size:12px;font-weight:600;cursor:help">'+vAgend+'</span>' : '';
+    elHero.innerHTML =
+      '<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;opacity:0.85">CIRURGIAS · '+periodoTxt.toUpperCase()+'</div>'+
+      '<div style="display:flex;align-items:baseline;gap:10px;margin-top:8px">'+
+        '<div class="kpi-num" style="font-size:54px;font-weight:600;letter-spacing:-0.04em;line-height:1">'+ativos.length+'</div>'+
+        varHtml+
+      '</div>'+
+      '<div style="font-size:13px;opacity:0.9;margin-top:4px">'+agendadas.length+' agendadas · '+realizadas.length+' realizadas · '+mediaDia+'/dia</div>'+
+      (sparkPts ? '<svg width="100%" height="60" viewBox="0 0 280 60" style="margin-top:14px;display:block">'+
+        '<defs><linearGradient id="cArea2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff" stop-opacity="0.3"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>'+
+        '<polyline fill="url(#cArea2)" stroke="none" points="'+areaPts+'"/>'+
+        '<polyline fill="none" stroke="#fff" stroke-width="2.5" points="'+sparkPts+'"/>'+
+      '</svg>' : '');
+  }
+
+  // KPIs compactos
+  let kM = document.getElementById('dash2KpiMedicos'); if(kM) kM.textContent = medicos.size;
+  let kC = document.getElementById('dash2KpiConvenios'); if(kC) kC.textContent = totalConv;
+  let kT = document.getElementById('dash2KpiTxCanc'); if(kT) kT.textContent = taxaCanc+'%';
+  let kTV = document.getElementById('dash2KpiTxCancVar'); if(kTV){
+    if(vTxCanc){ kTV.textContent = vTxCanc+' '+labelComp; }
+    else if(sampleMuitoPequeno){ kTV.textContent = labelComp; }
+    else { kTV.textContent = '—'; }
+  }
+
+  // Distribuição por grupo - barra horizontal
+  let porGrupo = {};
+  ativos.forEach(c=>{ let g=c.convenioGrupo||c.convenio_grupo||'Outros'; porGrupo[g]=(porGrupo[g]||0)+1; });
+  let gLabels = Object.keys(porGrupo).sort((a,b)=>porGrupo[b]-porGrupo[a]);
+  let gTotal = gLabels.reduce((s,g)=>s+porGrupo[g],0);
+  let gColors = {'Ana Costa':'linear-gradient(135deg,#f59e0b,#fbbf24)','Mercado':'linear-gradient(135deg,#10b981,#34d399)','Amil':'linear-gradient(135deg,#8b5cf6,#a78bfa)','Outros':'linear-gradient(135deg,#94a3b8,#cbd5e1)'};
+  let gColorsSimples = {'Ana Costa':'#f59e0b','Mercado':'#10b981','Amil':'#8b5cf6','Outros':'#94a3b8'};
+  let gBar = document.getElementById('dash2GrupoBar');
+  if(gBar){
+    if(gTotal===0){
+      gBar.innerHTML = '<div style="flex:1;background:#f1f5f9;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:12px">Sem dados</div>';
+    } else {
+      gBar.innerHTML = gLabels.map(g=>{
+        let pct = (porGrupo[g]/gTotal)*100;
+        let bg = gColors[g] || gColors['Outros'];
+        // Em segmentos pequenos mostra só "%", em maiores mostra "Nome %"
+        // Em muito pequenos (<3%) deixa vazio (a legenda abaixo informa)
+        let lbl = '';
+        if(pct >= 12){ lbl = g + ' ' + pct.toFixed(0) + '%'; }
+        else if(pct >= 6){ lbl = pct.toFixed(0) + '%'; }
+        else if(pct >= 2){ lbl = pct.toFixed(0) + '%'; }
+        let fontSize = pct >= 12 ? 11 : (pct >= 6 ? 10 : 9);
+        return '<div title="'+g+': '+porGrupo[g]+' ('+pct.toFixed(1)+'%)" style="width:'+pct.toFixed(2)+'%;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:'+fontSize+'px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden">'+lbl+'</div>';
+      }).join('');
+    }
+  }
+  let gLeg = document.getElementById('dash2GrupoLeg');
+  if(gLeg){
+    gLeg.innerHTML = gLabels.map(g=>{
+      let cor = gColorsSimples[g] || '#94a3b8';
+      return '<span><span style="display:inline-block;width:8px;height:8px;background:'+cor+';border-radius:2px;margin-right:5px"></span>'+g+' <strong>'+porGrupo[g]+'</strong></span>';
+    }).join('');
+  }
+  let gTot = document.getElementById('dash2GrupoTotal'); if(gTot) gTot.textContent = totalConv+' convênios';
+
+  // Top 10 cirurgiões com medalhas - clicáveis para filtrar procedimentos
+  let porMed = {};
+  ativos.forEach(c=>{ if(c.medico) porMed[c.medico.toUpperCase()]=(porMed[c.medico.toUpperCase()]||0)+1; });
+  let topMed = Object.entries(porMed).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  let elTM = document.getElementById('dash2TopMedicos');
+  let medSelecionado = window._dash2MedicoSel || '';
+  if(elTM){
+    let max = topMed[0]?topMed[0][1]:1;
+    let medalhaCores = [
+      'background:linear-gradient(135deg,#0F6E56,#10b981);color:#fff',
+      'background:#cbd5e1;color:#475569',
+      'background:#fde68a;color:#92400e'
+    ];
+    if(topMed.length===0){
+      elTM.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Sem dados</div>';
+    } else {
+      elTM.innerHTML = '';
+      topMed.forEach((m,i)=>{
+        let pct = (m[1]/max)*100;
+        let badge = (i<3) ? medalhaCores[i] : 'background:#f1f5f9;color:#64748b';
+        let isSel = m[0] === medSelecionado;
+        let bgRow = isSel ? 'background:#dcfce7;border:1.5px solid #0F6E56' : 'background:transparent;border:1.5px solid transparent';
+        let barCor = isSel ? 'linear-gradient(90deg,#0F6E56,#10b981)' : (i<3 ? (i===0?'linear-gradient(90deg,#0F6E56,#10b981)':'#10b981') : '#86efac');
+        let row = document.createElement('div');
+        row.setAttribute('data-medico', m[0]);
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:8px;cursor:pointer;transition:all .15s;min-width:0;width:100%;box-sizing:border-box;'+bgRow;
+        row.innerHTML = '<div style="width:26px;height:26px;border-radius:50%;'+badge+';font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(i+1)+'</div>'+
+          '<div class="dash2-medico-nome" style="flex:1;min-width:0;font-size:12px;color:#0f172a;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>'+
+          '<div style="width:70px;background:#f1f5f9;height:6px;border-radius:3px;overflow:hidden;flex-shrink:0"><div style="width:'+pct.toFixed(0)+'%;height:100%;background:'+barCor+'"></div></div>'+
+          '<div class="kpi-num" style="font-size:14px;font-weight:600;color:#0f172a;width:24px;text-align:right">'+m[1]+'</div>';
+        // Coloca o nome via textContent (evita XSS e quebras com aspas/<>)
+        let nomeEl = row.querySelector('.dash2-medico-nome');
+        if(nomeEl) nomeEl.textContent = m[0];
+        row.addEventListener('click', function(){
+          selecionarMedicoTopDash2(m[0]);
+        });
+        if(!isSel){
+          row.addEventListener('mouseenter', function(){ this.style.background = '#f1f5f9'; });
+          row.addEventListener('mouseleave', function(){ this.style.background = 'transparent'; });
+        }
+        elTM.appendChild(row);
+      });
+    }
+  }
+
+  // Status do mês com barras gradiente
+  let elST = document.getElementById('dash2StatusBars');
+  let elSTotal = document.getElementById('dash2StatusTotal');
+  if(elSTotal) elSTotal.textContent = lista.length+' total';
+  if(elST){
+    let total = lista.length;
+    let pAtivo = total>0?((ativos.length/total)*100):0;
+    let pCanc = total>0?((cancelados.length/total)*100):0;
+    let pSusp = total>0?((suspensos.length/total)*100):0;
+    elST.innerHTML =
+      '<div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:#0f172a;font-weight:500">✓ Agendadas / Realizadas</span><span class="kpi-num" style="font-weight:600;color:#0f172a">'+ativos.length+' · '+pAtivo.toFixed(0)+'%</span></div>'+
+        '<div style="background:#f1f5f9;height:8px;border-radius:4px;overflow:hidden"><div style="width:'+pAtivo.toFixed(1)+'%;height:100%;background:linear-gradient(90deg,#10b981,#34d399);transition:width .4s"></div></div>'+
+      '</div>'+
+      '<div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:#0f172a;font-weight:500">✗ Canceladas</span><span class="kpi-num" style="font-weight:600;color:#dc2626">'+cancelados.length+' · '+pCanc.toFixed(0)+'%</span></div>'+
+        '<div style="background:#f1f5f9;height:8px;border-radius:4px;overflow:hidden"><div style="width:'+pCanc.toFixed(1)+'%;height:100%;background:linear-gradient(90deg,#ef4444,#f87171);transition:width .4s"></div></div>'+
+      '</div>'+
+      '<div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:#0f172a;font-weight:500">⏸ Suspensas</span><span class="kpi-num" style="font-weight:600;color:#d97706">'+suspensos.length+' · '+pSusp.toFixed(0)+'%</span></div>'+
+        '<div style="background:#f1f5f9;height:8px;border-radius:4px;overflow:hidden"><div style="width:'+pSusp.toFixed(1)+'%;height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);transition:width .4s"></div></div>'+
+      '</div>';
+  }
+
+  // ========== CHARTS (Chart.js) ==========
+  let coresGrupo = {'Ana Costa':'#f59e0b','Amil':'#8b5cf6','Mercado':'#10b981'};
+  let coresBarra = ['#0F6E56','#10b981','#10b981','#34d399','#34d399','#86efac','#86efac','#86efac','#86efac','#86efac'];
+
+  // Cirurgias por dia
+  destroyChart('chartPorDia2');
+  let porDia = {};
+  ativos.forEach(c=>{ porDia[c.data]=(porDia[c.data]||0)+1; });
+  let diasOrd = Object.keys(porDia).sort();
+  let elDia = document.getElementById('chartPorDia2');
+  if(elDia && diasOrd.length){
+    let maxDia = Math.max(...diasOrd.map(d=>porDia[d]));
+    let diaPico = diasOrd.find(d=>porDia[d]===maxDia);
+    let elSub = document.getElementById('dash2PorDiaSub');
+    if(elSub) elSub.textContent = 'Pico: '+formatDateShort(diaPico)+' com '+maxDia+' cirurgias · '+diasOrd.length+' dias com produção';
+    let ctxDia = elDia.getContext('2d');
+    let gDia = ctxDia.createLinearGradient(0,0,0,300);
+    gDia.addColorStop(0,'#10b981'); gDia.addColorStop(1,'#86efac');
+    dashCharts['chartPorDia2'] = new Chart(ctxDia, {
+      type:'bar', plugins:[DATALABEL_PLUGIN],
+      data:{ labels:diasOrd.map(d=>formatDateShort(d)),
+        datasets:[{label:'Cirurgias', data:diasOrd.map(d=>porDia[d]), backgroundColor:gDia, borderWidth:0, borderRadius:6, borderSkipped:false, barPercentage:0.7}]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',padding:10,cornerRadius:8,displayColors:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#94a3b8'},grid:{color:'#f1f5f9'},suggestedMax:Math.max(maxDia*1.15, maxDia+5)},x:{ticks:{maxRotation:45,minRotation:0,font:{size:10},color:'#64748b'},grid:{display:false}}}}
+    });
+  }
+
+  // Top procedimentos (renderiza como lista, filtrável pelo médico selecionado)
+  renderTopProcedimentos2(ativos);
+
+  // Cirurgias por sala — planta baixa do CC
+  renderPlantaSala2(ativos);
+
+  // Top convênios (lista com cores de marca)
+  renderTopConvenios2(ativos);
+
+  // Uso de recursos — cards com ícone + barra de uso
+  renderRecursos2(ativos);
+
+  // Ranking colaboradores (com avatar) - chama assíncrono para buscar fotos
+  renderRankingColaboradores2();
+}
+
+// Cache de avatares por nome (uppercase) -> avatar_url
+let _avatarCache2 = null;
+
+async function _carregarAvatares2(){
+  if(_avatarCache2) return _avatarCache2;
+  _avatarCache2 = {};
+  try {
+    let {data:users} = await sb.from('usuarios').select('nome, avatar_url').not('avatar_url','is',null);
+    if(users){
+      users.forEach(u => {
+        if(u.nome && u.avatar_url){
+          _avatarCache2[u.nome.toUpperCase().trim()] = u.avatar_url;
+        }
+      });
+    }
+  } catch(e){ console.warn('[ranking] falha carregar avatares', e); }
+  return _avatarCache2;
+}
+
+// Cores fixas por iniciais (consistente entre re-renders)
+const _CORES_AVATAR = [
+  ['#0F6E56','#10b981'],
+  ['#7c3aed','#a78bfa'],
+  ['#dc2626','#f87171'],
+  ['#ea580c','#fb923c'],
+  ['#0891b2','#22d3ee'],
+  ['#db2777','#f472b6'],
+  ['#15803d','#22c55e'],
+  ['#ca8a04','#facc15']
+];
+function _hashStr(s){
+  let h = 0;
+  for(let i=0;i<s.length;i++){ h = ((h<<5)-h) + s.charCodeAt(i); h |= 0; }
+  return Math.abs(h);
+}
+function _gradAvatar(nome){
+  let pair = _CORES_AVATAR[_hashStr(nome||'') % _CORES_AVATAR.length];
+  return 'linear-gradient(135deg,'+pair[0]+','+pair[1]+')';
+}
+
+async function renderRankingColaboradores2(){
+  let rk = document.getElementById('rankColaboradores2');
+  if(!rk) return;
+
+  // Carrega avatares (cache)
+  let avatares = await _carregarAvatares2();
+
+  // Conta cirurgias por usuário (apenas a aba CC, mas usa o mesmo modulo do dashboard)
+  // Reaproveita os dados da última render
+  let porUser = {};
+  dados.forEach(c=>{ if(c.registrado_por) porUser[c.registrado_por]=(porUser[c.registrado_por]||0)+1; });
+  let topUsers = Object.entries(porUser).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  if(topUsers.length===0){
+    rk.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Sem dados</div>';
+    return;
+  }
+
+  // Helper: extrai iniciais (até 2 letras de palavras significativas)
+  function _iniciais(nome){
+    let n = (nome||'').toUpperCase().trim();
+    let ps = n.split(/\s+/).filter(p => p && !['DE','DA','DO','DOS','DAS','E'].includes(p));
+    if(ps.length >= 2) return ps[0][0] + ps[1][0];
+    if(ps.length === 1) return ps[0].substring(0,2);
+    return '??';
+  }
+  function _nomeCurto(nome){
+    let n = (nome||'').toUpperCase().trim();
+    let ps = n.split(/\s+/).filter(p => p && !['DE','DA','DO','DOS','DAS','E'].includes(p));
+    return ps.slice(0,2).join(' ') || n;
+  }
+
+  let medalhas = ['🥇','🥈','🥉'];
+  let bgsPodio = [
+    'background:linear-gradient(90deg,rgba(251,191,36,0.12),transparent);border-left:3px solid #f59e0b',
+    'background:linear-gradient(90deg,rgba(203,213,225,0.18),transparent);border-left:3px solid #94a3b8',
+    'background:linear-gradient(90deg,rgba(253,186,116,0.18),transparent);border-left:3px solid #c2410c'
+  ];
+
+  rk.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px">'+
+    topUsers.map((u,i)=>{
+      let nomeFull = (u[0]||'').toUpperCase().trim();
+      let nomeCurto = _nomeCurto(nomeFull);
+      let iniciais = _iniciais(nomeFull);
+      let qtd = u[1];
+      let pct = topUsers[0]?(qtd/topUsers[0][1])*100:0;
+      let avatarUrl = avatares[nomeFull];
+      let bgPodio = i<3 ? bgsPodio[i] : '';
+      let estiloLinha = i<3
+        ? 'padding:8px 12px;'+bgPodio+';border-radius:10px'
+        : 'padding:8px 12px;border-radius:10px';
+      let avSize = i<3 ? 38 : 32;
+      let avFontSize = i<3 ? 12 : 11;
+      let avatarHtml = avatarUrl
+        ? '<img src="'+avatarUrl+'" alt="'+iniciais+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:'+avSize+'px;height:'+avSize+'px;border-radius:50%;object-fit:cover;flex-shrink:0">'+
+          '<div class="av" style="display:none;width:'+avSize+'px;height:'+avSize+'px;background:'+_gradAvatar(nomeFull)+';font-size:'+avFontSize+'px;flex-shrink:0;border-radius:50%;align-items:center;justify-content:center;color:#fff;font-weight:600">'+iniciais+'</div>'
+        : '<div class="av" style="display:flex;width:'+avSize+'px;height:'+avSize+'px;background:'+_gradAvatar(nomeFull)+';font-size:'+avFontSize+'px;flex-shrink:0;border-radius:50%;align-items:center;justify-content:center;color:#fff;font-weight:600">'+iniciais+'</div>';
+      let badgeMedalha;
+      if(i<3){
+        badgeMedalha = '<div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.15)">'+medalhas[i]+'</div>';
+      } else {
+        badgeMedalha = '<div style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#475569;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.15)">'+(i+1)+'</div>';
+      }
+      let txtNome = i<3 ? 'font-size:13px;font-weight:600;color:#0f172a' : 'font-size:13px;font-weight:500;color:#475569';
+      let corBarra = i===0 ? 'linear-gradient(90deg,#0F6E56,#10b981)' : (i<3 ? '#22c55e' : '#86efac');
+      let corValor = i===0 ? '#0F6E56' : (i<3 ? '#475569' : '#475569');
+      let pesoValor = i<3 ? 700 : 600;
+      let fontValor = i<3 ? '14px' : '13px';
+      return '<div style="display:flex;align-items:center;gap:12px;'+estiloLinha+'">'+
+        '<div style="position:relative;flex-shrink:0">'+avatarHtml+badgeMedalha+'</div>'+
+        '<span title="'+nomeFull+'" style="flex:1;min-width:0;'+txtNome+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase">'+nomeCurto+'</span>'+
+        '<div style="flex:1.2;background:#f1f5f9;height:8px;border-radius:4px;overflow:hidden;flex-shrink:1;min-width:40px"><div style="width:'+pct.toFixed(0)+'%;height:100%;background:'+corBarra+'"></div></div>'+
+        '<span class="kpi-num" style="font-size:'+fontValor+';font-weight:'+pesoValor+';color:'+corValor+';width:42px;text-align:right;flex-shrink:0">'+qtd+'</span>'+
+      '</div>';
+    }).join('')+
+  '</div>';
+}
 
 function renderDashboard(){
   let lista = getDashData();
