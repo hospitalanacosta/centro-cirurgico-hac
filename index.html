@@ -5237,6 +5237,15 @@ function _validarLive(){
     if(data < _hojeLive && data !== _dataOrigEdit){
       alertas.push({tipo:'erro', msg:'📅 <b>Data retroativa não permitida</b> — selecionada '+formatDate(data)+', mínimo permitido: '+formatDate(_hojeLive)});
     }
+    // Bloqueio de data muito distante (mais de 365 dias à frente)
+    let _dHoje = new Date(_hojeLive+'T12:00:00');
+    let _dSel = new Date(data+'T12:00:00');
+    let _diffDias = Math.round((_dSel - _dHoje) / (1000*60*60*24));
+    if(_diffDias > 365){
+      let _dMax = new Date(_dHoje); _dMax.setDate(_dMax.getDate()+365);
+      let _dMaxStr = _dMax.toISOString().slice(0,10);
+      alertas.push({tipo:'erro', msg:'📅 <b>Data muito distante</b> — máximo permitido: '+formatDate(_dMaxStr)+' (1 ano à frente). Verifique se digitou corretamente'});
+    }
   }
 
   // 1. Conflito de horário
@@ -6733,7 +6742,7 @@ async function salvar(){
 
   // Se está editando, fazer UPDATE
   if(editandoId){
-    // ====== BLOQUEIO DATA RETROATIVA AO EDITAR ======
+    // ====== BLOQUEIO DATA RETROATIVA OU MUITO DISTANTE AO EDITAR ======
     // Permite manter data passada se a cirurgia já era do passado.
     // Mas bloqueia se está MUDANDO a data para um novo dia anterior a hoje.
     if(c.data && !c.flutuante){
@@ -6743,6 +6752,16 @@ async function salvar(){
       // Bloqueia se: data nova é anterior a hoje E é diferente da data original
       if(c.data < hojeStr2 && c.data !== dataOriginal){
         await modalAlert('Não é permitido alterar a data para uma data retroativa.\n\nData selecionada: '+formatDate(c.data)+'\nData mínima permitida: '+formatDate(hojeStr2)+'\n\nMantenha a data original ou selecione hoje/futuro.', 'Data Inválida');
+        return;
+      }
+      // Bloqueia data muito distante (>1 ano) - exceto se manteve a data original
+      let dH2 = new Date(hojeStr2+'T12:00:00');
+      let dC2 = new Date(c.data+'T12:00:00');
+      let diffD2 = Math.round((dC2 - dH2) / (1000*60*60*24));
+      if(diffD2 > 365 && c.data !== dataOriginal){
+        let dMax2 = new Date(dH2); dMax2.setDate(dMax2.getDate()+365);
+        let dMaxStr2 = dMax2.toISOString().slice(0,10);
+        await modalAlert('Data muito distante.\n\nData selecionada: '+formatDate(c.data)+' ('+diffD2+' dias à frente)\nMáximo permitido: '+formatDate(dMaxStr2)+' (1 ano à frente)\n\nVerifique se a data foi digitada corretamente.', 'Data Inválida');
         return;
       }
     }
@@ -6792,13 +6811,23 @@ async function salvar(){
     return;
   }
 
-  // ====== BLOQUEIO: NÃO PERMITIR DATA RETROATIVA EM NOVO AGENDAMENTO ======
+  // ====== BLOQUEIO: NÃO PERMITIR DATA RETROATIVA OU MUITO DISTANTE EM NOVO AGENDAMENTO ======
   // Apenas para criação (sem editandoId). Edição é tratada separadamente.
   // Modo flutuante tem sua própria validação de janela 10-60 dias.
   if(c.data && !c.flutuante){
     let hojeStr = hojeLocal();
     if(c.data < hojeStr){
       await modalAlert('Não é permitido agendar cirurgia em data retroativa.\n\nData selecionada: '+formatDate(c.data)+'\nData mínima permitida: '+formatDate(hojeStr)+'\n\nSelecione hoje ou uma data futura.', 'Data Inválida');
+      return;
+    }
+    // Bloqueio data muito distante (mais de 1 ano à frente)
+    let dH = new Date(hojeStr+'T12:00:00');
+    let dC = new Date(c.data+'T12:00:00');
+    let diffD = Math.round((dC - dH) / (1000*60*60*24));
+    if(diffD > 365){
+      let dMax = new Date(dH); dMax.setDate(dMax.getDate()+365);
+      let dMaxStr = dMax.toISOString().slice(0,10);
+      await modalAlert('Data muito distante.\n\nData selecionada: '+formatDate(c.data)+' ('+diffD+' dias à frente)\nMáximo permitido: '+formatDate(dMaxStr)+' (1 ano à frente)\n\nVerifique se a data foi digitada corretamente.', 'Data Inválida');
       return;
     }
   }
@@ -10301,14 +10330,15 @@ async function salvarHemodinamica(){
     }
   }
 
-  // ====== BLOQUEIO: NÃO PERMITIR DATA RETROATIVA NA HEMODINÂMICA ======
+  // ====== BLOQUEIO: NÃO PERMITIR DATA RETROATIVA OU MUITO DISTANTE NA HEMODINÂMICA ======
   // Modo flutuante já tem validação própria. Aqui é só para agendamento padrão.
   if(data && !isFlutuante){
     let hojeStrH = hojeLocal();
+    let dataOrigH = '';
     if(window._hemoEditId){
-      // Edição: permite manter data original passada, bloqueia se mudar para outra data passada
       let cirHemoOrig = dados.find(x=>x.id===window._hemoEditId);
-      let dataOrigH = cirHemoOrig ? (cirHemoOrig.data||'') : '';
+      dataOrigH = cirHemoOrig ? (cirHemoOrig.data||'') : '';
+      // Edição: permite manter data original passada, bloqueia se mudar para outra data passada
       if(data < hojeStrH && data !== dataOrigH){
         await modalAlert('Não é permitido alterar a data para uma data retroativa.\n\nData selecionada: '+formatDate(data)+'\nData mínima permitida: '+formatDate(hojeStrH)+'\n\nMantenha a data original ou selecione hoje/futuro.', 'Data Inválida');
         return;
@@ -10319,6 +10349,16 @@ async function salvarHemodinamica(){
         await modalAlert('Não é permitido agendar cirurgia em data retroativa.\n\nData selecionada: '+formatDate(data)+'\nData mínima permitida: '+formatDate(hojeStrH)+'\n\nSelecione hoje ou uma data futura.', 'Data Inválida');
         return;
       }
+    }
+    // Bloqueia data muito distante (>1 ano) - exceto se manteve a data original em edição
+    let dHH = new Date(hojeStrH+'T12:00:00');
+    let dHC = new Date(data+'T12:00:00');
+    let diffHD = Math.round((dHC - dHH) / (1000*60*60*24));
+    if(diffHD > 365 && data !== dataOrigH){
+      let dHMax = new Date(dHH); dHMax.setDate(dHMax.getDate()+365);
+      let dHMaxStr = dHMax.toISOString().slice(0,10);
+      await modalAlert('Data muito distante.\n\nData selecionada: '+formatDate(data)+' ('+diffHD+' dias à frente)\nMáximo permitido: '+formatDate(dHMaxStr)+' (1 ano à frente)\n\nVerifique se a data foi digitada corretamente.', 'Data Inválida');
+      return;
     }
   }
 
